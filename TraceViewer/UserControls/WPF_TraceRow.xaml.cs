@@ -124,14 +124,6 @@ namespace TraceViewer
             Set(traceRow);
         }
 
-        public void Set(WPFTraceRowContainer wPFTraceRowContainer)
-        {
-           // this.id.Content = wPFTraceRowContainer.Id;
-           // this.address.Content = wPFTraceRowContainer.Address;
-           // this.disasm.Content = wPFTraceRowContainer.Disasm;
-           // this.changes.Content = wPFTraceRowContainer.Changes;
-        }
-
         public void Set(TraceRow traceRow)
         {
 
@@ -151,17 +143,26 @@ namespace TraceViewer
                     Foreground = HighlightingCollection.Check_Type(single_instruction)
                 });
             }
-            
-            changes.Text = traceRow.Regchanges;
-            changes.Foreground = Brushes.White;
-        }
-    }
 
-    public class WPFTraceRowContainer
-    {
-        public String Id { get; set; }
-        public String Address { get; set; }
-        public String Disasm { get; set; }
-        public String Changes { get; set; }
+            if (traceRow.Regchanges != null)
+            {
+
+                string[] single_changes = Regex.Split(traceRow.Regchanges, @"([ :])");
+
+                for (int i = 0; i < single_changes.Length; i++)
+                {
+
+                    if (i == 4 || i == 8)
+                    {
+                        single_changes[i] = "0x" + single_changes[i];
+                    }
+                        
+                    changes.Inlines.Add(new Run(single_changes[i])
+                    {
+                        Foreground = HighlightingCollection.Check_Type(single_changes[i])
+                    });
+                }
+            }
+        }
     }
 }
