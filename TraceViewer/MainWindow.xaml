@@ -21,30 +21,56 @@
         </Style>
     </Window.Resources>
     <Grid>
-        <DockPanel Margin="0,104,0,0" LastChildFill="False" RenderTransformOrigin="0.501,-0.463" Height="41" VerticalAlignment="Top">
-            <Label Style="{StaticResource titles}" Content="#" Width="50"/>
-            <Label Style="{StaticResource titles}" Content="ADDRESS" Width="200"/>
-            <Label Style="{StaticResource titles}" Content="DISASM" Width="200"/>
-            <Label Style="{StaticResource titles}" Content="CHANGES" Width="200"/>
-            <Label Style="{StaticResource titles}" Content="COMMENTS" Width="300"/>
-        </DockPanel>
+        <DockPanel Margin="0,104,0,0" LastChildFill="False" Height="41" VerticalAlignment="Top">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="50" MinWidth="30"/>
+                    <ColumnDefinition Width="200" MinWidth="30"/>
+                    <ColumnDefinition Width="200" MinWidth="30"/>
+                    <ColumnDefinition Width="200" MinWidth="30"/>
+                    <ColumnDefinition Width="300" MinWidth="30"/>
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-        <Grid Margin="0,150,450,0">
-            <ItemsControl x:Name="instructions_view" VirtualizingStackPanel.IsVirtualizing="True"
-              ScrollViewer.CanContentScroll="True">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <VirtualizingStackPanel />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.Template>
-                    <ControlTemplate TargetType="ItemsControl">
-                        <ScrollViewer CanContentScroll="True">
-                            <ItemsPresenter />
-                        </ScrollViewer>
-                    </ControlTemplate>
-                </ItemsControl.Template>
-            </ItemsControl>
-        </Grid>
+                <Label Style="{StaticResource titles}" Content="#" Grid.Column="0" />
+                <GridSplitter Grid.Column="0" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+
+                <Label Style="{StaticResource titles}" Content="ADDRESS" Grid.Column="1" />
+                <GridSplitter Grid.Column="1" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+
+                <Label Style="{StaticResource titles}" Content="DISASM" Grid.Column="2" />
+                <GridSplitter Grid.Column="2" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+
+                <Label Style="{StaticResource titles}" Content="CHANGES" Grid.Column="3" />
+                <GridSplitter Grid.Column="3" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+
+                <Label Style="{StaticResource titles}" Content="COMMENTS" Grid.Column="4" />
+                <GridSplitter Grid.Column="4" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+                
+            </Grid>
+        </DockPanel>
+        <DockPanel Margin="0,150,0,0" LastChildFill="True">
+            <Grid DockPanel.Dock="Left" MinWidth="950">
+                <ItemsControl x:Name="instructions_view" VirtualizingStackPanel.IsVirtualizing="True"
+                  ScrollViewer.CanContentScroll="True">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.Template>
+                        <ControlTemplate TargetType="ItemsControl">
+                            <ScrollViewer CanContentScroll="True">
+                                <ItemsPresenter />
+                            </ScrollViewer>
+                        </ControlTemplate>
+                    </ItemsControl.Template>
+                </ItemsControl>
+            </Grid>
+            <StackPanel>
+                
+            </StackPanel>
+        </DockPanel>
     </Grid>
+    
 </Window>

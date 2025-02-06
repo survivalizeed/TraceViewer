@@ -62,20 +62,21 @@
             </Style.Triggers>
         </Style>
     </UserControl.Resources>
-
-    <DockPanel LastChildFill="False">
-        <Border Style="{StaticResource TextBlockBorderStyle}" Width="50">
-            <TextBlock x:Name="id" Width="50" Style="{StaticResource StyledTextBlock}"/>
-        </Border>
-        <Border Style="{StaticResource TextBlockBorderStyle}" Width="200">
-            <TextBlock x:Name="address" Width="200" Style="{StaticResource StyledTextBlock}"/>
-        </Border>
-        <Border Style="{StaticResource TextBlockBorderStyle}" Width="200">
-            <TextBlock x:Name="disasm" Width="200" Style="{StaticResource StyledTextBlock}"/>
-        </Border>
-        <Border Style="{StaticResource TextBlockBorderStyle}" Width="200">
-            <TextBlock x:Name="changes" Width="200" Style="{StaticResource StyledTextBlock}"/>
-        </Border>
-        <TextBox Style="{StaticResource StyledTextBox}" x:Name="comments" Width="300"/>
-    </DockPanel>
+    <Grid Margin="0,0,0,0" >
+         <DockPanel LastChildFill="False">
+             <Border Style="{StaticResource TextBlockBorderStyle}" Width="50">
+                 <TextBlock x:Name="id" Width="50" Style="{StaticResource StyledTextBlock}"/>
+             </Border>
+             <Border Style="{StaticResource TextBlockBorderStyle}" Width="200">
+                 <TextBlock x:Name="address" Width="200" Style="{StaticResource StyledTextBlock}"/>
+             </Border>
+             <Border Style="{StaticResource TextBlockBorderStyle}" Width="200">
+                 <TextBlock x:Name="disasm" Width="200" Style="{StaticResource StyledTextBlock}"/>
+             </Border>
+             <Border Style="{StaticResource TextBlockBorderStyle}" Width="200">
+                 <TextBlock x:Name="changes" Width="200" Style="{StaticResource StyledTextBlock}"/>
+             </Border>
+             <TextBox Style="{StaticResource StyledTextBox}" x:Name="comments" Width="300"/>
+         </DockPanel>
+    </Grid>
 </UserControl>

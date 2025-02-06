@@ -13,7 +13,7 @@ namespace TraceViewer
         public MainWindow()
         {
             InitializeComponent();
-            instructions_view.ItemsSource = items; // UI-Element verbinden
+            instructions_view.ItemsSource = items; 
             LadeTraceAsynchron();
         }
 
