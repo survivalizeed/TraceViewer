@@ -6,14 +6,69 @@
         xmlns:local="clr-namespace:TraceViewer"
         mc:Ignorable="d"
         Title="MainWindow" 
-        Background="#101010"
+        Background="#151515"
         Width="{x:Static SystemParameters.PrimaryScreenWidth}"  
         Height="{x:Static SystemParameters.PrimaryScreenHeight}"
+        BorderBrush="Aqua"
+        BorderThickness="0.4"
         >
     <Window.Resources>
+        <Style TargetType="ScrollBar">
+            <Setter Property="Background" Value="#202020" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Width" Value="8" />
+            <Setter Property="Height" Value="Auto" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid>
+                            <Border 
+                            CornerRadius="0" 
+                            Background="{TemplateBinding Background}"
+                            Margin="0" />
+                            <Track 
+                            x:Name="PART_Track"
+                            IsDirectionReversed="True">
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Rectangle 
+                                                Fill="Aqua"
+                                                RadiusX="0" 
+                                                RadiusY="0"
+                                                Margin="0"
+                                                >
+                                                    <Rectangle.Effect>
+                                                        <DropShadowEffect 
+                                                        Color="Aqua"
+                                                        BlurRadius="10"
+                                                        ShadowDepth="0"
+                                                        Opacity="0.8" />
+                                                    </Rectangle.Effect>
+                                                </Rectangle>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="RepeatButton">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RepeatButton">
+                        <Grid Background="Transparent" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="titles" TargetType="Label">
             <Setter Property="DockPanel.Dock" Value="Left"/>
-            <Setter Property="BorderBrush" Value="Orange"/>
+            <Setter Property="BorderBrush" Value="Aqua"/>
             <Setter Property="BorderThickness" Value="0.5"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontSize" Value="20"/>
@@ -21,36 +76,41 @@
         </Style>
     </Window.Resources>
     <Grid>
-        <DockPanel Margin="0,104,0,0" LastChildFill="False" Height="41" VerticalAlignment="Top">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="50" MinWidth="30"/>
-                    <ColumnDefinition Width="200" MinWidth="30"/>
-                    <ColumnDefinition Width="200" MinWidth="30"/>
-                    <ColumnDefinition Width="200" MinWidth="30"/>
-                    <ColumnDefinition Width="300" MinWidth="30"/>
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+        <DockPanel Margin="0,104,0,0" LastChildFill="False" Background="#101010">
+            <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left">
+                <Grid x:Name="titles_grid" DockPanel.Dock="Left">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"  MinWidth="30" MaxWidth="70"/>
+                        <ColumnDefinition Width="100" MinWidth="30" MaxWidth="120"/>
+                        <ColumnDefinition Width="300" MinWidth="30" MaxWidth="400"/>
+                        <ColumnDefinition Width="300" MinWidth="30" MaxWidth="400"/>
+                        <ColumnDefinition Width="300" MinWidth="30" MaxWidth="400"/>
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-                <Label Style="{StaticResource titles}" Content="#" Grid.Column="0" />
-                <GridSplitter Grid.Column="0" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+                    <Label x:Name="id" Style="{StaticResource titles}" Content="#" Grid.Column="0" SizeChanged="ID_SizeChanged" />
+                    <GridSplitter Grid.Column="0" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                <Label Style="{StaticResource titles}" Content="ADDRESS" Grid.Column="1" />
-                <GridSplitter Grid.Column="1" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+                    <Label x:Name="address" Style="{StaticResource titles}" Content="ADDRESS" Grid.Column="1" SizeChanged="ADDRESS_SizeChanged"/>
+                    <GridSplitter Grid.Column="1" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                <Label Style="{StaticResource titles}" Content="DISASM" Grid.Column="2" />
-                <GridSplitter Grid.Column="2" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+                    <Label x:Name="disasm" Style="{StaticResource titles}" Content="DISASM" Grid.Column="2" SizeChanged="DISASM_SizeChanged" />
+                    <GridSplitter Grid.Column="2" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                <Label Style="{StaticResource titles}" Content="CHANGES" Grid.Column="3" />
-                <GridSplitter Grid.Column="3" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+                    <Label x:Name="changes" Style="{StaticResource titles}" Content="CHANGES" Grid.Column="3" SizeChanged="CHANGES_SizeChanged"/>
+                    <GridSplitter Grid.Column="3" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                <Label Style="{StaticResource titles}" Content="COMMENTS" Grid.Column="4" />
-                <GridSplitter Grid.Column="4" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
-                
-            </Grid>
+                    <Label x:Name="comments" Style="{StaticResource titles}" Content="COMMENTS" Grid.Column="4" SizeChanged="COMMENTS_SizeChanged"/>
+                    <GridSplitter Grid.Column="4" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+
+                </Grid>
+            </DockPanel>
+            <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="38,0,0,0">
+                <Label x:Name="ide" Style="{StaticResource titles}" Content="#" Grid.Column="0" SizeChanged="ID_SizeChanged" />
+            </DockPanel>
         </DockPanel>
         <DockPanel Margin="0,150,0,0" LastChildFill="True">
-            <Grid DockPanel.Dock="Left" MinWidth="950">
+            <Grid x:Name="instructions_view_grid" DockPanel.Dock="Left">
                 <ItemsControl x:Name="instructions_view" VirtualizingStackPanel.IsVirtualizing="True"
                   ScrollViewer.CanContentScroll="True">
                     <ItemsControl.ItemsPanel>
@@ -67,10 +127,9 @@
                     </ItemsControl.Template>
                 </ItemsControl>
             </Grid>
-            <StackPanel>
-                
+            <StackPanel Background="#181818" Margin="20,0,0,0">
+                <Label Content="Registers" HorizontalAlignment="Center" FontSize="40" Foreground="White"/>
             </StackPanel>
         </DockPanel>
     </Grid>
-    
 </Window>
