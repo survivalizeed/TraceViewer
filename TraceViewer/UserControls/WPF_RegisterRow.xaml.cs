@@ -15,20 +15,17 @@ using System.Windows.Shapes;
 
 namespace TraceViewer
 {
-    public class Registers
-    {
-        public static string[] x64 = new string[] {
-            "RAX", "RBX", "RCX", "RDX", "RBP", "RSP", 
-            "RSI", "RDI",  "R8",  "R9", "R10", "R11", 
-            "R12", "R13", "R14", "R15", "DR0", "RIP", 
-            "DR1","DR2", "DR3", "DR6", "DR7"};
-
-    }
     public partial class WPF_RegisterRow : UserControl
     {
         public WPF_RegisterRow()
         {
             InitializeComponent();
+        }
+
+        public void Set(string register, string value)
+        {
+            this.register.Text = register;
+            this.hex.Text = value;
         }
     }
 }

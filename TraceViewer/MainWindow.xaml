@@ -6,11 +6,8 @@
         xmlns:local="clr-namespace:TraceViewer"
         mc:Ignorable="d"
         Title="MainWindow" 
-        Background="#151515"
         Width="{x:Static SystemParameters.PrimaryScreenWidth}"  
         Height="{x:Static SystemParameters.PrimaryScreenHeight}"
-        BorderBrush="Aqua"
-        BorderThickness="0.4"
         >
     <Window.Resources>
         <Style TargetType="ScrollBar">
@@ -34,14 +31,14 @@
                                         <Thumb.Template>
                                             <ControlTemplate TargetType="Thumb">
                                                 <Rectangle 
-                                                Fill="Aqua"
+                                                Fill="White"
                                                 RadiusX="0" 
                                                 RadiusY="0"
                                                 Margin="0"
                                                 >
                                                     <Rectangle.Effect>
                                                         <DropShadowEffect 
-                                                        Color="Aqua"
+                                                        Color="White"
                                                         BlurRadius="10"
                                                         ShadowDepth="0"
                                                         Opacity="0.8" />
@@ -66,17 +63,10 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style x:Key="titles" TargetType="Label">
-            <Setter Property="DockPanel.Dock" Value="Left"/>
-            <Setter Property="BorderBrush" Value="Aqua"/>
-            <Setter Property="BorderThickness" Value="0.5"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="20"/>
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-        </Style>
     </Window.Resources>
     <Grid>
-        <DockPanel Margin="0,104,0,0" LastChildFill="False" Background="#101010">
+        <Rectangle Fill="{StaticResource CustomBackground}"/>
+        <DockPanel Margin="0,104,0,30" LastChildFill="False" Background="Transparent">
             <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left">
                 <Grid x:Name="titles_grid" DockPanel.Dock="Left">
                     <Grid.ColumnDefinitions>
@@ -88,28 +78,28 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <Label x:Name="id" Style="{StaticResource titles}" Content="#" Grid.Column="0" SizeChanged="ID_SizeChanged" />
+                    <Label x:Name="id" Style="{StaticResource instructions_view_titles}" Content="#" Grid.Column="0" SizeChanged="ID_SizeChanged" />
                     <GridSplitter Grid.Column="0" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                    <Label x:Name="address" Style="{StaticResource titles}" Content="ADDRESS" Grid.Column="1" SizeChanged="ADDRESS_SizeChanged"/>
+                    <Label x:Name="address" Style="{StaticResource instructions_view_titles}" Content="ADDRESS" Grid.Column="1" SizeChanged="ADDRESS_SizeChanged"/>
                     <GridSplitter Grid.Column="1" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                    <Label x:Name="disasm" Style="{StaticResource titles}" Content="DISASM" Grid.Column="2" SizeChanged="DISASM_SizeChanged" />
+                    <Label x:Name="disasm" Style="{StaticResource instructions_view_titles}" Content="DISASM" Grid.Column="2" SizeChanged="DISASM_SizeChanged" />
                     <GridSplitter Grid.Column="2" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                    <Label x:Name="changes" Style="{StaticResource titles}" Content="CHANGES" Grid.Column="3" SizeChanged="CHANGES_SizeChanged"/>
+                    <Label x:Name="changes" Style="{StaticResource instructions_view_titles}" Content="CHANGES" Grid.Column="3" SizeChanged="CHANGES_SizeChanged"/>
                     <GridSplitter Grid.Column="3" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                    <Label x:Name="comments" Style="{StaticResource titles}" Content="COMMENTS" Grid.Column="4" SizeChanged="COMMENTS_SizeChanged"/>
+                    <Label x:Name="comments" Style="{StaticResource instructions_view_titles}" Content="COMMENTS" Grid.Column="4" SizeChanged="COMMENTS_SizeChanged"/>
                     <GridSplitter Grid.Column="4" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
                 </Grid>
             </DockPanel>
-            <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="38,0,0,0">
-                <Label x:Name="ide" Style="{StaticResource titles}" Content="#" Grid.Column="0" SizeChanged="ID_SizeChanged" />
+            <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="37,0,0,0">
+                <Label x:Name="register" Style="{StaticResource instructions_view_titles}" Content="     CPU     "/>
             </DockPanel>
         </DockPanel>
-        <DockPanel Margin="0,150,0,0" LastChildFill="True">
+        <DockPanel Margin="0,150,0,30" LastChildFill="True">
             <Grid x:Name="instructions_view_grid" DockPanel.Dock="Left">
                 <ItemsControl x:Name="instructions_view" VirtualizingStackPanel.IsVirtualizing="True"
                   ScrollViewer.CanContentScroll="True">
@@ -127,7 +117,7 @@
                     </ItemsControl.Template>
                 </ItemsControl>
             </Grid>
-            <StackPanel Background="#181818" Margin="20,0,0,0">
+            <StackPanel Background="Black" Margin="20,0,0,0">
                 <Label Content="Registers" HorizontalAlignment="Center" FontSize="40" Foreground="White"/>
             </StackPanel>
         </DockPanel>
