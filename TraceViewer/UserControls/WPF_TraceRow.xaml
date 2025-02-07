@@ -9,18 +9,18 @@
     <Grid Margin="0,0,0,0" >
          <DockPanel LastChildFill="False">
              <Border x:Name="id_border" Style="{StaticResource disasm_text_block_border}" Width="50" DockPanel.Dock="Left">
-                <TextBlock x:Name="id" Width="50" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left"/>
+                <TextBlock x:Name="id" Width="50" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover"/>
              </Border>
             <Border x:Name="address_border" Style="{StaticResource disasm_text_block_border}" Width="100" DockPanel.Dock="Left">
-                <TextBlock x:Name="address" Width="100" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left"/>
+                <TextBlock x:Name="address" Width="100" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover"/>
              </Border>
             <Border x:Name="disasm_border" Style="{StaticResource disasm_text_block_border}" Width="300" DockPanel.Dock="Left">
-                <TextBlock x:Name="disasm" Width="300" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left"/>
+                <TextBlock x:Name="disasm" Width="300" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover"/>
              </Border>
             <Border x:Name="changes_border" Style="{StaticResource disasm_text_block_border}" Width="300" DockPanel.Dock="Left">
-                <TextBlock x:Name="changes" Width="300" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left"/>
+                <TextBlock x:Name="changes" Width="300" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover"/>
              </Border>
-            <TextBox Style="{StaticResource comments_text_box}" x:Name="comments" Width="300" DockPanel.Dock="Left"/>
+            <TextBox Style="{StaticResource comments_text_box}" x:Name="comments" Width="300" DockPanel.Dock="Left" MouseEnter="OnHover"/>
          </DockPanel>
     </Grid>
 </UserControl>

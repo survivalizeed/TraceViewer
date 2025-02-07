@@ -12,12 +12,13 @@ namespace TraceViewer
     public partial class MainWindow : Window
     {
         private ObservableCollection<WPF_TraceRow> instruction_view_items = new ObservableCollection<WPF_TraceRow>();
-
+        private ObservableCollection<WPF_RegisterRow> register_view_items = new ObservableCollection<WPF_RegisterRow>();
         public MainWindow()
         {
             InitializeComponent();
             instructions_view.ItemsSource = instruction_view_items;
-            LoadTrace.Load("F:\\Tools\\Reversing\\x64dbg\\release\\x64\\db\\trace.trace64", ref instruction_view_items);
+            registers_view.ItemsSource = register_view_items;
+            TraceHandler.Load("F:\\Tools\\Reversing\\x64dbg\\release\\x64\\db\\trace.trace64", ref instruction_view_items, ref register_view_items, registers_view);
         }
 
         private void ID_SizeChanged(object sender, SizeChangedEventArgs e)

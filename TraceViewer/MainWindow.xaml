@@ -118,7 +118,20 @@
                 </ItemsControl>
             </Grid>
             <StackPanel Background="Black" Margin="20,0,0,0">
-                <Label Content="Registers" HorizontalAlignment="Center" FontSize="40" Foreground="White"/>
+                <ItemsControl x:Name="registers_view" VirtualizingStackPanel.IsVirtualizing="True">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.Template>
+                        <ControlTemplate TargetType="ItemsControl">
+                            <ScrollViewer CanContentScroll="False">
+                                <ItemsPresenter />
+                            </ScrollViewer>
+                        </ControlTemplate>
+                    </ItemsControl.Template>
+                </ItemsControl>
             </StackPanel>
         </DockPanel>
     </Grid>

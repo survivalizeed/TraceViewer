@@ -6,39 +6,10 @@
              xmlns:local="clr-namespace:TraceViewer"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <UserControl.Resources>
-      
-        <Style x:Key="StyledTextBlock" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Padding" Value="5"/>
-            <Setter Property="Background" Value="Transparent"/>
-        </Style>
-
-        <Style x:Key="TextBlockBorderStyle" TargetType="Border">
-            <Setter Property="BorderBrush" Value="#353535"/>
-            <Setter Property="BorderThickness" Value="0.5"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="BorderBrush" Value="Red"/>
-                    <Setter Property="Background" Value="#1a0500"/>
-                </Trigger>
-                <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                    <Setter Property="BorderBrush" Value="Red"/>
-                    <Setter Property="Background" Value="#1a0500"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-    </UserControl.Resources>
     <Grid Margin="0,0,0,0" >
         <DockPanel LastChildFill="False">
-            <Border Style="{StaticResource TextBlockBorderStyle}" Width="200">
-                <TextBlock x:Name="register" Width="200" Style="{StaticResource StyledTextBlock}"/>
-            </Border>
-            <Border Style="{StaticResource TextBlockBorderStyle}" Width="200">
-                <TextBlock x:Name="hex" Width="200" Style="{StaticResource StyledTextBlock}"/>
-            </Border>
+            <TextBlock x:Name="register" Width="200" Style="{StaticResource disasm_text_block}"/>
+            <TextBlock x:Name="value" Width="200" Style="{StaticResource disasm_text_block}"/>
         </DockPanel>
     </Grid>
 </UserControl>

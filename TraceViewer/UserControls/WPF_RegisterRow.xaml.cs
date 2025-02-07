@@ -17,15 +17,21 @@ namespace TraceViewer
 {
     public partial class WPF_RegisterRow : UserControl
     {
-        public WPF_RegisterRow()
+        public WPF_RegisterRow(string register, string value)
         {
             InitializeComponent();
+            Set(register, value);
         }
 
         public void Set(string register, string value)
         {
             this.register.Text = register;
-            this.hex.Text = value;
+            this.value.Text = value;
+        }
+
+        public void Set(string value)
+        {
+            this.value.Text = value;
         }
     }
 }
