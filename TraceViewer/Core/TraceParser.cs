@@ -13,7 +13,10 @@ namespace TraceViewer.Core
 {
     public static class prefs
     {
-        public static readonly string[] X64_REGS = { "rax", "rbx", "rcx", "rdx", "rbp", "rsp", "rsi", "rdi", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15", "rip" };
+        public static readonly string[] X64_REGS = { 
+            "rax", "rbx", "rcx", "rdx", "rbp", "rsp", "rsi", "rdi", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15", "rip" ,
+            "rflags", "gs"
+        };
         public static readonly string[] X32_REGS = { "eax", "ebx", "ecx", "edx", "ebp", "esp", "esi", "edi", "eip" };
         public const bool TRACE_SHOW_OLD_REG_VALUE = true;
     }

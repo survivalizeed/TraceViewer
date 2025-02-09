@@ -14,7 +14,7 @@
     <LinearGradientBrush x:Key="CustomBackground" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#151515" Offset="0.0"/>
         <GradientStop Color="#0D0D0D" Offset="0.6"/>
-        <GradientStop Color="#000000" Offset="1.0"/>
+        <GradientStop Color="#050505" Offset="1.0"/>
     </LinearGradientBrush>
 
     <Style x:Key="instructions_view_titles" TargetType="Label">

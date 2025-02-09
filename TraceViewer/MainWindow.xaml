@@ -117,7 +117,7 @@
                     </ItemsControl.Template>
                 </ItemsControl>
             </Grid>
-            <StackPanel Background="Black" Margin="20,0,0,0">
+            <StackPanel Margin="20,0,0,0">
                 <ItemsControl x:Name="registers_view" VirtualizingStackPanel.IsVirtualizing="True">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
