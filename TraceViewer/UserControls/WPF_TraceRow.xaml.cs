@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -27,36 +28,58 @@ namespace TraceViewer
         private ItemsControl registers_view;
         private List<Tuple<string, int>> regs; // here without the paddings
 
-        public WPF_TraceRow(TraceRow previous, TraceRow current, ItemsControl register_view)
+        public WPF_TraceRow(TraceRow current, TraceRow next, ItemsControl register_view)
         {
             InitializeComponent();
-            regs = prefs.X64_REGS;
+            regs = new List<Tuple<string, int>>(prefs.X64_REGS);
             for (int i = 0; i < regs.Count; i++)
             {
                 if (regs[i].Item1 == "")
                 {
                     regs.RemoveAt(i);
+                    i--;
                 }
             }
-            Set(previous, current);
+            Set(current, next);
             this.registers_view = register_view;
         }
 
 
-        public void Set(TraceRow previous, TraceRow current)
+        public void Set(TraceRow current, TraceRow next)
         {
+            if (next != null)
+            {
+                for (int i = 0; i < regs.Count; ++i)
+                {
+                    if (!next.Regs[i].SequenceEqual(current.Regs[i]) && regs[i].Item1 != "rip")
+                    {
+                        string current_reg = string.Concat(current.Regs[i].Reverse().Where(b => b != 0x00).Select(b => b.ToString("X2")));
+                        if(current_reg == "")
+                        {
+                            current_reg = "00";
+                        }
+                        string next_reg = string.Concat(next.Regs[i].Reverse().Where(b => b != 0x00).Select(b => b.ToString("X2")));
+                        if(next_reg == "")
+                        {
+                            next_reg = "00";
+                        }
+                        changes.Text += regs[i].Item1 + ": " + "0x" + current_reg + " -> " + "0x" +
+                            next_reg + "; ";
+                    }
+                }
+            }
+
             byte[] rbx = new byte[8], rcx = new byte[8], rdx = new byte[8];
             // Make the order rax, rbx, rcx, rdx for the register
-            rbx = current.Regs[3];
-            rcx = current.Regs[1];
-            rdx = current.Regs[2];
-
-            current.Regs[1] = rbx;
-            current.Regs[2] = rcx;
-            current.Regs[3] = rdx;
-
             registers_x64 = current.Regs;
-            
+
+            rbx = registers_x64[3];
+            rcx = registers_x64[1];
+            rdx = registers_x64[2];
+
+            registers_x64[1] = rbx;
+            registers_x64[2] = rcx;
+            registers_x64[3] = rdx;
 
 
             id.Text = current.Id.ToString();
@@ -76,18 +99,6 @@ namespace TraceViewer
                 });
             }
 
-
-
-            if (previous != null) {
-                for (int i = 0; i < regs.Count; ++i)
-                {
-                    if (!previous.Regs[i].SequenceEqual(current.Regs[i]) && regs[i].Item1 != "rip")
-                    {
-                        changes.Text += regs[i].Item1 + ": " + "0x" + string.Concat(previous.Regs[i].Reverse().Where(b => b != 0x00).Select(b => b.ToString("X2"))) + " -> " + "0x" +
-                            string.Concat(current.Regs[i].Reverse().Where(b => b != 0x00).Select(b => b.ToString("X2"))) + "; ";
-                    }
-                }
-            }
         }
 
         private void OnHover(object sender, MouseEventArgs e)

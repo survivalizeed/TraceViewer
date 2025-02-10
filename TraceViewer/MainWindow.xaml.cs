@@ -5,12 +5,14 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using TraceViewer.Core;
 
 namespace TraceViewer
 {
     public partial class MainWindow : Window
     {
+        static int show_counter = 0;
         private ObservableCollection<WPF_TraceRow> instruction_view_items = new ObservableCollection<WPF_TraceRow>();
         private ObservableCollection<WPF_RegisterRow> register_view_items = new ObservableCollection<WPF_RegisterRow>();
         public MainWindow()
@@ -116,6 +118,31 @@ namespace TraceViewer
                 finally
                 {
                     instructions_view.EndInit();
+                }
+            }
+        }
+
+        private bool toggle = true;
+        private void fpu_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            toggle = !toggle;
+            Visibility fpu_visibility = Visibility.Visible;
+            if (!toggle)
+            {
+                fpu.Foreground = Brushes.Gray;
+                fpu_visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                fpu.Foreground = Brushes.White;
+                fpu_visibility = Visibility.Visible;
+            }
+
+            foreach (var item in register_view_items)
+            {
+                if (item.registerType == RegisterType.FPU)
+                {
+                    item.Visibility = fpu_visibility;
                 }
             }
         }

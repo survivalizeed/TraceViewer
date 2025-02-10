@@ -32,19 +32,56 @@ namespace TraceViewer.Core
             new Tuple<string, int>("r15", 8),
             new Tuple<string, int>("rip", 8),
             new Tuple<string, int>("rflags", 8),
-            new Tuple<string, int>("gs", 2),
-            new Tuple<string, int>("fs", 2),
-            new Tuple<string, int>("es", 2),
-            new Tuple<string, int>("ds", 2),
-            new Tuple<string, int>("cs", 2),
-            new Tuple<string, int>("ss", 2),
-            new Tuple<string, int>("", 4),
+            new Tuple<string, int>("", 2), // Segment Registers --> Here skipped
+            new Tuple<string, int>("", 2), // Segment Registers --> Here skipped
+            new Tuple<string, int>("", 2), // Segment Registers --> Here skipped
+            new Tuple<string, int>("", 2), // Segment Registers --> Here skipped
+            new Tuple<string, int>("", 2), // Segment Registers --> Here skipped
+            new Tuple<string, int>("", 2), // Segment Registers --> Here skipped
+            new Tuple<string, int>("", 4), // Alignment padding
             new Tuple<string, int>("dr0", 8),
             new Tuple<string, int>("dr1", 8),
             new Tuple<string, int>("dr2", 8),
             new Tuple<string, int>("dr3", 8),
             new Tuple<string, int>("dr6", 8),
             new Tuple<string, int>("dr7", 8),
+            new Tuple<string, int>("", 80), // Byte Registers --> Here skipped
+            new Tuple<string, int>("", 26), //x87FPU Registers --> Here skipped
+            new Tuple<string, int>("", 4), // mxcsr --> Here skipped
+            new Tuple<string, int>("", 2), // Alignment padding
+            new Tuple<string, int>("xmm0", 16),
+            new Tuple<string, int>("xmm1", 16),
+            new Tuple<string, int>("xmm2", 16),
+            new Tuple<string, int>("xmm3", 16),
+            new Tuple<string, int>("xmm4", 16),
+            new Tuple<string, int>("xmm5", 16),
+            new Tuple<string, int>("xmm6", 16),
+            new Tuple<string, int>("xmm7", 16),
+            new Tuple<string, int>("xmm8", 16),
+            new Tuple<string, int>("xmm9", 16),
+            new Tuple<string, int>("xmm10", 16),
+            new Tuple<string, int>("xmm11", 16),
+            new Tuple<string, int>("xmm12", 16),
+            new Tuple<string, int>("xmm13", 16),
+            new Tuple<string, int>("xmm14", 16),
+            new Tuple<string, int>("xmm15", 16),
+            new Tuple<string, int>("ymm0", 32),
+            new Tuple<string, int>("ymm1", 32),
+            new Tuple<string, int>("ymm2", 32),
+            new Tuple<string, int>("ymm3", 32),
+            new Tuple<string, int>("ymm4", 32),
+            new Tuple<string, int>("ymm5", 32),
+            new Tuple<string, int>("ymm6", 32),
+            new Tuple<string, int>("ymm7", 32),
+            new Tuple<string, int>("ymm8", 32),
+            new Tuple<string, int>("ymm9", 32),
+            new Tuple<string, int>("ymm10", 32),
+            new Tuple<string, int>("ymm11", 32),
+            new Tuple<string, int>("ymm12", 32),
+            new Tuple<string, int>("ymm13", 32),
+            new Tuple<string, int>("ymm14", 32),
+            new Tuple<string, int>("ymm15", 32),
+
         };
         public static readonly string[] X32_REGS = { "eax", "ebx", "ecx", "edx", "ebp", "esp", "esi", "edi", "eip" };
         public const bool TRACE_SHOW_OLD_REG_VALUE = true;
@@ -235,7 +272,7 @@ namespace TraceViewer.Core
                             }
                         }
 
-                        if (initial_state) // so if its all 0 we can just set the registerChangePositions to 0,1,2,3,4,5,6,7 to get exact information
+                        if (initial_state) // change back to 0 so the position parsing wont fuck up
                         {
                             for (int i = 0; i < registerChanges; i++)
                             {

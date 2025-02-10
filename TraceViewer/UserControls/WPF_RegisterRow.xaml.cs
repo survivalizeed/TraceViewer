@@ -15,18 +15,27 @@ using System.Windows.Shapes;
 
 namespace TraceViewer
 {
+    public enum RegisterType
+    {
+        GeneralPurpose,
+        Flags,
+        Debug,
+        FPU
+    }
     public partial class WPF_RegisterRow : UserControl
     {
-        public WPF_RegisterRow(string register, string value)
+        public RegisterType registerType;
+        public WPF_RegisterRow(string register, string value, RegisterType registerType)
         {
             InitializeComponent();
-            Set(register, value);
+            Set(register, value, registerType);     
         }
 
-        public void Set(string register, string value)
+        public void Set(string register, string value, RegisterType registerType)
         {
             this.register.Text = register;
             this.value.Text = value;
+            this.registerType = registerType;
         }
 
         public void Set(string value)

@@ -13,7 +13,9 @@
         <Style TargetType="ScrollBar">
             <Setter Property="Background" Value="#202020" />
             <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="MinWidth" Value="8" />
             <Setter Property="Width" Value="8" />
+            <Setter Property="MaxWidth" Value="8" />
             <Setter Property="Height" Value="Auto" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -95,14 +97,13 @@
 
                 </Grid>
             </DockPanel>
-            <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="37,0,0,0">
-                <Label x:Name="register" Style="{StaticResource instructions_view_titles}" Content="     CPU     "/>
+            <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="28,0,0,0">
+                <Label x:Name="fpu" Style="{StaticResource instructions_view_titles}" Content="   FPU   " MouseDown="fpu_MouseDown"/>
             </DockPanel>
         </DockPanel>
         <DockPanel Margin="0,150,0,30" LastChildFill="True">
             <Grid x:Name="instructions_view_grid" DockPanel.Dock="Left">
-                <ItemsControl x:Name="instructions_view" VirtualizingStackPanel.IsVirtualizing="True"
-                  ScrollViewer.CanContentScroll="True">
+                <ItemsControl x:Name="instructions_view" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <VirtualizingStackPanel />
@@ -117,22 +118,32 @@
                     </ItemsControl.Template>
                 </ItemsControl>
             </Grid>
-            <StackPanel Margin="20,0,0,0">
-                <ItemsControl x:Name="registers_view" VirtualizingStackPanel.IsVirtualizing="True">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <VirtualizingStackPanel />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.Template>
-                        <ControlTemplate TargetType="ItemsControl">
-                            <ScrollViewer CanContentScroll="False">
-                                <ItemsPresenter />
-                            </ScrollViewer>
-                        </ControlTemplate>
-                    </ItemsControl.Template>
-                </ItemsControl>
-            </StackPanel>
+            <Grid Margin="20,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid x:Name="registers_view_grid" Grid.Row="0">
+                    <ItemsControl x:Name="registers_view" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VirtualizingStackPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.Template>
+                            <ControlTemplate TargetType="ItemsControl">
+                                <ScrollViewer CanContentScroll="True">
+                                    <ItemsPresenter />
+                                </ScrollViewer>
+                            </ControlTemplate>
+                        </ItemsControl.Template>
+                    </ItemsControl>
+                </Grid>
+                <Grid x:Name="memory_view_grid" Grid.Row="1">
+
+                </Grid>
+            </Grid>
+
         </DockPanel>
     </Grid>
 </Window>
