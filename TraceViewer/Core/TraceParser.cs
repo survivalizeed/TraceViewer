@@ -13,9 +13,38 @@ namespace TraceViewer.Core
 {
     public static class prefs
     {
-        public static readonly string[] X64_REGS = { 
-            "rax", "rbx", "rcx", "rdx", "rbp", "rsp", "rsi", "rdi", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15", "rip" ,
-            "rflags", "gs"
+        public static readonly List<Tuple<string, int>> X64_REGS = new List<Tuple<string, int>> {
+            new Tuple<string, int>("rax", 8), 
+            new Tuple<string, int>("rcx", 8),
+            new Tuple<string, int>("rdx", 8),
+            new Tuple<string, int>("rbx", 8),
+            new Tuple<string, int>("rsp", 8),
+            new Tuple<string, int>("rbp", 8),
+            new Tuple<string, int>("rsi", 8),
+            new Tuple<string, int>("rdi", 8),
+            new Tuple<string, int>("r8", 8),
+            new Tuple<string, int>("r9", 8),
+            new Tuple<string, int>("r10", 8),
+            new Tuple<string, int>("r11", 8),
+            new Tuple<string, int>("r12", 8),
+            new Tuple<string, int>("r13", 8),
+            new Tuple<string, int>("r14", 8),
+            new Tuple<string, int>("r15", 8),
+            new Tuple<string, int>("rip", 8),
+            new Tuple<string, int>("rflags", 8),
+            new Tuple<string, int>("gs", 2),
+            new Tuple<string, int>("fs", 2),
+            new Tuple<string, int>("es", 2),
+            new Tuple<string, int>("ds", 2),
+            new Tuple<string, int>("cs", 2),
+            new Tuple<string, int>("ss", 2),
+            new Tuple<string, int>("", 4),
+            new Tuple<string, int>("dr0", 8),
+            new Tuple<string, int>("dr1", 8),
+            new Tuple<string, int>("dr2", 8),
+            new Tuple<string, int>("dr3", 8),
+            new Tuple<string, int>("dr6", 8),
+            new Tuple<string, int>("dr7", 8),
         };
         public static readonly string[] X32_REGS = { "eax", "ebx", "ecx", "edx", "ebp", "esp", "esi", "edi", "eip" };
         public const bool TRACE_SHOW_OLD_REG_VALUE = true;
@@ -36,7 +65,7 @@ namespace TraceViewer.Core
         public int Id { get; set; }
         public ulong Ip { get; set; }
         public string Disasm { get; set; }
-        public ulong[] Regs { get; set; }
+        public List<byte[]> Regs { get; set; }
         public string Opcodes { get; set; }
         public List<MemoryAccess> Mem { get; set; }
         public string Regchanges { get; set; }
@@ -72,26 +101,26 @@ namespace TraceViewer.Core
                 JObject jsonObj = JObject.Parse(jsonStr);
                 string arch = jsonObj["arch"].ToString();
 
-                string[] regs;
+                List<Tuple<string, int>> regs;
                 string ipReg;
                 int pointerSize;
-                if (arch == "x64")
-                {
+                //if (arch == "x64")
+                //{
                     regs = prefs.X64_REGS;
                     ipReg = "rip";
                     pointerSize = 8;
-                }
-                else
-                {
-                    regs = prefs.X32_REGS;
-                    ipReg = "eip";
-                    pointerSize = 4;
-                }
+                //}
+                //else
+                //{
+                //    //regs = prefs.X32_REGS;
+                //    ipReg = "eip";
+                //    pointerSize = 4;
+                //}
 
                 Dictionary<string, int> regIndexes = new Dictionary<string, int>();
-                for (int i = 0; i < regs.Length; i++)
+                for (int i = 0; i < regs.Count; i++)
                 {
-                    regIndexes[regs[i]] = i;
+                    regIndexes[regs[i].Item1] = i;
                 }
 
                 traceData.Arch = arch;
@@ -106,7 +135,11 @@ namespace TraceViewer.Core
                     dis.EnableInstructionDetails = true;
                     dis.DisassembleSyntax = DisassembleSyntax.Intel;
 
-                    ulong[] regValues = new ulong[regs.Length];
+                    List<byte[]> regValues = new List<byte[]>();
+                    for (int i = 0; i < regs.Count; i++)
+                    {
+                        regValues.Add(new byte[regs[i].Item2]);
+                    }
                     int rowId = 0;
 
                     while (fs.Position < fs.Length)
@@ -135,14 +168,40 @@ namespace TraceViewer.Core
                             registerChangePositions.Add(br.ReadByte());
                         }
 
-                        List<ulong> registerChangeNewData = new List<ulong>();
+                        bool initial_state = true; // if it the first row, the changed registers are all 0 because the layout is 8 byted.
+                                                   // here we want to have precise slicing of the registers so we need to know which register has which size
                         for (int i = 0; i < registerChanges; i++)
                         {
-                            byte[] data = br.ReadBytes(pointerSize);
-                            ulong val = pointerSize == 8 ? BitConverter.ToUInt64(data, 0) : BitConverter.ToUInt32(data, 0);
-                            registerChangeNewData.Add(val);
+                            if (registerChangePositions[i] != 0)
+                            {
+                                initial_state = false;
+                            }
                         }
 
+                        if (initial_state) // so if its all 0 we can just set the registerChangePositions to 0,1,2,3,4,5,6,7 to get exact information
+                        {
+                            for (int i = 0; i < registerChanges; i++)
+                            {
+                                registerChangePositions[i] = i;
+                            }
+                        }
+
+                        List<byte[]> registerChangeNewData = new List<byte[]>();
+                        byte[] buffer = br.ReadBytes(8 * registerChanges); // load everything into a buffer to not fuck up any offsets. Even if not all data is used
+
+                        using (MemoryStream ms = new MemoryStream(buffer))
+                        using (BinaryReader reader = new BinaryReader(ms))
+                        {
+                            for (int i = 0; i < registerChanges; i++)
+                            {
+                                if (registerChangePositions[i] < regs.Count)
+                                {
+                                    byte[] data = reader.ReadBytes(regs[registerChangePositions[i]].Item2);
+                                    registerChangeNewData.Add(data);
+                                }
+                            }
+
+                        }
                         List<byte> memoryAccessFlags = new List<byte>();
                         for (int i = 0; i < memoryAccesses; i++)
                         {
@@ -176,43 +235,27 @@ namespace TraceViewer.Core
                             }
                         }
 
+                        if (initial_state) // so if its all 0 we can just set the registerChangePositions to 0,1,2,3,4,5,6,7 to get exact information
+                        {
+                            for (int i = 0; i < registerChanges; i++)
+                            {
+                                registerChangePositions[i] = 0;
+                            }
+                        }
+
                         int regId = 0;
                         string regchanges = "";
                         for (int i = 0; i < registerChangePositions.Count; i++)
                         {
                             regId += registerChangePositions[i];
                             int index = regId + i;
-                            if (index < regValues.Length)
+                            if (index < regValues.Count)
                             {
                                 regValues[index] = registerChangeNewData[i];
                             }
-                            if (index < regValues.Length && rowId > 0)
-                            {
-                                string regName = regs[index];
-                                if (regName != ipReg)
-                                {
-                                    ulong oldValue = traceData.Trace.Last().Regs[index];
-                                    ulong newValue = registerChangeNewData[i];
-                                    if (oldValue != newValue)
-                                    {
-                                        if (prefs.TRACE_SHOW_OLD_REG_VALUE)
-                                        {
-                                            regchanges += $"{regName}: {oldValue:X} -> {newValue:X} ";
-                                        }
-                                        else
-                                        {
-                                            regchanges += $"{regName}: {newValue:X} ";
-                                        }
-                                        if (newValue < 0x7F && newValue > 0x1F)
-                                        {
-                                            regchanges += $"'{(char)newValue}' ";
-                                        }
-                                    }
-                                }
-                            }
                         }
 
-                        ulong ip = regValues[regIndexes[ipReg]];
+                        ulong ip = BitConverter.ToUInt64(regValues[regIndexes[ipReg]], 0);
                         string disasm = "";
                         var instructions = dis.Disassemble(opcodes, (long)ip);
                         foreach (var instr in instructions)
@@ -268,12 +311,22 @@ namespace TraceViewer.Core
                             traceData.Trace.Last().Regchanges = regchanges;
                         }
 
+                        List<byte[]> cloned_regValues = new List<byte[]>();
+                        for (int i = 0; i < regValues.Count; i++)
+                        {
+                            if (regs[i].Item1 == "")
+                            {
+                                continue;
+                            }
+                            cloned_regValues.Add((byte[])regValues[i].Clone());
+                        }
+
                         TraceRow traceRow = new TraceRow
                         {
                             Id = rowId,
                             Ip = ip,
                             Disasm = disasm,
-                            Regs = (ulong[])regValues.Clone(),
+                            Regs = cloned_regValues,
                             Opcodes = BitConverter.ToString(opcodes).Replace("-", ""),
                             Mem = mems
                         };

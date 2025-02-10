@@ -17,30 +17,52 @@ namespace TraceViewer.Core
         {
             TraceLoader loader = new TraceLoader();
 
-            try
-            {
+
                 TraceData traceData = loader.OpenX64dbgTrace(path);
 
-                foreach (var row in traceData.Trace)
+                for(int i = 0; i < traceData.Trace.Count; i++)
                 {
-                    var wpfRow = new WPF_TraceRow(row, registers_view);
-
+                    WPF_TraceRow wpfRow;
+                    if (i == 0)
+                    {
+                        wpfRow = new WPF_TraceRow(null, traceData.Trace[i], registers_view);
+                    }
+                    else
+                    {
+                        wpfRow = new WPF_TraceRow(traceData.Trace[i-1], traceData.Trace[i], registers_view);
+                    }
                     instructions.Add(wpfRow);
                 }
                 if(traceData.Arch == "x64")
                 {
-                    for(int i = 0; i < prefs.X64_REGS.Length; i++)
+                    for(int i = 0; i < prefs.X64_REGS.Count; i++)
                     {
-                        var wpfRow = new WPF_RegisterRow(prefs.X64_REGS[i].ToUpper(), "0");
+                        WPF_RegisterRow wpfRow;
+                        // For paddings
+                        if (prefs.X64_REGS[i].Item1 == "")
+                        {
+                            continue;
+                        }
+                        // All those if statements so the order is: rax, rbx, rcx, rdx
+                        if (i == 1)
+                        {
+                            wpfRow = new WPF_RegisterRow(prefs.X64_REGS[3].Item1.ToUpper(), "0");
+                        }
+                        else if (i == 2)
+                        {
+                            wpfRow = new WPF_RegisterRow(prefs.X64_REGS[1].Item1.ToUpper(), "0");
+                        }
+                        else if (i == 3)
+                        {
+                            wpfRow = new WPF_RegisterRow(prefs.X64_REGS[2].Item1.ToUpper(), "0");
+                        }
+                        else
+                        {
+                            wpfRow = new WPF_RegisterRow(prefs.X64_REGS[i].Item1.ToUpper(), "0");
+                        }
                         registers.Add(wpfRow);
                     }
                 }
-
-            }
-            catch (System.Exception ex)
-            {
-                MessageBox.Show("Error loading the .trace64 file: " + ex.Message);
-            }
         }
         
 

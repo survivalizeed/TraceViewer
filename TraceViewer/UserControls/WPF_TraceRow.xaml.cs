@@ -23,34 +23,50 @@ namespace TraceViewer
 
     public partial class WPF_TraceRow : UserControl
     {
-        private ulong[] registers_x64 = new ulong[17];
+        private List<byte[]> registers_x64;
         private ItemsControl registers_view;
+        private List<Tuple<string, int>> regs; // here without the paddings
 
-        public WPF_TraceRow()
+        public WPF_TraceRow(TraceRow previous, TraceRow current, ItemsControl register_view)
         {
             InitializeComponent();
-        }
-
-        public WPF_TraceRow(TraceRow traceRow, ItemsControl register_view)
-        {
-            InitializeComponent();
-            Set(traceRow);
+            regs = prefs.X64_REGS;
+            for (int i = 0; i < regs.Count; i++)
+            {
+                if (regs[i].Item1 == "")
+                {
+                    regs.RemoveAt(i);
+                }
+            }
+            Set(previous, current);
             this.registers_view = register_view;
         }
 
 
-        public void Set(TraceRow traceRow)
+        public void Set(TraceRow previous, TraceRow current)
         {
-            registers_x64 = traceRow.Regs;
+            byte[] rbx = new byte[8], rcx = new byte[8], rdx = new byte[8];
+            // Make the order rax, rbx, rcx, rdx for the register
+            rbx = current.Regs[3];
+            rcx = current.Regs[1];
+            rdx = current.Regs[2];
 
-            id.Text = traceRow.Id.ToString();
+            current.Regs[1] = rbx;
+            current.Regs[2] = rcx;
+            current.Regs[3] = rdx;
+
+            registers_x64 = current.Regs;
+            
+
+
+            id.Text = current.Id.ToString();
             id.Foreground = Brushes.White;
 
-            address.Text = "0x" + traceRow.Ip.ToString("X");
+            address.Text = "0x" + current.Ip.ToString("X");
             address.Foreground = Brushes.White;
 
 
-            string[] single_instructions = Regex.Split(traceRow.Disasm, @"([ ,:\[\]*])");
+            string[] single_instructions = Regex.Split(current.Disasm, @"([ ,:\[\]*])");
 
             foreach (string single_instruction in single_instructions)
             {
@@ -60,23 +76,16 @@ namespace TraceViewer
                 });
             }
 
-            if (traceRow.Regchanges != null)
-            {
 
-                string[] single_changes = Regex.Split(traceRow.Regchanges, @"([ :])");
 
-                for (int i = 0; i < single_changes.Length; i++)
+            if (previous != null) {
+                for (int i = 0; i < regs.Count; ++i)
                 {
-
-                    if (i == 4 || i == 8)
+                    if (!previous.Regs[i].SequenceEqual(current.Regs[i]) && regs[i].Item1 != "rip")
                     {
-                        single_changes[i] = "0x" + single_changes[i];
+                        changes.Text += regs[i].Item1 + ": " + "0x" + string.Concat(previous.Regs[i].Reverse().Where(b => b != 0x00).Select(b => b.ToString("X2"))) + " -> " + "0x" +
+                            string.Concat(current.Regs[i].Reverse().Where(b => b != 0x00).Select(b => b.ToString("X2"))) + "; ";
                     }
-                        
-                    changes.Inlines.Add(new Run(single_changes[i])
-                    {
-                        Foreground = SyntaxHighlighter.Check_Type(single_changes[i])
-                    });
                 }
             }
         }
@@ -89,7 +98,7 @@ namespace TraceViewer
                 var register = item as WPF_RegisterRow;
                 if (register != null)
                 {
-                    register.value.Text = "0x" + registers_x64[i].ToString("X");
+                    register.value.Text = "0x" + string.Concat(registers_x64[i].Reverse().Select(b => b.ToString("X2"))); ;
                 }
                 i++;
             }

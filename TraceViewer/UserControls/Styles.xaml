@@ -24,12 +24,14 @@
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="FontSize" Value="20"/>
         <Setter Property="FontWeight" Value="Bold"/>
+		<Setter Property="FontFamily" Value="Consolas"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
     </Style>
 
     <Style x:Key="comments_text_box" TargetType="TextBox">
         <Setter Property="Background" Value="{StaticResource instructions_view_background}"/>
         <Setter Property="Foreground" Value="White"/>
+		<Setter Property="FontFamily" Value="Consolas"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border}"/>
         <Setter Property="BorderThickness" Value="0.5"/>
@@ -63,6 +65,7 @@
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Padding" Value="5"/>
+		<Setter Property="FontFamily" Value="Consolas"/>
         <Setter Property="Background" Value="{StaticResource instructions_view_background}"/>
     </Style>
 
