@@ -39,6 +39,7 @@ namespace TraceViewer
                 finally
                 {
                     instructions_view.EndInit();
+                    set_instructions_view_width();
                 }
             }
         }
@@ -59,6 +60,7 @@ namespace TraceViewer
                 finally
                 {
                     instructions_view.EndInit();
+                    set_instructions_view_width();
                 }
             }
         }
@@ -79,6 +81,7 @@ namespace TraceViewer
                 finally
                 {
                     instructions_view.EndInit();
+                    set_instructions_view_width();
                 }
             }
         }
@@ -99,6 +102,7 @@ namespace TraceViewer
                 finally
                 {
                     instructions_view.EndInit();
+                    set_instructions_view_width();
                 }
             }
         }
@@ -118,7 +122,19 @@ namespace TraceViewer
                 finally
                 {
                     instructions_view.EndInit();
+                    set_instructions_view_width();
                 }
+            }
+        }
+
+        private void set_instructions_view_width()
+        {
+            // +8 is for the scrollbar
+            var total_width = cd0.Width.Value + cd1.Width.Value + cd2.Width.Value + cd3.Width.Value + cd4.Width.Value + cd5.Width.Value + 8;
+            if (total_width > 0)
+            {
+                instructions_view.MinWidth = total_width;
+                instructions_view.MaxWidth = total_width;
             }
         }
 

@@ -12,72 +12,70 @@ namespace TraceViewer.Core
 {
     class TraceHandler
     {
-        public static void Load(string path, ref ObservableCollection<WPF_TraceRow> instructions, ref ObservableCollection<WPF_RegisterRow> registers, 
-            ItemsControl registers_view)
+        public static void Load(string path, ref ObservableCollection<WPF_TraceRow> instructions, ref ObservableCollection<WPF_RegisterRow> registers,
+          ItemsControl registers_view)
         {
             TraceLoader loader = new TraceLoader();
+            TraceData traceData = loader.OpenX64dbgTrace(path);
 
+            int traceCount = traceData.Trace.Count; 
 
-                TraceData traceData = loader.OpenX64dbgTrace(path);
+            for (int i = 0; i < traceCount; i++)
+            {
+                WPF_TraceRow wpfRow = new WPF_TraceRow(traceData.Trace[i], (i < traceCount - 1) ? traceData.Trace[i + 1] : null, registers_view);
+                instructions.Add(wpfRow);
+            }
 
-                for(int i = 0; i < traceData.Trace.Count; i++)
+            if (traceData.Arch == "x64")
+            {
+                var x64Regs = prefs.X64_REGS;
+
+                for (int i = 0; i < x64Regs.Count; i++)
                 {
-                    WPF_TraceRow wpfRow;
-                    if (i == traceData.Trace.Count - 1)
-                    {
-                        wpfRow = new WPF_TraceRow(traceData.Trace[i], null, registers_view);
-                    }
-                    else
-                    {
-                        wpfRow = new WPF_TraceRow(traceData.Trace[i], traceData.Trace[i + 1], registers_view);
-                    }
-                    instructions.Add(wpfRow);
-                }
-                if(traceData.Arch == "x64")
-                {
-                    for(int i = 0; i < prefs.X64_REGS.Count; i++)
-                    {
-                        WPF_RegisterRow wpfRow;
-                        if(prefs.X64_REGS[i].Item1 == "")
-                        {
+                    if (string.IsNullOrEmpty(x64Regs[i].Item1)) 
+                    {
                         continue;
-                        }
-                        // All those if statements so the order is: rax, rbx, rcx, rdx
-                        if (i == 1)
-                        {
-                            wpfRow = new WPF_RegisterRow(prefs.X64_REGS[3].Item1.ToUpper(), "0", RegisterType.GeneralPurpose);
-                        }
-                        else if (i == 2)
-                        {
-                            wpfRow = new WPF_RegisterRow(prefs.X64_REGS[1].Item1.ToUpper(), "0", RegisterType.GeneralPurpose);
-                        }
-                        else if (i == 3)
-                        {
-                            wpfRow = new WPF_RegisterRow(prefs.X64_REGS[2].Item1.ToUpper(), "0", RegisterType.GeneralPurpose);
-                        }
-                        else
-                        {
-                            RegisterType registerType = RegisterType.GeneralPurpose;
-                            if (i == 17)
-                            {
-                                registerType = RegisterType.Flags;
-                            }
-                            else if (i >= 25 && i <= 30)
-                            {
-                                registerType = RegisterType.Debug;
-                            }
-                            else if(i >= 35)
+                    }
+
+                    WPF_RegisterRow wpfRow;
+                    RegisterType registerType = RegisterType.GeneralPurpose; 
+
+                    // case 1,2,3 are for the correct order in the register view
+                    switch (i)
+                    {
+                        case 1: // rbx
+                            wpfRow = new WPF_RegisterRow(x64Regs[3].Item1.ToUpper(), "0", registerType);
+                            break;
+                        case 2: // rcx
+                            wpfRow = new WPF_RegisterRow(x64Regs[1].Item1.ToUpper(), "0", registerType);
+                            break;
+                        case 3: // rdx
+                            wpfRow = new WPF_RegisterRow(x64Regs[2].Item1.ToUpper(), "0", registerType);
+                            break;
+                        case 17: //
+                            registerType = RegisterType.Flags;
+                            wpfRow = new WPF_RegisterRow(x64Regs[i].Item1.ToUpper(), "0", registerType);
+                            break;
+                        case 25: // Fallthrough
+                        case 26:
+                        case 27:
+                        case 28:
+                        case 29:
+                        case 30:
+                            registerType = RegisterType.Debug;
+                            wpfRow = new WPF_RegisterRow(x64Regs[i].Item1.ToUpper(), "0", registerType);
+                            break;
+                        default: // FPU (last entries)
+                            if (i >= 35)
                             {
                                 registerType = RegisterType.FPU;
                             }
-                            wpfRow = new WPF_RegisterRow(prefs.X64_REGS[i].Item1.ToUpper(), "0", registerType);
-                        }
-                        registers.Add(wpfRow);
+                            wpfRow = new WPF_RegisterRow(x64Regs[i].Item1.ToUpper(), "0", registerType);
+                            break;
                     }
+                    registers.Add(wpfRow);
                 }
+            }
         }
-        
-
-
     }
 }

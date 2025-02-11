@@ -20,32 +20,24 @@ using TraceViewer.Core;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace TraceViewer
-{ 
-
+{
     public partial class WPF_TraceRow : UserControl
     {
         private List<byte[]> registers_x64;
         private ItemsControl registers_view;
         private List<Tuple<string, int>> regs; // here without the paddings
 
-        public WPF_TraceRow(TraceRow current, TraceRow next, ItemsControl register_view)
+        public WPF_TraceRow(TraceRow current, TraceRow? next, ItemsControl register_view)
         {
             InitializeComponent();
-            regs = new List<Tuple<string, int>>(prefs.X64_REGS);
-            for (int i = 0; i < regs.Count; i++)
-            {
-                if (regs[i].Item1 == "")
-                {
-                    regs.RemoveAt(i);
-                    i--;
-                }
-            }
-            Set(current, next);
+            regs = prefs.X64_REGS.ToList();
+            regs.RemoveAll(reg => string.IsNullOrEmpty(reg.Item1));
+            Set(current, next);
             this.registers_view = register_view;
         }
 
 
-        public void Set(TraceRow current, TraceRow next)
+        public void Set(TraceRow current, TraceRow? next)
         {
             if (next != null)
             {
@@ -53,36 +45,26 @@ namespace TraceViewer
                 {
                     if (!next.Regs[i].SequenceEqual(current.Regs[i]) && regs[i].Item1 != "rip")
                     {
-                        string current_reg = string.Concat(current.Regs[i].Reverse().Where(b => b != 0x00).Select(b => b.ToString("X2")));
-                        if(current_reg == "")
-                        {
-                            current_reg = "00";
-                        }
-                        string next_reg = string.Concat(next.Regs[i].Reverse().Where(b => b != 0x00).Select(b => b.ToString("X2")));
-                        if(next_reg == "")
-                        {
-                            next_reg = "00";
-                        }
-                        changes.Text += regs[i].Item1 + ": " + "0x" + current_reg + " -> " + "0x" +
-                            next_reg + "; ";
+                        string current_reg = ByteArrayToHexString(current.Regs[i], true);
+                        string next_reg = ByteArrayToHexString(next.Regs[i], true);
+
+                        changes.Inlines.Add(new Run(regs[i].Item1) { Foreground = SyntaxHighlighter.Check_Type(regs[i].Item1) });
+                        changes.Inlines.Add(new Run(": ") { Foreground = Brushes.White });
+                        changes.Inlines.Add(new Run("0x" + current_reg) { Foreground = SyntaxHighlighter.Check_Type("0x" + current_reg) });
+                        changes.Inlines.Add(new Run(" -> ") { Foreground = Brushes.White });
+                        changes.Inlines.Add(new Run("0x" + next_reg) { Foreground = SyntaxHighlighter.Check_Type("0x" + next_reg) });
+                        changes.Inlines.Add(new Run("; ") { Foreground = Brushes.White });
                     }
                 }
             }
 
-            byte[] rbx = new byte[8], rcx = new byte[8], rdx = new byte[8];
-            // Make the order rax, rbx, rcx, rdx for the register
-            registers_x64 = current.Regs;
-
-            rbx = registers_x64[3];
-            rcx = registers_x64[1];
-            rdx = registers_x64[2];
-
-            registers_x64[1] = rbx;
-            registers_x64[2] = rcx;
-            registers_x64[3] = rdx;
+            // Make the order rax, rbx, rcx, rdx for the register (Optimized swapping)
+            registers_x64 = current.Regs;
+            SwapRegisters(registers_x64, 1, 3);
+            SwapRegisters(registers_x64, 2, 3); 
 
 
-            id.Text = current.Id.ToString();
+            id.Text = current.Id.ToString();
             id.Foreground = Brushes.White;
 
             address.Text = "0x" + current.Ip.ToString("X");
@@ -93,12 +75,8 @@ namespace TraceViewer
 
             foreach (string single_instruction in single_instructions)
             {
-                disasm.Inlines.Add(new Run(single_instruction)
-                {
-                    Foreground = SyntaxHighlighter.Check_Type(single_instruction)
-                });
+                disasm.Inlines.Add(new Run(single_instruction) { Foreground = SyntaxHighlighter.Check_Type(single_instruction) });
             }
-
         }
 
         private void OnHover(object sender, MouseEventArgs e)
@@ -109,11 +87,23 @@ namespace TraceViewer
                 var register = item as WPF_RegisterRow;
                 if (register != null)
                 {
-                    register.value.Text = "0x" + string.Concat(registers_x64[i].Reverse().Select(b => b.ToString("X2"))); ;
+                    register.value.Text = "0x" + ByteArrayToHexString(registers_x64[i], false);
                 }
                 i++;
             }
-          
+        }
+
+        private string ByteArrayToHexString(byte[] bytes, bool zero_removal)
+        {
+            string hex = "";
+            if(zero_removal) hex = string.Concat(bytes.Reverse().Where(b => b != 0x00).Select(b => b.ToString("X2")));
+            else hex = string.Concat(bytes.Reverse().Select(b => b.ToString("X2")));       
+            return string.IsNullOrEmpty(hex) ? "00" : hex;
+        }
+
+        private void SwapRegisters<T>(List<T> list, int index1, int index2)
+        {
+            (list[index1], list[index2]) = (list[index2], list[index1]);
         }
     }
 }

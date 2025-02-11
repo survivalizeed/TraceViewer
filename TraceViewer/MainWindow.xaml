@@ -72,12 +72,12 @@
             <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left">
                 <Grid x:Name="titles_grid" DockPanel.Dock="Left">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="50"  MinWidth="30" MaxWidth="70"/>
-                        <ColumnDefinition Width="100" MinWidth="30" MaxWidth="120"/>
-                        <ColumnDefinition Width="300" MinWidth="30" MaxWidth="400"/>
-                        <ColumnDefinition Width="300" MinWidth="30" MaxWidth="400"/>
-                        <ColumnDefinition Width="300" MinWidth="30" MaxWidth="400"/>
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="50"  MinWidth="30" MaxWidth="70" Name="cd0"/>
+                        <ColumnDefinition Width="100" MinWidth="30" MaxWidth="120" Name="cd1"/>
+                        <ColumnDefinition Width="300" MinWidth="30" MaxWidth="400" Name="cd2"/>
+                        <ColumnDefinition Width="300" MinWidth="30" MaxWidth="400" Name="cd3"/>
+                        <ColumnDefinition Width="300" MinWidth="30" MaxWidth="400" Name="cd4"/>
+                        <ColumnDefinition Width="*" Name="cd5"/>
                     </Grid.ColumnDefinitions>
 
                     <Label x:Name="id" Style="{StaticResource instructions_view_titles}" Content="#" Grid.Column="0" SizeChanged="ID_SizeChanged" />
