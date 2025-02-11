@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -25,15 +26,30 @@ namespace TraceViewer
     {
         private List<byte[]> registers_x64;
         private ItemsControl registers_view;
+        private Grid comment_content_grid_hitbox;
+        private Grid disassembler_view;
         private List<Tuple<string, int>> regs; // here without the paddings
+        private List<string> highlights = new List<string>();
+        MainWindow window;
 
-        public WPF_TraceRow(TraceRow current, TraceRow? next, ItemsControl register_view)
+        public WPF_TraceRow(TraceRow current, TraceRow? next)
         {
             InitializeComponent();
             regs = prefs.X64_REGS.ToList();
             regs.RemoveAll(reg => string.IsNullOrEmpty(reg.Item1));
             Set(current, next);
-            this.registers_view = register_view;
+            if (System.Windows.Application.Current.MainWindow is MainWindow window)
+            {
+                this.registers_view = window.registers_view;
+                this.comment_content_grid_hitbox = window.comment_content_grid_hitbox;
+                this.disassembler_view = window.disassembler_view;
+                this.window = window;
+            }
+            else
+            {
+                throw new Exception("Main window not found");
+            }
+            
         }
 
 
@@ -46,14 +62,14 @@ namespace TraceViewer
                     if (!next.Regs[i].SequenceEqual(current.Regs[i]) && regs[i].Item1 != "rip")
                     {
                         string current_reg = ByteArrayToHexString(current.Regs[i], true);
-                        string next_reg = ByteArrayToHexString(next.Regs[i], true);
-
+                        string next_reg = ByteArrayToHexString(next.Regs[i], true);         
                         changes.Inlines.Add(new Run(regs[i].Item1) { Foreground = SyntaxHighlighter.Check_Type(regs[i].Item1) });
                         changes.Inlines.Add(new Run(": ") { Foreground = Brushes.White });
                         changes.Inlines.Add(new Run("0x" + current_reg) { Foreground = SyntaxHighlighter.Check_Type("0x" + current_reg) });
                         changes.Inlines.Add(new Run(" -> ") { Foreground = Brushes.White });
                         changes.Inlines.Add(new Run("0x" + next_reg) { Foreground = SyntaxHighlighter.Check_Type("0x" + next_reg) });
                         changes.Inlines.Add(new Run("; ") { Foreground = Brushes.White });
+                        highlights.Add(regs[i].Item1);
                     }
                 }
             }
@@ -82,12 +98,31 @@ namespace TraceViewer
         private void OnHover(object sender, MouseEventArgs e)
         {
             int i = 0;
+            
             foreach (var item in registers_view.Items)
             {
+                bool found_something = false;
                 var register = item as WPF_RegisterRow;
                 if (register != null)
                 {
+                    foreach(string highlight in highlights)
+                    {
+                        if (register.register.Text.ToLower() == highlight.ToLower())
+                        {
+                            register.register.Foreground = Brushes.Red;
+                            register.value.Foreground = Brushes.Red;
+                            found_something = true;
+                        }
+                    }
                     register.value.Text = "0x" + ByteArrayToHexString(registers_x64[i], false);
+                    if (found_something)
+                    {
+                        i++;
+                        continue;
+                    }
+                    register.register.Foreground = Brushes.Coral;
+                    register.value.Foreground = Brushes.DarkGoldenrod;
+               
                 }
                 i++;
             }
@@ -104,6 +139,33 @@ namespace TraceViewer
         private void SwapRegisters<T>(List<T> list, int index1, int index2)
         {
             (list[index1], list[index2]) = (list[index2], list[index1]);
+        }
+
+        private void OnDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            big_comment_edit_active();
+        }
+
+        private void OnKeyPress(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                big_comment_edit_active();
+            }
+        }
+
+        private void big_comment_edit_active()
+        {
+            disassembler_view.Visibility = Visibility.Collapsed;
+            comment_content_grid_hitbox.Visibility = Visibility.Visible;
+            if (comment_content_grid_hitbox.Children[0] is DockPanel dockPanel && dockPanel.Children[0] is TextBox comment_content)
+            {
+                comment_content.Text = this.comments.Text;
+                comment_content.Focus();
+                comment_content.SelectionStart = comment_content.Text.Length;
+                // Allows for text update in the comment box
+                window.current_comment_content_partner = comments;
+            }
         }
     }
 }

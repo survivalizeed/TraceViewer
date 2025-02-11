@@ -12,9 +12,12 @@ namespace TraceViewer.Core
 {
     class TraceHandler
     {
-        public static void Load(string path, ref ObservableCollection<WPF_TraceRow> instructions, ref ObservableCollection<WPF_RegisterRow> registers,
-          ItemsControl registers_view)
+        public static void Load(string path)
         {
+            var window = System.Windows.Application.Current.MainWindow as MainWindow;
+            if (window == null)
+                return;
+
             TraceLoader loader = new TraceLoader();
             TraceData traceData = loader.OpenX64dbgTrace(path);
 
@@ -22,8 +25,8 @@ namespace TraceViewer.Core
 
             for (int i = 0; i < traceCount; i++)
             {
-                WPF_TraceRow wpfRow = new WPF_TraceRow(traceData.Trace[i], (i < traceCount - 1) ? traceData.Trace[i + 1] : null, registers_view);
-                instructions.Add(wpfRow);
+                WPF_TraceRow wpfRow = new WPF_TraceRow(traceData.Trace[i], (i < traceCount - 1) ? traceData.Trace[i + 1] : null);
+                window.instruction_view_items.Add(wpfRow);
             }
 
             if (traceData.Arch == "x64")
@@ -73,7 +76,7 @@ namespace TraceViewer.Core
                             wpfRow = new WPF_RegisterRow(x64Regs[i].Item1.ToUpper(), "0", registerType);
                             break;
                     }
-                    registers.Add(wpfRow);
+                    window.register_view_items.Add(wpfRow);
                 }
             }
         }

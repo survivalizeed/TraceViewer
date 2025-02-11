@@ -13,14 +13,16 @@ namespace TraceViewer
     public partial class MainWindow : Window
     {
         static int show_counter = 0;
-        private ObservableCollection<WPF_TraceRow> instruction_view_items = new ObservableCollection<WPF_TraceRow>();
-        private ObservableCollection<WPF_RegisterRow> register_view_items = new ObservableCollection<WPF_RegisterRow>();
+        public ObservableCollection<WPF_TraceRow> instruction_view_items = new ObservableCollection<WPF_TraceRow>();
+        public ObservableCollection<WPF_RegisterRow> register_view_items = new ObservableCollection<WPF_RegisterRow>();
+        public TextBox current_comment_content_partner;
+
         public MainWindow()
         {
             InitializeComponent();
             instructions_view.ItemsSource = instruction_view_items;
             registers_view.ItemsSource = register_view_items;
-            TraceHandler.Load("F:\\Tools\\Reversing\\x64dbg\\release\\x64\\db\\trace.trace64", ref instruction_view_items, ref register_view_items, registers_view);
+            TraceHandler.Load("F:\\Tools\\Reversing\\x64dbg\\release\\x64\\db\\trace.trace64");
         }
 
         private void ID_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -160,6 +162,32 @@ namespace TraceViewer
                 {
                     item.Visibility = fpu_visibility;
                 }
+            }
+        }
+
+        private void comment_content_grid_hitbox_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            big_comment_edit_inactive();
+        }
+
+        private void comment_content_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if(e.Key == System.Windows.Input.Key.Enter || e.Key == System.Windows.Input.Key.Escape)
+            {
+                big_comment_edit_inactive();
+            }
+        }
+
+        private void big_comment_edit_inactive()
+        {
+            comment_content_grid_hitbox.Visibility = Visibility.Collapsed;
+            disassembler_view.Visibility = Visibility.Visible;
+            if (comment_content != null)
+            {
+                // Will set the content of the textbox which originally made the comment_content_grid_hitbox visible
+                current_comment_content_partner.Text = comment_content.Text;
+                current_comment_content_partner.Focus();
+                current_comment_content_partner.SelectionStart = current_comment_content_partner.Text.Length;
             }
         }
     }

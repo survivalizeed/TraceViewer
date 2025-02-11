@@ -8,8 +8,8 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid Margin="0,0,0,0" >
         <DockPanel LastChildFill="False">
-            <TextBlock x:Name="register" Width="60" Style="{StaticResource disasm_text_block}" Padding="0,1,0,1"/>
-            <TextBlock x:Name="value" Width="Auto" Style="{StaticResource disasm_text_block}" Padding="0,1,0,1"/>
+            <TextBlock x:Name="register" Width="60" Foreground="Coral" Style="{StaticResource disasm_text_block}" Padding="0,1,0,1"/>
+            <TextBlock x:Name="value" Width="Auto" Foreground="DarkGoldenrod" Style="{StaticResource disasm_text_block}" Padding="0,1,0,1"/>
         </DockPanel>
     </Grid>
 </UserControl>

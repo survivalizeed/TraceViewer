@@ -66,65 +66,51 @@
             </Setter>
         </Style>
     </Window.Resources>
-    <Grid>
+    <Grid Name="window">
         <Rectangle Fill="{StaticResource CustomBackground}"/>
-        <DockPanel Margin="0,104,0,30" LastChildFill="False" Background="Transparent">
-            <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left">
-                <Grid x:Name="titles_grid" DockPanel.Dock="Left">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="50"  MinWidth="30" MaxWidth="70" Name="cd0"/>
-                        <ColumnDefinition Width="100" MinWidth="30" MaxWidth="120" Name="cd1"/>
-                        <ColumnDefinition Width="300" MinWidth="30" MaxWidth="400" Name="cd2"/>
-                        <ColumnDefinition Width="300" MinWidth="30" MaxWidth="400" Name="cd3"/>
-                        <ColumnDefinition Width="300" MinWidth="30" MaxWidth="400" Name="cd4"/>
-                        <ColumnDefinition Width="*" Name="cd5"/>
-                    </Grid.ColumnDefinitions>
-
-                    <Label x:Name="id" Style="{StaticResource instructions_view_titles}" Content="#" Grid.Column="0" SizeChanged="ID_SizeChanged" />
-                    <GridSplitter Grid.Column="0" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
-
-                    <Label x:Name="address" Style="{StaticResource instructions_view_titles}" Content="ADDRESS" Grid.Column="1" SizeChanged="ADDRESS_SizeChanged"/>
-                    <GridSplitter Grid.Column="1" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
-
-                    <Label x:Name="disasm" Style="{StaticResource instructions_view_titles}" Content="DISASM" Grid.Column="2" SizeChanged="DISASM_SizeChanged" />
-                    <GridSplitter Grid.Column="2" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
-
-                    <Label x:Name="changes" Style="{StaticResource instructions_view_titles}" Content="CHANGES" Grid.Column="3" SizeChanged="CHANGES_SizeChanged"/>
-                    <GridSplitter Grid.Column="3" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
-
-                    <Label x:Name="comments" Style="{StaticResource instructions_view_titles}" Content="COMMENTS" Grid.Column="4" SizeChanged="COMMENTS_SizeChanged"/>
-                    <GridSplitter Grid.Column="4" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
-
-                </Grid>
+        <Grid Name="comment_content_grid_hitbox" Visibility="Collapsed" MouseDown="comment_content_grid_hitbox_MouseDown" Background="Transparent">
+            <DockPanel Name="comment_content_panel" LastChildFill="True">
+                <TextBox x:Name="comment_content" Foreground="White" FontSize="30" Background="#40000000" BorderThickness="0" HorizontalContentAlignment="Center"
+                       VerticalContentAlignment="Center" Height="50" KeyDown="comment_content_KeyDown"/>
             </DockPanel>
-            <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="28,0,0,0">
-                <Label x:Name="fpu" Style="{StaticResource instructions_view_titles}" Content="   FPU   " MouseDown="fpu_MouseDown"/>
+        </Grid>
+        <Grid Name="disassembler_view" Visibility="Visible">
+            <DockPanel Margin="0,104,0,30" LastChildFill="False" Background="Transparent">
+                <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left">
+                    <Grid x:Name="titles_grid" DockPanel.Dock="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="50"  MinWidth="30" MaxWidth="100" Name="cd0"/>
+                            <ColumnDefinition Width="120" MinWidth="30" MaxWidth="150" Name="cd1"/>
+                            <ColumnDefinition Width="300" MinWidth="30" MaxWidth="450" Name="cd2"/>
+                            <ColumnDefinition Width="300" MinWidth="30" MaxWidth="600" Name="cd3"/>
+                            <ColumnDefinition Width="300" MinWidth="30" MaxWidth="500" Name="cd4"/>
+                            <ColumnDefinition Width="*" Name="cd5"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Label x:Name="id" Style="{StaticResource instructions_view_titles}" Content="#" Grid.Column="0" SizeChanged="ID_SizeChanged" />
+                        <GridSplitter Grid.Column="0" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+
+                        <Label x:Name="address" Style="{StaticResource instructions_view_titles}" Content="ADDRESS" Grid.Column="1" SizeChanged="ADDRESS_SizeChanged"/>
+                        <GridSplitter Grid.Column="1" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+
+                        <Label x:Name="disasm" Style="{StaticResource instructions_view_titles}" Content="DISASM" Grid.Column="2" SizeChanged="DISASM_SizeChanged" />
+                        <GridSplitter Grid.Column="2" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+
+                        <Label x:Name="changes" Style="{StaticResource instructions_view_titles}" Content="CHANGES" Grid.Column="3" SizeChanged="CHANGES_SizeChanged"/>
+                        <GridSplitter Grid.Column="3" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+
+                        <Label x:Name="comments" Style="{StaticResource instructions_view_titles}" Content="COMMENTS" Grid.Column="4" SizeChanged="COMMENTS_SizeChanged"/>
+                        <GridSplitter Grid.Column="4" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+
+                    </Grid>
+                </DockPanel>
+                <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="28,0,0,0">
+                    <Label x:Name="fpu" Style="{StaticResource instructions_view_titles}" Content="   FPU   " MouseDown="fpu_MouseDown"/>
+                </DockPanel>
             </DockPanel>
-        </DockPanel>
-        <DockPanel Margin="0,150,0,30" LastChildFill="True">
-            <Grid x:Name="instructions_view_grid" DockPanel.Dock="Left">
-                <ItemsControl x:Name="instructions_view" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <VirtualizingStackPanel />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.Template>
-                        <ControlTemplate TargetType="ItemsControl">
-                            <ScrollViewer CanContentScroll="True">
-                                <ItemsPresenter />
-                            </ScrollViewer>
-                        </ControlTemplate>
-                    </ItemsControl.Template>
-                </ItemsControl>
-            </Grid>
-            <Grid Margin="20,0,0,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <Grid x:Name="registers_view_grid" Grid.Row="0">
-                    <ItemsControl x:Name="registers_view" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True">
+            <DockPanel Margin="0,150,0,30" LastChildFill="True">
+                <Grid x:Name="instructions_view_grid" DockPanel.Dock="Left">
+                    <ItemsControl x:Name="instructions_view" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <VirtualizingStackPanel />
@@ -139,11 +125,32 @@
                         </ItemsControl.Template>
                     </ItemsControl>
                 </Grid>
-                <Grid x:Name="memory_view_grid" Grid.Row="1">
+                <Grid Margin="20,0,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="500" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid x:Name="registers_view_grid" Grid.Row="0">
+                        <ItemsControl x:Name="registers_view" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.Template>
+                                <ControlTemplate TargetType="ItemsControl">
+                                    <ScrollViewer CanContentScroll="True">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </ControlTemplate>
+                            </ItemsControl.Template>
+                        </ItemsControl>
+                    </Grid>
+                    <Grid x:Name="memory_view_grid" Grid.Row="1">
 
+                    </Grid>
                 </Grid>
-            </Grid>
-
-        </DockPanel>
+            </DockPanel>
+        </Grid>
     </Grid>
 </Window>
