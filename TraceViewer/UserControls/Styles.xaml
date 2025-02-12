@@ -32,7 +32,7 @@
     <Style x:Key="comments_text_box" TargetType="TextBox">
         <Setter Property="Background" Value="{StaticResource instructions_view_background}"/>
         <Setter Property="Foreground" Value="White"/>
-		<Setter Property="FontFamily" Value="Everson"/>
+		<Setter Property="FontFamily" Value="Miriam Mono CLM"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border}"/>
         <Setter Property="BorderThickness" Value="0.5"/>

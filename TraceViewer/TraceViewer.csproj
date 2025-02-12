@@ -9,8 +9,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="mnemdb.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Gee.External.Capstone" Version="2.3.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="mnemdb.json" />
   </ItemGroup>
 
 </Project>
