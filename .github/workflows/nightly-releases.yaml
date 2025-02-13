@@ -2,7 +2,7 @@ name: Nightly Release
 
 on:
   schedule:
-    - cron: '0 0 * * *' # 
+    - cron: '0 0 * * *' #
   workflow_dispatch:
 
 jobs:
@@ -21,8 +21,8 @@ jobs:
       - name: NuGet Paket Restore
         run: dotnet restore
 
-      - name: Build WPF Application
-        run: dotnet build --configuration Release
+      - name: Publish WPF Application  <-- Schrittname geändert, Befehl geändert
+        run: dotnet publish --configuration Release --framework net8.0-windows --runtime win-x64 --output ./bin/Release/net8.0-windows/publish/win-x64/
 
       - name: Get Release Date
         id: get_date
@@ -41,13 +41,13 @@ jobs:
           draft: false
           prerelease: true
 
-      - name: Upload .exe
+      - name: Upload .exe  <-- asset_path angepasst
         id: upload-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bin/Release/TraceViewer.exe
+          asset_path: ./bin/Release/net8.0-windows/publish/win-x64/TraceViewer.exe  <-- Angepasst!
           asset_name: TraceViewer-nightly-${{ steps.get_date.outputs.date }}.exe
           asset_content_type: application/octet-stream
