@@ -42,8 +42,7 @@ jobs:
           tag_name: nightly-${{ steps.get_date.outputs.date }}
           release_name: Nightly Release ${{ steps.get_date.outputs.date }}
           body: |
-            Nightly Release of the TraceViewer solution.
-            This version is created as a Single-File Release, meaning all dependencies are included in the .exe file.
+            Nightly Release of the TraceViewer solution.          
           draft: false
           prerelease: false
 
