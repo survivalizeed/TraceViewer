@@ -16,7 +16,7 @@ jobs:
       - name: .NET SDK Setup
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x' # Ersetzen Sie dies mit Ihrer benötigten .NET SDK Version
+          dotnet-version: '8.0.x'
 
       - name: NuGet Paket Restore
         run: dotnet restore
@@ -37,7 +37,7 @@ jobs:
           tag_name: nightly-${{ steps.get_date.outputs.date }}
           release_name: Nightly Release ${{ steps.get_date.outputs.date }}
           body: |
-            Diese Release beinhaltet die nächtliche Version der WPF Desktop Anwendung.
+            Nightly Release of the TraceViewer solution.
           draft: false
           prerelease: true
 
