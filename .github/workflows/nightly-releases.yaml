@@ -18,7 +18,7 @@ jobs:
         with:
           dotnet-version: '8.0.x' # Ersetzen Sie dies mit Ihrer benötigten .NET SDK Version
 
-      - name: NuGet Pakete Restore
+      - name: NuGet Paket Restore
         run: dotnet restore
 
       - name: Build WPF Application
