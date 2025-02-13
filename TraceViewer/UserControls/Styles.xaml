@@ -28,8 +28,29 @@
 		 <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
     </Style>
-	
-	  <Style x:Key="memory_view_label" TargetType="Label">
+
+	<Style x:Key="view_titles" TargetType="Label">
+		<Setter Property="DockPanel.Dock" Value="Left"/>
+		<Setter Property="Foreground" Value="White"/>
+		<Setter Property="FontSize" Value="15"/>
+		<Setter Property="FontFamily" Value="Consolas"/>
+		<Setter Property="VerticalContentAlignment" Value="Center"/>
+		<Setter Property="HorizontalContentAlignment" Value="Center"/>
+	</Style>
+
+	<Style x:Key="view_titles_border" TargetType="Border">
+		<Setter Property="CornerRadius" Value="5,5,0,0"/>
+		<Setter Property="BorderThickness" Value="0.5"/>
+		<Setter Property="BorderBrush" Value="Gray"/>
+		<Style.Triggers>
+			<Trigger Property="IsMouseOver" Value="True">
+				<Setter Property="BorderBrush" Value="White"/>
+				<Setter Property="Background" Value="{StaticResource instructions_view_background_hover}"/>
+			</Trigger>
+		</Style.Triggers>
+	</Style>
+
+	<Style x:Key="memory_view_label" TargetType="Label">
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="FontSize" Value="15"/>
 		<Setter Property="FontFamily" Value="Miriam Mono CLM"/>

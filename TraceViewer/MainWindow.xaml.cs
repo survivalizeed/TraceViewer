@@ -3,10 +3,18 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using TraceViewer.Core;
 
 namespace TraceViewer
 {
+    public enum UIState
+    {
+        DisassemblerView,
+        NotesView,
+        BookmarksView
+    }
+
     public partial class MainWindow : Window
     {
         private bool _toggleFpu = true; // Use backing field for toggle state
@@ -24,6 +32,8 @@ namespace TraceViewer
             InstructionsView.ItemsSource = InstructionViewItems;
             RegistersView.ItemsSource = RegisterViewItems;
             InstructionsView.Loaded += InstructionsView_Loaded;
+            DisasmViewButton_MouseDown(null, null); // Will be the default view when opening the application
+            
             TraceHandler.Load(@"F:\Tools\Reversing\x64dbg\release\x64\db\trace.trace64"); // Raw string literal
         }
 
@@ -127,7 +137,7 @@ namespace TraceViewer
         private void BigCommentEditInactive()
         {
             CommentContentGridHitbox.Visibility = Visibility.Collapsed;
-            DisassemblerView.Visibility = Visibility.Visible;
+            MainView.Visibility = Visibility.Visible;
             CurrentCommentContentPartner?.Focus(); // Null-conditional operator and simplified focus setting
             CurrentCommentContentPartner.Text = CommentContent.Text; // Update text
         }
@@ -153,13 +163,73 @@ namespace TraceViewer
         {
             MnemonicReaderScrollView.ScrollToVerticalOffset(0);
             MnemonicReaderScrollView.Visibility = Visibility.Collapsed;
-            DisassemblerView.Visibility = Visibility.Visible;
+            MainView.Visibility = Visibility.Visible;
             SetInstructionsViewScrollbar(_disassemblerViewOffset);
         }
 
         private void SetInstructionsViewScrollbar(double offset)
         {
             InstructionsScrollViewer?.ScrollToVerticalOffset(offset); // Null-conditional operator
+        }
+
+        private DropShadowEffect glowEffect = new DropShadowEffect
+        {
+            Color = Colors.White,
+            BlurRadius = 10,
+            ShadowDepth = 0,
+            Opacity = 0.8
+        };
+
+        private void DisasmViewButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            DisasmViewButtonBorder.Background = new SolidColorBrush(Color.FromArgb(255, 40, 40, 40));
+            DisasmViewButtonBorder.Effect = glowEffect;
+            NotesViewButtonBorder.Background = Brushes.Transparent;
+            NotesViewButtonBorder.Effect = null;
+            BookmarksViewButtonBorder.Background = Brushes.Transparent;
+            BookmarksViewButtonBorder.Effect = null;
+            SetCurrentUIState(UIState.DisassemblerView);
+        }
+
+        private void NotesViewButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            DisasmViewButtonBorder.Background = Brushes.Transparent;
+            DisasmViewButtonBorder.Effect = null;
+            NotesViewButtonBorder.Background = new SolidColorBrush(Color.FromArgb(255, 40, 40, 40));
+            NotesViewButtonBorder.Effect = glowEffect;
+            BookmarksViewButtonBorder.Background = Brushes.Transparent;
+            BookmarksViewButtonBorder.Effect = null;
+            SetCurrentUIState(UIState.NotesView);
+        }
+
+        private void BookmarksViewButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            DisasmViewButtonBorder.Background = Brushes.Transparent;
+            DisasmViewButtonBorder.Effect = null;
+            NotesViewButtonBorder.Background = Brushes.Transparent;
+            NotesViewButtonBorder.Effect = null;
+            BookmarksViewButtonBorder.Background = new SolidColorBrush(Color.FromArgb(255, 40, 40, 40));
+            BookmarksViewButtonBorder.Effect = glowEffect;
+            SetCurrentUIState(UIState.BookmarksView);
+        }
+
+        private void SetCurrentUIState(UIState uiState)
+        {
+            switch (uiState)
+            {
+                case UIState.DisassemblerView:
+                    DisassemblerView.Visibility = Visibility.Visible;
+                    NotesView.Visibility = Visibility.Collapsed;
+                    break;
+                case UIState.NotesView:
+                    DisassemblerView.Visibility = Visibility.Collapsed;
+                    NotesView.Visibility = Visibility.Visible;
+                    break;
+                case UIState.BookmarksView:
+                    DisassemblerView.Visibility = Visibility.Collapsed;
+                    NotesView.Visibility = Visibility.Collapsed;
+                    break;
+            }
         }
     }
 }

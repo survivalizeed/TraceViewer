@@ -226,7 +226,7 @@ namespace TraceViewer
 
         private void ActivateBigCommentEdit()
         {
-            window.DisassemblerView.Visibility = Visibility.Collapsed;
+            window.MainView.Visibility = Visibility.Collapsed;
             window.CommentContentGridHitbox.Visibility = Visibility.Visible;
 
             // Safely access the comment_content TextBox
@@ -262,7 +262,7 @@ namespace TraceViewer
         private void ActivateBigMnemonicView()
         {
             window._disassemblerViewOffset = window.InstructionsScrollViewer.VerticalOffset; // Save scroll position
-            window.DisassemblerView.Visibility = Visibility.Collapsed;
+            window.MainView.Visibility = Visibility.Collapsed;
             window.MnemonicReaderScrollView.Visibility = Visibility.Visible;
             window.MnemonicReader.Content = mnemonic; // Display full mnemonic
         }

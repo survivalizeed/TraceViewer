@@ -69,7 +69,7 @@
     <Grid Name="window">
         <Rectangle Fill="{StaticResource CustomBackground}"/>
         <ScrollViewer Name="MnemonicReaderScrollView" Visibility="Collapsed">
-            <Label Name="MnemonicReader" FontSize="15" FontFamily="Miriam Mono CLM" Foreground="White" Background="#30000000"
+            <Label Name="MnemonicReader" FontSize="15" FontFamily="Miriam Mono CLM" Foreground="White" Background="#50000000"
                    MouseDown="MnemonicReader_MouseDown"/>
         </ScrollViewer>
         <Grid Name="CommentContentGridHitbox" Visibility="Collapsed" MouseDown="CommentContentGridHitbox_MouseDown" Background="Transparent">
@@ -79,106 +79,137 @@
             </DockPanel>
         </Grid>
         
-        <Grid Name="DisassemblerView" Visibility="Visible">
-            <DockPanel Margin="0,104,0,15" LastChildFill="False" Background="Transparent">
-                <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left">
-                    <Grid x:Name="TitlesGrid" DockPanel.Dock="Left">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="50"  MinWidth="30" MaxWidth="100" Name="cd0"/>
-                            <ColumnDefinition Width="120" MinWidth="30" MaxWidth="150" Name="cd1"/>
-                            <ColumnDefinition Width="300" MinWidth="30" MaxWidth="450" Name="cd2"/>
-                            <ColumnDefinition Width="300" MinWidth="30" MaxWidth="600" Name="cd3"/>
-                            <ColumnDefinition Width="300" MinWidth="30" MaxWidth="500" Name="cd4"/>
-                            <ColumnDefinition Width="*" Name="cd5"/>
-                        </Grid.ColumnDefinitions>
+        <Grid Name="MainView" Visibility="Visible">
+            <Grid Name="MenuView">
+                <StackPanel>
+                    <DockPanel LastChildFill="False">
+                        <Label Content="TEST" Foreground="White"></Label>
+                        <Label Content="TEST" Foreground="White"></Label>
+                    </DockPanel>
+                    <DockPanel Margin="0,40,0,0"  LastChildFill="False">
+                        <Border x:Name="DisasmViewButtonBorder" Style="{StaticResource view_titles_border}">
+                            <Label x:Name="DisasmViewButton" Content="DISASM" Foreground="White" Style="{StaticResource view_titles}" MouseDown="DisasmViewButton_MouseDown"/>
+                        </Border>
+                        <Border x:Name="NotesViewButtonBorder" Style="{StaticResource view_titles_border}">
+                            <Label x:Name="NotesViewButton" Content="NOTES" Foreground="White" Style="{StaticResource view_titles}" MouseDown="NotesViewButton_MouseDown"/>
+                        </Border>
+                        <Border x:Name="BookmarksViewButtonBorder" Style="{StaticResource view_titles_border}">
+                            <Label x:Name="BookmarksViewButton" Content="BOOKMARKS" Foreground="White" Style="{StaticResource view_titles}" MouseDown="BookmarksViewButton_MouseDown"/>
+                        </Border>
+                    </DockPanel>
+                    <Line Margin="0,0,0,0" X1="0" Y1="0" X2="10000" Y2="0" Stroke="White" StrokeThickness="5"/>
+                </StackPanel>
+            </Grid>
+            
+            <Grid Name="DisassemblerView">
+                <DockPanel Margin="0,104,0,15" LastChildFill="False" Background="Transparent">
+                    <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left">
+                        <Grid x:Name="TitlesGrid" DockPanel.Dock="Left">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="50"  MinWidth="30" MaxWidth="100" Name="cd0"/>
+                                <ColumnDefinition Width="120" MinWidth="30" MaxWidth="150" Name="cd1"/>
+                                <ColumnDefinition Width="300" MinWidth="30" MaxWidth="450" Name="cd2"/>
+                                <ColumnDefinition Width="300" MinWidth="30" MaxWidth="600" Name="cd3"/>
+                                <ColumnDefinition Width="300" MinWidth="30" MaxWidth="500" Name="cd4"/>
+                                <ColumnDefinition Width="*" Name="cd5"/>
+                            </Grid.ColumnDefinitions>
 
-                        <Label x:Name="id" Style="{StaticResource instructions_view_titles}" Content="#" Grid.Column="0" SizeChanged="TitleLabel_SizeChanged" />
-                        <GridSplitter Grid.Column="0" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+                            <Label x:Name="id" Style="{StaticResource instructions_view_titles}" Content="#" Grid.Column="0" SizeChanged="TitleLabel_SizeChanged" />
+                            <GridSplitter Grid.Column="0" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                        <Label x:Name="address" Style="{StaticResource instructions_view_titles}" Content="ADDRESS" Grid.Column="1" SizeChanged="TitleLabel_SizeChanged"/>
-                        <GridSplitter Grid.Column="1" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+                            <Label x:Name="address" Style="{StaticResource instructions_view_titles}" Content="ADDRESS" Grid.Column="1" SizeChanged="TitleLabel_SizeChanged"/>
+                            <GridSplitter Grid.Column="1" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                        <Label x:Name="disasm" Style="{StaticResource instructions_view_titles}" Content="DISASM" Grid.Column="2" SizeChanged="TitleLabel_SizeChanged" />
-                        <GridSplitter Grid.Column="2" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+                            <Label x:Name="disasm" Style="{StaticResource instructions_view_titles}" Content="DISASM" Grid.Column="2" SizeChanged="TitleLabel_SizeChanged" />
+                            <GridSplitter Grid.Column="2" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                        <Label x:Name="changes" Style="{StaticResource instructions_view_titles}" Content="CHANGES" Grid.Column="3" SizeChanged="TitleLabel_SizeChanged"/>
-                        <GridSplitter Grid.Column="3" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+                            <Label x:Name="changes" Style="{StaticResource instructions_view_titles}" Content="CHANGES" Grid.Column="3" SizeChanged="TitleLabel_SizeChanged"/>
+                            <GridSplitter Grid.Column="3" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                        <Label x:Name="comments" Style="{StaticResource instructions_view_titles}" Content="COMMENTS" Grid.Column="4" SizeChanged="TitleLabel_SizeChanged" 
+                            <Label x:Name="comments" Style="{StaticResource instructions_view_titles}" Content="COMMENTS" Grid.Column="4" SizeChanged="TitleLabel_SizeChanged" 
                                MouseDown="Comments_MouseDown"/>
-                        <GridSplitter Grid.Column="4" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+                            <GridSplitter Grid.Column="4" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                    </Grid>
-                </DockPanel>
-                <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="28,0,0,0">
-                    <Label x:Name="fpu" Style="{StaticResource instructions_view_titles}" Content="   FPU   " MouseDown="Fpu_MouseDown"/>
-                </DockPanel>
-            </DockPanel>
-            <DockPanel Margin="0,150,0,15" LastChildFill="True">
-                <Grid x:Name="InstructionsViewGrid" DockPanel.Dock="Left">
-                    <ItemsControl x:Name="InstructionsView" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <VirtualizingStackPanel />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.Template>
-                            <ControlTemplate TargetType="ItemsControl">
-                                <ScrollViewer Name="instructions_view_scrollviewer" CanContentScroll="True">
-                                    <ItemsPresenter />
-                                </ScrollViewer>
-                            </ControlTemplate>
-                        </ItemsControl.Template>
-                    </ItemsControl>
-                </Grid>
-                <Grid Margin="20,0,0,0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="650" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Border BorderThickness="0.5" BorderBrush="{StaticResource instructions_view_border}">
-                        <Grid x:Name="RegistersViewGrid" Grid.Row="0" Margin="7,4,0,0">
-                            <ItemsControl x:Name="RegistersView" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True"
-                                          ScrollViewer.VerticalScrollBarVisibility="Auto">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <VirtualizingStackPanel />
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.Template>
-                                    <ControlTemplate TargetType="ItemsControl">
-                                        <ScrollViewer CanContentScroll="True">
-                                            <ItemsPresenter />
-                                        </ScrollViewer>
-                                    </ControlTemplate>
-                                </ItemsControl.Template>
-                            </ItemsControl>
                         </Grid>
-                    </Border>
-                    <Grid x:Name="MemoryViewGrid" Grid.Row="1" Margin="0,20,0,0">
-                        <StackPanel Margin="0,0,0,0">
-                            <DockPanel Name="memory1" LastChildFill="False">
-                                <Label Content="WRITE:" Name="write1" Width="70" FontWeight="SemiBold" Style="{StaticResource memory_view_label}" Foreground="Red"/>
-                                <Label Content="0x0011223344556677 --> " Name="address1" Width="215" Style="{StaticResource memory_view_label}"/>
-                                <Label Content="0234124124124" Name="value1" Width="170" Style="{StaticResource memory_view_label}" 
-                                        BorderThickness="1" BorderBrush="White"/>
-                            </DockPanel>
-                            <DockPanel Name="memory2" LastChildFill="False">
-                                <Label Content="WRITE:" Name="write2" Width="70" FontWeight="SemiBold" Style="{StaticResource memory_view_label}" Foreground="Red"/>
-                                <Label Content="0x0011223344556677 --> " Name="address2" Width="215" Style="{StaticResource memory_view_label}"/>
-                                <Label Content="0234124124124" Name="value2" Width="170" Style="{StaticResource memory_view_label}"
-                                        BorderThickness="1" BorderBrush="White"/>
-                            </DockPanel>
-                            <DockPanel Name="memory3" LastChildFill="False">
-                                <Label Content="WRITE:" Name="write3" Width="70" FontWeight="SemiBold" Style="{StaticResource memory_view_label}" Foreground="Red"/>
-                                <Label Content="0x0011223344556677 --> " Name="address3" Width="215" Style="{StaticResource memory_view_label}"/>
-                                <Label Content="0234124124124" Name="value3" Width="170" Style="{StaticResource memory_view_label}" 
-                                        BorderThickness="1" BorderBrush="White"/>
-                            </DockPanel>
-                        </StackPanel>
+                    </DockPanel>
+                    <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="29,0,0,0">
+                        <Label x:Name="fpu" Style="{StaticResource instructions_view_titles}" Content="   FPU   " MouseDown="Fpu_MouseDown"/>
+                    </DockPanel>
+                </DockPanel>
+                <DockPanel Margin="0,150,0,15" LastChildFill="True">
+                    <Grid x:Name="InstructionsViewGrid" DockPanel.Dock="Left">
+                        <ItemsControl x:Name="InstructionsView" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.Template>
+                                <ControlTemplate TargetType="ItemsControl">
+                                    <ScrollViewer Name="instructions_view_scrollviewer" CanContentScroll="True">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </ControlTemplate>
+                            </ItemsControl.Template>
+                        </ItemsControl>
                     </Grid>
-                </Grid>
-            </DockPanel>
+                    <Grid Margin="20,0,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="650" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Border BorderThickness="0.5" BorderBrush="{StaticResource instructions_view_border}">
+                            <Grid x:Name="RegistersViewGrid" Grid.Row="0" Margin="7,4,0,0">
+                                <ItemsControl x:Name="RegistersView" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True"
+                                          ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <VirtualizingStackPanel />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.Template>
+                                        <ControlTemplate TargetType="ItemsControl">
+                                            <ScrollViewer CanContentScroll="True">
+                                                <ItemsPresenter />
+                                            </ScrollViewer>
+                                        </ControlTemplate>
+                                    </ItemsControl.Template>
+                                </ItemsControl>
+                            </Grid>
+                        </Border>
+                        <Grid x:Name="MemoryViewGrid" Grid.Row="1" Margin="0,20,0,0">
+                            <StackPanel Margin="0,0,0,0">
+                                <DockPanel Name="memory1" Visibility="Collapsed" LastChildFill="False">
+                                    <Label Content="WRITE:" Name="write1" Width="70" FontWeight="SemiBold" Style="{StaticResource memory_view_label}" Foreground="Red"/>
+                                    <Label Content="0 --> " Name="address1" Width="215" Style="{StaticResource memory_view_label}"/>
+                                    <Label Content="0" Name="value1" Width="170" Style="{StaticResource memory_view_label}" 
+                                        BorderThickness="1" BorderBrush="White"/>
+                                </DockPanel>
+                                <DockPanel Name="memory2" Visibility="Collapsed" LastChildFill="False">
+                                    <Label Content="WRITE:" Name="write2" Width="70" FontWeight="SemiBold" Style="{StaticResource memory_view_label}" Foreground="Red"/>
+                                    <Label Content="0 --> " Name="address2" Width="215" Style="{StaticResource memory_view_label}"/>
+                                    <Label Content="0" Name="value2" Width="170" Style="{StaticResource memory_view_label}"
+                                        BorderThickness="1" BorderBrush="White"/>
+                                </DockPanel>
+                                <DockPanel Name="memory3" Visibility="Collapsed" LastChildFill="False">
+                                    <Label Content="WRITE:" Name="write3" Width="70" FontWeight="SemiBold" Style="{StaticResource memory_view_label}" Foreground="Red"/>
+                                    <Label Content="0 --> " Name="address3" Width="215" Style="{StaticResource memory_view_label}"/>
+                                    <Label Content="0" Name="value3" Width="170" Style="{StaticResource memory_view_label}" 
+                                        BorderThickness="1" BorderBrush="White"/>
+                                </DockPanel>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </DockPanel>
+            </Grid>
+
+            <Grid Name="NotesView">
+                <Border Margin="0,104,0,15" BorderThickness="0.5" BorderBrush="{StaticResource instructions_view_border}">
+                    <TextBox Name="NotesContent" Text="" Foreground="White" AcceptsReturn="True" TextWrapping="Wrap"
+                         Background="#50000000" FontSize="15" FontFamily="Miriam Mono CLM"
+                         BorderThickness="0"/>
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 </Window>
