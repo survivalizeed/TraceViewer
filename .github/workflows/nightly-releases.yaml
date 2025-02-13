@@ -23,7 +23,21 @@ jobs:
 
       - name: Publish WPF Application with Single-File
         run: dotnet publish --configuration Release --framework net8.0-windows --runtime win-x64
+      # ### DEBUGGING-SCHRITTE - BITTE DIESE SCHRITTE UNVERÄNDERT EINSETZEN ###
+      
+      - name: Debug - Liste Publish Output Ordner Inhalt auf (direkt nach Publish)
+        shell: pwsh
+        run: |
+          Write-Host "### Debug: Inhalt des Publish Output Ordners direkt nach 'dotnet publish' ###"
+          Get-ChildItem -Path "./TraceViewer/bin/Release/net8.0-windows/win-x64/publish/" -Recurse
 
+      - name: Debug - Liste bin\Release Ordner Inhalt auf (gesamter bin\Release)
+        shell: pwsh
+        run: |
+          Write-Host "### Debug: Inhalt des gesamten bin\Release Ordners (zum Vergleich) ###"
+          Get-ChildItem -Path "./TraceViewer/bin/Release/" -Recurse
+      # ### DEBUGGING-SCHRITTE ENDE ###
+      
       - name: Get Release Date
         id: get_date
         run: echo "::set-output name=date::$(Get-Date -Format 'yyyyMMdd')"
