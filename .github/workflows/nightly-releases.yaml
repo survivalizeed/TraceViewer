@@ -54,6 +54,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./TraceViewer-nightly-${{ steps.get_date.outputs.date }}-publish.zip
-          asset_name: TraceViewer-nightly-${{ steps.get_date.outputs.date }}-publish.zip
+          asset_path: ./TraceViewer-nightly-${{ steps.get_date.outputs.date }}.zip
+          asset_name: TraceViewer-nightly-${{ steps.get_date.outputs.date }}.zip
           asset_content_type: application/zip
