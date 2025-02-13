@@ -2,7 +2,7 @@ name: Nightly Release
 
 on:
   schedule:
-    - cron: '0 0 * * *' #
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 jobs:
@@ -13,46 +13,25 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: .NET SDK Setup
+      - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      - name: NuGet Paket Restore
+      - name: Restore NuGet Packages
         run: dotnet restore
 
-      - name: Publish WPF Application
-        run: dotnet publish --configuration Release --framework net8.0-windows --runtime win-x64
-
-      # ### NEUE DEBUGGING-SCHRITTE DIREKT NACH "Publish WPF Application" ###
-      - name: Debug - Liste Publish Output Ordner Inhalt auf (direkt nach Publish)
-        shell: pwsh
-        run: |
-          Write-Host "### Debug: Inhalt des Publish Output Ordners direkt nach 'dotnet publish' ###"
-          Get-ChildItem -Path "./TraceViewer/bin/Release/net8.0-windows/win-x64/publish/" -Recurse
-
-      - name: Debug - Liste bin\Release Ordner Inhalt auf (gesamter bin\Release)
-        shell: pwsh
-        run: |
-          Write-Host "### Debug: Inhalt des gesamten bin\Release Ordners (zum Vergleich) ###"
-          Get-ChildItem -Path "./TraceViewer/bin/Release/" -Recurse
-
+      - name: Publish WPF Application with Single-File
+        run: dotnet publish --configuration Release --framework net8.0-windows --runtime win-x64 --PublishSingleFile true
 
       - name: Get Release Date
         id: get_date
         run: echo "::set-output name=date::$(Get-Date -Format 'yyyyMMdd')"
 
-      - name: Zip Publish Folder  # Debugging von vorher beibehalten
+      - name: Zip Publish Folder
         id: zip_folder
         shell: pwsh
-        run: |
-          Write-Host "### Debug: Inhalt des Publish-Ordners vor dem Zippen ###"
-          Get-ChildItem -Path "./TraceViewer/bin/Release/net8.0-windows/win-x64/publish/" -Recurse
-
-          Write-Host "### Debug: Ausgeführter Compress-Archive Befehl ###"
-          Write-Host "Compress-Archive -Path './TraceViewer/bin/Release/net8.0-windows/win-x64/publish/*' -DestinationPath './TraceViewer-nightly-${{ steps.get_date.outputs.date }}-publish.zip'"
-
-          Compress-Archive -Path "./TraceViewer/bin/Release/net8.0-windows/win-x64/publish/*" -DestinationPath "./TraceViewer-nightly-${{ steps.get_date.outputs.date }}-publish.zip"
+        run: Compress-Archive -Path "./TraceViewer/bin/Release/net8.0-windows/win-x64/publish/*" -DestinationPath "./TraceViewer-nightly-${{ steps.get_date.outputs.date }}-publish.zip"
 
       - name: Create Release
         id: create_release
@@ -64,8 +43,9 @@ jobs:
           release_name: Nightly Release ${{ steps.get_date.outputs.date }}
           body: |
             Nightly Release of the TraceViewer solution.
+            This version is created as a Single-File Release, meaning all dependencies are included in the .exe file.
           draft: false
-          prerelease: true
+          prerelease: false
 
       - name: Upload Publish ZIP
         id: upload-asset
