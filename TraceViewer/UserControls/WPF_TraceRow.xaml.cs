@@ -22,6 +22,7 @@ namespace TraceViewer
         private List<byte[]> registers_x64;
         private List<Tuple<string, int>> regs; // Stores register names and sizes, without padding.
         private List<string> highlights = new List<string>(); // Registers that have changed in this row.
+        private List<MemoryAccess> memoryAccesses = new List<MemoryAccess>(); // Memory accesses in this row.
         private string mnemonic; // Full mnemonic string.
         private MainWindow window; // Reference to the main window.
 
@@ -32,7 +33,7 @@ namespace TraceViewer
             regs.RemoveAll(reg => string.IsNullOrEmpty(reg.Item1));
             mnemonicBrief.Text = mnemonicBriefText;
             mnemonic = mnemonicText;
-
+            memoryAccesses = currentTraceRow.Mem;
             Set(currentTraceRow, nextTraceRow);
             window = System.Windows.Application.Current.MainWindow as MainWindow ?? throw new Exception("Main window not found");
         }
@@ -112,6 +113,32 @@ namespace TraceViewer
                 }
                 registerIndex++;
             }
+
+            window.memory1.Visibility = Visibility.Collapsed;
+            window.memory2.Visibility = Visibility.Collapsed;
+            window.memory3.Visibility = Visibility.Collapsed;
+
+            if (memoryAccesses.Count > 0)
+            {
+                window.memory1.Visibility = Visibility.Visible;
+                window.write1.Content = memoryAccesses[0].Access;
+                window.address1.Content = $"{HexPrefix}{memoryAccesses[0].Addr:X}";
+                window.value1.Content = $"{HexPrefix}{memoryAccesses[0].Value:X}";
+            }
+            if (memoryAccesses.Count > 1)
+            {
+                window.memory2.Visibility = Visibility.Visible;
+                window.write2.Content = memoryAccesses[1].Access;
+                window.address2.Content = $"{HexPrefix}{memoryAccesses[1].Addr:X}";
+                window.value2.Content = $"{HexPrefix}{memoryAccesses[1].Value:X}";
+            }
+            if (memoryAccesses.Count > 2) // Wouldnt know what to do with more than 3 memory accesses
+            {
+                window.memory3.Visibility = Visibility.Visible;
+                window.write3.Content = memoryAccesses[2].Access;
+                window.address3.Content = $"{HexPrefix}{memoryAccesses[2].Addr:X}";
+                window.value3.Content = $"{HexPrefix}{memoryAccesses[2].Value:X}";
+            }
         }
 
         private void UpdateRegisterDisplay(WPF_RegisterRow registerRow, int registerIndex, bool isHighlighted)
@@ -190,6 +217,7 @@ namespace TraceViewer
                     if (nextIndex >= 0 && nextIndex < window.InstructionViewItems.Count && window.InstructionViewItems[nextIndex] is WPF_TraceRow nextControl)
                     {
                         nextControl.comments.Focus();
+                        nextControl.OnHover(null, null); // To refresh the register highlighting
                     }
                     break; // Exit loop once current item is found
                 }

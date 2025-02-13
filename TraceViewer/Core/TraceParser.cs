@@ -306,7 +306,12 @@ namespace TraceViewer.Core
                                     string newSlice = slice;
                                     if (Regex.IsMatch(slice, @"^[0-9A-F]$"))
                                     {
-                                        newSlice = slice.Insert(0, "0x");
+                                        newSlice = newSlice.ToUpper();
+                                        newSlice = slice.Insert(0, "0x");    
+                                    }
+                                    else if(newSlice.StartsWith("0x"))
+                                    {
+                                        newSlice = "0x" + newSlice.Substring(2).ToUpper();
                                     }
                                     disasm += newSlice;
                                 }

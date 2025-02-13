@@ -28,6 +28,14 @@
 		 <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
     </Style>
+	
+	  <Style x:Key="memory_view_label" TargetType="Label">
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontSize" Value="15"/>
+		<Setter Property="FontFamily" Value="Miriam Mono CLM"/>
+		<Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    </Style>
 
     <Style x:Key="comments_text_box" TargetType="TextBox">
         <Setter Property="Background" Value="{StaticResource instructions_view_background}"/>

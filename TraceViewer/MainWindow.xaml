@@ -80,7 +80,7 @@
         </Grid>
         
         <Grid Name="DisassemblerView" Visibility="Visible">
-            <DockPanel Margin="0,104,0,30" LastChildFill="False" Background="Transparent">
+            <DockPanel Margin="0,104,0,15" LastChildFill="False" Background="Transparent">
                 <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left">
                     <Grid x:Name="TitlesGrid" DockPanel.Dock="Left">
                         <Grid.ColumnDefinitions>
@@ -114,7 +114,7 @@
                     <Label x:Name="fpu" Style="{StaticResource instructions_view_titles}" Content="   FPU   " MouseDown="Fpu_MouseDown"/>
                 </DockPanel>
             </DockPanel>
-            <DockPanel Margin="0,150,0,30" LastChildFill="True">
+            <DockPanel Margin="0,150,0,15" LastChildFill="True">
                 <Grid x:Name="InstructionsViewGrid" DockPanel.Dock="Left">
                     <ItemsControl x:Name="InstructionsView" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True">
                         <ItemsControl.ItemsPanel>
@@ -133,28 +133,49 @@
                 </Grid>
                 <Grid Margin="20,0,0,0">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="500" />
+                        <RowDefinition Height="650" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <Grid x:Name="RegistersViewGrid" Grid.Row="0">
-                        <ItemsControl x:Name="RegistersView" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True"
-                                      ScrollViewer.VerticalScrollBarVisibility="Auto">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <VirtualizingStackPanel />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.Template>
-                                <ControlTemplate TargetType="ItemsControl">
-                                    <ScrollViewer CanContentScroll="True">
-                                        <ItemsPresenter />
-                                    </ScrollViewer>
-                                </ControlTemplate>
-                            </ItemsControl.Template>
-                        </ItemsControl>
-                    </Grid>
-                    <Grid x:Name="MemoryViewGrid" Grid.Row="1">
-
+                    <Border BorderThickness="0.5" BorderBrush="{StaticResource instructions_view_border}">
+                        <Grid x:Name="RegistersViewGrid" Grid.Row="0" Margin="7,4,0,0">
+                            <ItemsControl x:Name="RegistersView" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True"
+                                          ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.Template>
+                                    <ControlTemplate TargetType="ItemsControl">
+                                        <ScrollViewer CanContentScroll="True">
+                                            <ItemsPresenter />
+                                        </ScrollViewer>
+                                    </ControlTemplate>
+                                </ItemsControl.Template>
+                            </ItemsControl>
+                        </Grid>
+                    </Border>
+                    <Grid x:Name="MemoryViewGrid" Grid.Row="1" Margin="0,20,0,0">
+                        <StackPanel Margin="0,0,0,0">
+                            <DockPanel Name="memory1" LastChildFill="False">
+                                <Label Content="WRITE:" Name="write1" Width="70" FontWeight="SemiBold" Style="{StaticResource memory_view_label}" Foreground="Red"/>
+                                <Label Content="0x0011223344556677 --> " Name="address1" Width="215" Style="{StaticResource memory_view_label}"/>
+                                <Label Content="0234124124124" Name="value1" Width="170" Style="{StaticResource memory_view_label}" 
+                                        BorderThickness="1" BorderBrush="White"/>
+                            </DockPanel>
+                            <DockPanel Name="memory2" LastChildFill="False">
+                                <Label Content="WRITE:" Name="write2" Width="70" FontWeight="SemiBold" Style="{StaticResource memory_view_label}" Foreground="Red"/>
+                                <Label Content="0x0011223344556677 --> " Name="address2" Width="215" Style="{StaticResource memory_view_label}"/>
+                                <Label Content="0234124124124" Name="value2" Width="170" Style="{StaticResource memory_view_label}"
+                                        BorderThickness="1" BorderBrush="White"/>
+                            </DockPanel>
+                            <DockPanel Name="memory3" LastChildFill="False">
+                                <Label Content="WRITE:" Name="write3" Width="70" FontWeight="SemiBold" Style="{StaticResource memory_view_label}" Foreground="Red"/>
+                                <Label Content="0x0011223344556677 --> " Name="address3" Width="215" Style="{StaticResource memory_view_label}"/>
+                                <Label Content="0234124124124" Name="value3" Width="170" Style="{StaticResource memory_view_label}" 
+                                        BorderThickness="1" BorderBrush="White"/>
+                            </DockPanel>
+                        </StackPanel>
                     </Grid>
                 </Grid>
             </DockPanel>
