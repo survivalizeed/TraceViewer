@@ -2,7 +2,7 @@ name: Nightly Release
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Täglich um Mitternacht UTC
+    - cron: '0 0 * * *' # 
   workflow_dispatch:
 
 jobs:
@@ -10,25 +10,25 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Code auschecken
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: .NET SDK einrichten
+      - name: .NET SDK Setup
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x' # Ersetzen Sie dies mit Ihrer benötigten .NET SDK Version
 
-      - name: NuGet Pakete wiederherstellen
+      - name: NuGet Pakete Restore
         run: dotnet restore
 
-      - name: WPF Anwendung bauen
+      - name: Build WPF Application
         run: dotnet build --configuration Release
 
-      - name: Aktuelles Datum für Release-Namen ermitteln
+      - name: Get Release Date
         id: get_date
         run: echo "::set-output name=date::$(Get-Date -Format 'yyyyMMdd')"
 
-      - name: GitHub Release erstellen
+      - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -41,13 +41,13 @@ jobs:
           draft: false
           prerelease: true
 
-      - name: .exe Release Asset hochladen
+      - name: Upload .exe
         id: upload-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bin/Release/YourWPFApp.exe # Pfad zu Ihrer .exe Datei anpassen
-          asset_name: YourWPFApp-nightly-${{ steps.get_date.outputs.date }}.exe # Name des Assets anpassen
+          asset_path: ./bin/Release/TraceViewer.exe
+          asset_name: TraceViewer-nightly-${{ steps.get_date.outputs.date }}.exe
           asset_content_type: application/octet-stream
