@@ -1,0 +1,40 @@
+name: Nightly Release
+
+on:
+  schedule:
+    - cron: "0 0 * * *"  # Läuft täglich um Mitternacht UTC
+  workflow_dispatch:  # Ermöglicht manuelles Starten
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: "8.0.x"  # Passe die Version an
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      - name: Build Project
+        run: dotnet publish -c Release -o out
+
+      - name: Compress Build Artifacts
+        run: Compress-Archive -Path out/* -DestinationPath nightly.zip
+
+      - name: Create Nightly Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          release_name: "Nightly Build - ${{ github.run_number }}"
+          body: "Automatischer Nightly Release für ${{ github.run_number }}"
+          draft: false
+          prerelease: true
+          files: nightly.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
