@@ -28,7 +28,7 @@ jobs:
         id: get_date
         run: echo "::set-output name=date::$(Get-Date -Format 'yyyyMMdd')"
 
-      - name: Zip Publish Folder  <-- Pfad angepasst!
+      - name: Zip Publish Folder
         id: zip_folder
         shell: pwsh
         run: |
@@ -45,7 +45,7 @@ jobs:
           body: |
             Nightly Release of the TraceViewer solution.
           draft: false
-          prerelease: true
+          prerelease: false
 
       - name: Upload Publish ZIP
         id: upload-asset
