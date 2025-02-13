@@ -22,7 +22,7 @@ jobs:
         run: dotnet restore
 
       - name: Publish WPF Application with Single-File
-        run: dotnet publish --configuration Release --framework net8.0-windows --runtime win-x64 --PublishSingleFile true
+        run: dotnet publish --configuration Release --framework net8.0-windows --runtime win-x64
 
       - name: Get Release Date
         id: get_date
