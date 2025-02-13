@@ -2,39 +2,52 @@ name: Nightly Release
 
 on:
   schedule:
-    - cron: "0 0 * * *"  # Läuft täglich um Mitternacht UTC
-  workflow_dispatch:  # Ermöglicht manuelles Starten
+    - cron: '0 0 * * *' # Täglich um Mitternacht UTC
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-and-release:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Code auschecken
+        uses: actions/checkout@v3
 
-      - name: Setup .NET
+      - name: .NET SDK einrichten
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: "8.0.x"  # Passe die Version an
+          dotnet-version: '8.0.x' # Ersetzen Sie dies mit Ihrer benötigten .NET SDK Version
 
-      - name: Restore Dependencies
+      - name: NuGet Pakete wiederherstellen
         run: dotnet restore
 
-      - name: Build Project
-        run: dotnet publish -c Release -o out
+      - name: WPF Anwendung bauen
+        run: dotnet build --configuration Release
 
-      - name: Compress Build Artifacts
-        run: Compress-Archive -Path out/* -DestinationPath nightly.zip
+      - name: Aktuelles Datum für Release-Namen ermitteln
+        id: get_date
+        run: echo "::set-output name=date::$(Get-Date -Format 'yyyyMMdd')"
 
-      - name: Create Nightly Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: nightly
-          release_name: "Nightly Build - ${{ github.run_number }}"
-          body: "Automatischer Nightly Release für ${{ github.run_number }}"
-          draft: false
-          prerelease: true
-          files: nightly.zip
+      - name: GitHub Release erstellen
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: nightly-${{ steps.get_date.outputs.date }}
+          release_name: Nightly Release ${{ steps.get_date.outputs.date }}
+          body: |
+            Diese Release beinhaltet die nächtliche Version der WPF Desktop Anwendung.
+          draft: false
+          prerelease: true
+
+      - name: .exe Release Asset hochladen
+        id: upload-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/Release/YourWPFApp.exe # Pfad zu Ihrer .exe Datei anpassen
+          asset_name: YourWPFApp-nightly-${{ steps.get_date.outputs.date }}.exe # Name des Assets anpassen
+          asset_content_type: application/octet-stream
