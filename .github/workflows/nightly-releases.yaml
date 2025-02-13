@@ -1,0 +1,59 @@
+name: Nightly Release
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore NuGet Packages
+        run: dotnet restore
+
+      - name: Publish WPF Application with Single-File
+        run: dotnet publish --configuration Release --framework net8.0-windows --runtime win-x64
+
+      - name: Get Release Date
+        id: get_date
+        run: echo "::set-output name=date::$(Get-Date -Format 'yyyyMMdd')"
+
+      - name: Zip Publish Folder
+        id: zip_folder
+        shell: pwsh
+        run: Compress-Archive -Path "./TraceViewer/bin/Release/net8.0-windows/win-x64/publish/*" -DestinationPath "./TraceViewer-nightly-${{ steps.get_date.outputs.date }}-publish.zip"
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: nightly-${{ steps.get_date.outputs.date }}
+          release_name: Nightly Release ${{ steps.get_date.outputs.date }}
+          body: |
+            Nightly Release of the TraceViewer solution.
+            This version is created as a Single-File Release, meaning all dependencies are included in the .exe file.
+          draft: false
+          prerelease: false
+
+      - name: Upload Publish ZIP
+        id: upload-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./TraceViewer-nightly-${{ steps.get_date.outputs.date }}-publish.zip
+          asset_name: TraceViewer-nightly-${{ steps.get_date.outputs.date }}-publish.zip
+          asset_content_type: application/zip
