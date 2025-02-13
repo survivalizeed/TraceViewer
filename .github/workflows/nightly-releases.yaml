@@ -31,7 +31,7 @@ jobs:
       - name: Zip Publish Folder
         id: zip_folder
         shell: pwsh
-        run: Compress-Archive -Path "./TraceViewer/bin/Release/net8.0-windows/win-x64/publish/*" -DestinationPath "./TraceViewer-nightly-${{ steps.get_date.outputs.date }}-publish.zip"
+        run: Compress-Archive -Path "./TraceViewer/bin/Release/net8.0-windows/publish/win-x64" -DestinationPath "./TraceViewer-nightly-${{ steps.get_date.outputs.date }}.zip"
 
       - name: Create Release
         id: create_release
