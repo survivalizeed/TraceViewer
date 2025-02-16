@@ -93,7 +93,7 @@ namespace TraceViewer.Core
     };
 
 
-        public static string[] registers = {
+        public static string[] registers = new string[] {
             "rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "rip",
             "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15",
             "eax", "ebx", "ecx", "edx", "esi", "edi", "ax", "bx", "cx",
@@ -109,77 +109,36 @@ namespace TraceViewer.Core
             "ymm8", "ymm9", "ymm10", "ymm11", "ymm12", "ymm13", "ymm14", "ymm15",
         };
 
+        private static readonly Dictionary<string, SolidColorBrush> InstructionBrushes = new Dictionary<string, SolidColorBrush>(StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<string, SolidColorBrush> RegisterBrushes = new Dictionary<string, SolidColorBrush>(StringComparer.OrdinalIgnoreCase);
+
+
+        static SyntaxHighlighter() // Statischer Konstruktor
+        {
+            foreach (string instruction in JumpInstructions) InstructionBrushes[instruction] = Brushes.Red;
+            foreach (string instruction in CallInstructions) InstructionBrushes[instruction] = Brushes.Red;
+            foreach (string instruction in MoveInstructions) InstructionBrushes[instruction] = Brushes.LightGreen;
+            foreach (string instruction in StackInstructions) InstructionBrushes[instruction] = Brushes.Turquoise;
+            foreach (string instruction in CompareInstructions) InstructionBrushes[instruction] = Brushes.Yellow;
+            foreach (string instruction in ArithmeticInstructions) InstructionBrushes[instruction] = Brushes.LightBlue;
+            foreach (string instruction in BitwiseLogicalInstructions) InstructionBrushes[instruction] = Brushes.Aqua;
+            foreach (string instruction in SIMDInstructions) InstructionBrushes[instruction] = Brushes.Orange;
+            foreach (string instruction in MiscInstructions) InstructionBrushes[instruction] = Brushes.DarkGray;
+            foreach (string register in registers) RegisterBrushes[register] = Brushes.Coral;
+        }
         public static SolidColorBrush Check_Type(string instruction)
         {
-            for (int i = 0; i < JumpInstructions.Length; i++)
+            if (InstructionBrushes.TryGetValue(instruction, out var brush))
             {
-                if (JumpInstructions[i].ToLower() == instruction.ToLower())
-                {
-                    return Brushes.Red;
-                }
+                return brush;
             }
-            for (int i = 0; i < MoveInstructions.Length; i++)
+            if (RegisterBrushes.TryGetValue(instruction, out brush))
             {
-                if (MoveInstructions[i].ToLower() == instruction.ToLower())
-                {
-                    return Brushes.LightGreen;
-                }
-            }
-            for (int i = 0; i < CompareInstructions.Length; i++)
-            {
-                if (CompareInstructions[i].ToLower() == instruction.ToLower())
-                {
-                    return Brushes.Yellow;
-                }
-            }
-            for (int i = 0; i < ArithmeticInstructions.Length; i++)
-            {
-                if (ArithmeticInstructions[i].ToLower() == instruction.ToLower())
-                {
-                    return Brushes.LightBlue;
-                }
-            }
-            for (int i = 0; i < BitwiseLogicalInstructions.Length; i++)
-            {
-                if (BitwiseLogicalInstructions[i].ToLower() == instruction.ToLower())
-                {
-                    return Brushes.Aqua;
-                }
-            }
-            for (int i = 0; i < SIMDInstructions.Length; i++)
-            {
-                if (SIMDInstructions[i].ToLower() == instruction.ToLower())
-                {
-                    return Brushes.Orange;
-                }
-            }
-            for (int i = 0; i < CallInstructions.Length; i++)
-            {
-                if (CallInstructions[i].ToLower() == instruction.ToLower())
-                {
-                    return Brushes.Red;
-                }
-            }
-            for (int i = 0; i < StackInstructions.Length; i++)
-            {
-                if (StackInstructions[i].ToLower() == instruction)
-                {
-                    return Brushes.Turquoise;
-                }
-            }
-            for (int i = 0; i < registers.Length; i++)
-            {
-                if (registers[i].ToLower() == instruction.ToLower())
-                {
-                    return Brushes.Coral;
-                }
+                return brush;
             }
             if (instruction.StartsWith("0x"))
-            {
                 return Brushes.DarkGoldenrod;
-            }
-            return Brushes.White;
-
+            return Brushes.White; // Default Brush
         }
     }
 }
