@@ -8,7 +8,6 @@ on:
 jobs:
   build-and-release:
     runs-on: windows-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -56,6 +55,3 @@ jobs:
           asset_path: ./TraceViewer-nightly-${{ steps.get_date.outputs.date }}.zip
           asset_name: TraceViewer-nightly-${{ steps.get_date.outputs.date }}.zip
           asset_content_type: application/zip
-          done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
