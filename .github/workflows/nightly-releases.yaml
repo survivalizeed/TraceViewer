@@ -23,7 +23,7 @@ jobs:
 
       - name: Publish WPF Application with Single-File
         run: dotnet publish --configuration Release --framework net8.0-windows --runtime win-x64
-      
+
       - name: Get Release Date
         id: get_date
         run: echo "::set-output name=date::$(Get-Date -Format 'yyyyMMdd')"
@@ -42,7 +42,7 @@ jobs:
           tag_name: nightly-${{ steps.get_date.outputs.date }}
           release_name: Nightly Release ${{ steps.get_date.outputs.date }}
           body: |
-            Nightly Release of the TraceViewer solution.          
+            Nightly Release of the TraceViewer solution.
           draft: false
           prerelease: false
 
@@ -56,3 +56,69 @@ jobs:
           asset_path: ./TraceViewer-nightly-${{ steps.get_date.outputs.date }}.zip
           asset_name: TraceViewer-nightly-${{ steps.get_date.outputs.date }}.zip
           asset_content_type: application/zip
+
+      - name: Delete Old Releases
+        uses: actions/github-script@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          script: |
+            const numberOfReleasesToKeep = 7; // Keep the latest 7 nightly releases
+            const releasePrefix = 'nightly-';
+
+            async function getReleasesToDelete(octokit, context) {
+              const allReleases = await octokit.paginate(
+                octokit.rest.repos.listReleases,
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  per_page: 100,
+                }
+              );
+
+              const nightlyReleases = allReleases.data.filter(release => release.tag_name.startsWith(releasePrefix));
+              const sortedReleases = nightlyReleases.sort((a, b) => {
+                const dateA = a.tag_name.substring(releasePrefix.length);
+                const dateB = b.tag_name.substring(releasePrefix.length);
+                return dateB.localeCompare(dateA); // Sort newest to oldest
+              });
+
+              const releasesToDelete = sortedReleases.slice(numberOfReleasesToKeep);
+              return releasesToDelete;
+            }
+
+            async function deleteRelease(octokit, context, release) {
+              console.log(`Deleting release: ${release.tag_name} (${release.id})`);
+              await octokit.rest.repos.deleteRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: release.id,
+              });
+              console.log(`Release ${release.tag_name} deleted.`);
+            }
+
+            async function run() {
+              const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+              const context = github.context;
+
+              try {
+                const releasesToDelete = await getReleasesToDelete(octokit, context);
+
+                if (releasesToDelete.length === 0) {
+                  console.log('No old nightly releases to delete.');
+                  return;
+                }
+
+                console.log(`Found ${releasesToDelete.length} old nightly releases to delete.`);
+                for (const release of releasesToDelete) {
+                  await deleteRelease(octokit, context, release);
+                }
+
+                console.log('Deletion of old nightly releases completed.');
+
+              } catch (error) {
+                console.error('Error deleting old releases:', error);
+              }
+            }
+
+            run();
