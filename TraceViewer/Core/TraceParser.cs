@@ -105,7 +105,9 @@ namespace TraceViewer.Core
         public List<byte[]> Regs { get; set; }
         public string Opcodes { get; set; }
         public List<MemoryAccess> Mem { get; set; }
-        public string Regchanges { get; set; }
+        public List<string> Regchanges { get; set; }
+
+        public List<string> highlights = new List<string>();
     }
 
     public class MemoryAccess
@@ -117,6 +119,11 @@ namespace TraceViewer.Core
 
     public class TraceLoader
     {
+        private const string HexPrefix = "0x";
+        private const string ChangeSeparator = "; ";
+        private const string ChangeArrow = " -> ";
+        private const string RegisterValueSeparator = ": ";
+        private const string ZeroHexValue = "00";
 
         public TraceData OpenX64dbgTrace(string filename)
         {
@@ -281,7 +288,7 @@ namespace TraceViewer.Core
                         }
 
                         int regId = 0;
-                        string regchanges = "";
+                        List<string> regchanges = new List<string>();
                         for (int i = 0; i < registerChangePositions.Count; i++)
                         {
                             regId += registerChangePositions[i];
@@ -348,7 +355,7 @@ namespace TraceViewer.Core
                             });
                         }
 
-                        if (!string.IsNullOrEmpty(regchanges) && traceData.Trace.Any())
+                        if (traceData.Trace.Any())
                         {
                             traceData.Trace.Last().Regchanges = regchanges;
                         }
@@ -376,8 +383,52 @@ namespace TraceViewer.Core
                         rowId++;
                     }
                 }
+                var registers = prefs.X64_REGS.ToList();
+                registers.RemoveAll(reg => string.IsNullOrEmpty(reg.Item1));
+
+                for (int i = 0; i < traceData.Trace.Count - 1; i++)
+                {
+                    for (int j = 0; j < registers.Count; ++j)
+                    {
+                        // Compare register values and skip 'rip' register
+                        if (!traceData.Trace[i + 1].Regs[j].SequenceEqual(traceData.Trace[i].Regs[j]) && regs[j].Item1 != "rip")
+                        {
+                            string currentRegHex = ByteArrayToHexString(traceData.Trace[i].Regs[j]);
+                            string nextRegHex = ByteArrayToHexString(traceData.Trace[i + 1].Regs[j]);
+
+                            traceData.Trace[i].Regchanges.Add(regs[j].Item1);
+                            traceData.Trace[i].Regchanges.Add(RegisterValueSeparator);
+                            traceData.Trace[i].Regchanges.Add(HexPrefix + currentRegHex);
+                            traceData.Trace[i].Regchanges.Add(ChangeArrow);
+                            traceData.Trace[i].Regchanges.Add(HexPrefix + nextRegHex);
+                            traceData.Trace[i].Regchanges.Add(ChangeSeparator);
+                            traceData.Trace[i].highlights.Add(regs[j].Item1); // Mark register for highlight on hover
+                        }
+                    }
+                }
             }
+
             return traceData;
         }
+        private string ByteArrayToHexString(byte[] bytes)
+        {
+            if (bytes == null || bytes.Length == 0)
+            {
+                return ZeroHexValue;
+            }
+            StringBuilder hexBuilder = new StringBuilder(bytes.Length * 2);
+            bool leadingZero = true; // Flag to handle leading zeros correctly
+            for (int i = bytes.Length - 1; i >= 0; i--) // Iterate in reverse without Reverse()
+            {
+                byte b = bytes[i];
+                if (b != 0 || !leadingZero || i == 0) // Keep at least one zero if all bytes are zero
+                {
+                    hexBuilder.Append(b.ToString("X2"));
+                    leadingZero = false; // No longer leading zero after a non-zero byte or the last byte is processed
+                }
+            }
+            return hexBuilder.Length == 0 ? ZeroHexValue : hexBuilder.ToString(); // Handle empty builder case
+        }
     }
+
 }

@@ -17,6 +17,123 @@
         <GradientStop Color="#070707" Offset="1.0"/>
     </LinearGradientBrush>
 
+    <Style TargetType="Menu">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Padding" Value="5"/>
+    </Style>
+
+    <Style TargetType="MenuItem">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Padding" Value="10"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontFamily" Value="Consolas"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Border Background="Transparent">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" Background="Transparent">
+                                <TextBlock Text="{TemplateBinding Header}" Foreground="White" Padding="10,5,5,5" Background="Transparent"/>
+                                <ContentPresenter ContentSource="Icon" Margin="15,0,0,0"/>
+                            </StackPanel>
+
+                            <Popup IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                               Placement="Bottom" StaysOpen="False">
+                                <Border Background="{StaticResource instructions_view_background_hover}" CornerRadius="3">
+                                    <StackPanel Background="Transparent">
+                                        <ItemsPresenter/>
+                                    </StackPanel>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </Border>
+
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter Property="Background" Value="{StaticResource instructions_view_background_hover}"/>
+                            <Setter Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect Color="White" BlurRadius="15" ShadowDepth="0" Opacity="0.8"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" Value="{StaticResource comments_focused}"/>
+                            <Setter Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect Color="White" BlurRadius="15" ShadowDepth="0" Opacity="0.8"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="ScrollBar">
+        <Setter Property="Background" Value="#202020" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="MinWidth" Value="8" />
+        <Setter Property="Width" Value="8" />
+        <Setter Property="MaxWidth" Value="8" />
+        <Setter Property="Height" Value="Auto" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ScrollBar">
+                    <Grid>
+                        <Border 
+                     CornerRadius="0" 
+                     Background="{TemplateBinding Background}"
+                     Margin="0" />
+                        <Track 
+                     x:Name="PART_Track"
+                     IsDirectionReversed="True">
+                            <Track.Thumb>
+                                <Thumb>
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Rectangle 
+                                         Fill="White"
+                                         RadiusX="0" 
+                                         RadiusY="0"
+                                         Margin="0"
+                                         >
+                                                <Rectangle.Effect>
+                                                    <DropShadowEffect 
+                                                 Color="White"
+                                                 BlurRadius="10"
+                                                 ShadowDepth="0"
+                                                 Opacity="0.8" />
+                                                </Rectangle.Effect>
+                                            </Rectangle>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                        </Track>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="RepeatButton">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Grid Background="Transparent" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
     <Style x:Key="instructions_view_titles" TargetType="Label">
         <Setter Property="DockPanel.Dock" Value="Left"/>
         <Setter Property="BorderBrush" Value="Gray"/>

@@ -1,9 +1,13 @@
 ﻿using Microsoft.Win32;
+using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Reflection.Emit;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
+using System.Windows.Threading;
 using TraceViewer.Core;
 
 namespace TraceViewer
@@ -29,14 +33,25 @@ namespace TraceViewer
         public MainWindow()
         {
             InitializeComponent();
+            InstructionsView.Loaded += InstructionsView_Loaded;
             InstructionsView.ItemsSource = InstructionViewItems;
             RegistersView.ItemsSource = RegisterViewItems;
-            InstructionsView.Loaded += InstructionsView_Loaded;
-            DisasmViewButton_MouseDown(null, null); // Will be the default view when opening the application
-            
-            TraceHandler.Load(@"F:\Tools\Reversing\x64dbg\release\x64\db\trace.trace64"); // Raw string literal
+
+            //Thread thread = new Thread(cleaner);
+            //thread.Start();
+            DisasmViewButton_MouseDown(null, null); // Will be the default view when opening the application  
         }
 
+        void cleaner()
+        {
+            while (true)
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+                Thread.Sleep(10);
+            }
+        }
         private void InstructionsView_Loaded(object sender, RoutedEventArgs e)
         {
             if (sender is ItemsControl itemsControl && // Using pattern matching
@@ -50,10 +65,11 @@ namespace TraceViewer
             }
         }
 
+
         // Consolidated SizeChanged event handlers
         private void TitleLabel_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if (sender is Label label)
+            if (sender is System.Windows.Controls.Label label)
             {
                 InstructionsView.BeginInit();
                 try
@@ -231,5 +247,65 @@ namespace TraceViewer
                     break;
             }
         }
+
+        private void OpenTrace_Click(object sender, RoutedEventArgs e)
+        {
+            InstructionViewItems.Clear();
+            RegisterViewItems.Clear();
+            var openFileDialog = new OpenFileDialog
+            {
+                Filter = "Trace Files (*.trace64)|*.trace64|All Files (*.*)|*.*",
+                FilterIndex = 1,
+                Multiselect = false
+            };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                TraceHandler.OpenAndLoad(openFileDialog.FileName);
+            }
+        }
+
+
+        static int index = TraceHandler.load_count; // Default loaded size
+        private void InstructionsScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+
+
+
+        }
+
+        private void InstructionsScrollViewer_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        {
+            if (TraceHandler.Trace == null)
+                return;
+
+            InstructionsScrollViewer.MouseWheel -= InstructionsScrollViewer_PreviewMouseWheel;
+
+            if (e.Delta > 0) // Up
+            {
+                for (int i = 0; i < 4; i++) 
+                {
+                    if (InstructionViewItems.Count > 0 && index - TraceHandler.load_count >= 0)
+                    {
+                        InstructionViewItems.RemoveAt(InstructionViewItems.Count - 1);
+                        TraceHandler.LoadRange(index - TraceHandler.load_count, index - TraceHandler.load_count + 1, true);
+                        index--;
+                    }
+                }
+            }
+            else if (e.Delta < 0) // Down
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    if (InstructionViewItems.Count > 0)
+                    {
+                        InstructionViewItems.RemoveAt(0);
+                        TraceHandler.LoadRange(index, index + 1, false);
+                        index++;
+                    }
+                }
+            }   
+            InstructionsScrollViewer.MouseWheel += InstructionsScrollViewer_PreviewMouseWheel;
+        }
     }
+    
 }

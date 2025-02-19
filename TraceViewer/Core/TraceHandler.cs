@@ -5,82 +5,124 @@ using System.Windows;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Windows.UI;
 
 namespace TraceViewer.Core
 {
     class TraceHandler
     {
-        public static void Load(string path)
+        public static TraceData? Trace { get; set; }
+
+        public static MainWindow window { get; set; }
+
+        private static Dictionary<string, object> root;
+
+        private static List<MnemObject> dataBrief;
+
+        private static List<MnemObject> data;
+
+        public const int load_count = 30;
+
+        public static void OpenAndLoad(string path)
         {
-            var window = Application.Current.MainWindow as MainWindow;
+            window = Application.Current.MainWindow as MainWindow;
             if (window == null)
                 throw new InvalidOperationException("Main window not found");
 
             var loader = new TraceLoader();
-            var traceData = loader.OpenX64dbgTrace(path);
+            Trace = loader.OpenX64dbgTrace(path);
+            var uri = new Uri("pack://application:,,,/mnemdb.json");
+            var stream = Application.GetResourceStream(uri)?.Stream;
+            var reader = stream != null ? new StreamReader(stream) : null;
+            if(reader == null)
+                throw new InvalidOperationException("Stream reader was null");
+
+            root = JsonConvert.DeserializeObject<Dictionary<string, object>>(reader.ReadToEnd());
+
+            if (root != null && // Null check for root
+                    root.TryGetValue("x86-64-brief", out var x86_64DataBrief) && x86_64DataBrief is JArray jsonArrayBrief &&
+                    root.TryGetValue("x86-64", out var x86_64Data) && x86_64Data is JArray jsonArray)
+            {
+                dataBrief = jsonArrayBrief.ToObject<List<MnemObject>>();
+                data = jsonArray.ToObject<List<MnemObject>>();
+            }
+            else
+                throw new InvalidOperationException("JSON root was null or the target dicts weren't found");
+
+            var x64Regs = prefs.X64_REGS;
+
+            for (int i = 0; i < x64Regs.Count; i++)
+            {
+                var regName = x64Regs[i].Item1;
+                if (string.IsNullOrEmpty(regName))
+                {
+                    continue;
+                }
+                if(i == 1)
+                {
+                    var rbx_wpfRow = new WPF_RegisterRow(x64Regs[3].Item1.ToUpper(), "0", GetRegisterType(i));
+                    window.RegisterViewItems.Add(rbx_wpfRow);
+                    continue;
+                }
+                if (i == 2)
+                {
+                    var rcx_wpfRow = new WPF_RegisterRow(x64Regs[1].Item1.ToUpper(), "0", GetRegisterType(i));
+                    window.RegisterViewItems.Add(rcx_wpfRow);
+                    continue;
+                }
+                if (i == 3)
+                {
+                    var rdx_wpfRow = new WPF_RegisterRow(x64Regs[2].Item1.ToUpper(), "0", GetRegisterType(i));
+                    window.RegisterViewItems.Add(rdx_wpfRow);
+                    continue;
+                }
+                var wpfRow = new WPF_RegisterRow(regName.ToUpper(), "0", GetRegisterType(i));
+                window.RegisterViewItems.Add(wpfRow);
+            }
+
+            LoadRange(0, load_count, false);
+        }
+
+        public static void LoadRange(int low, int high, bool prepend)
+        {
+            if(Trace == null)
+                throw new InvalidOperationException("Trace was null");
+
+            var traceData = Trace;
 
             var traceCount = traceData.Trace.Count;
 
-            var uri = new Uri("pack://application:,,,/mnemdb.json");
-            using (var stream = Application.GetResourceStream(uri)?.Stream) // Null check
-            using (var reader = stream != null ? new StreamReader(stream) : null) // Conditional stream reader creation
+            if(low < 0 || high > traceCount - 1)
+                throw new InvalidOperationException("low or high value out of bounds");
+
+
+            for (int i = low; i < high; i++)
             {
-                if (reader != null) // Check if reader is valid before proceeding
+                var instructionMnemonic = traceData.Trace[i].Disasm.Split(' ').First();
+            
+                var mnemonicBrief = dataBrief.FirstOrDefault(m => m.Mnem == instructionMnemonic)?.Description ?? ""; // Using LINQ for brief mnemonic lookup
+            
+                var mnemonic = FindMnemonic(data, instructionMnemonic.ToUpper()); // Extracting mnemonic finding logic
+            
+                if (string.IsNullOrEmpty(mnemonic))
                 {
-                    var root = JsonConvert.DeserializeObject<Dictionary<string, object>>(reader.ReadToEnd());
-
-                    if (root != null && // Null check for root
-                        root.TryGetValue("x86-64-brief", out var x86_64DataBrief) && x86_64DataBrief is JArray jsonArrayBrief &&
-                        root.TryGetValue("x86-64", out var x86_64Data) && x86_64Data is JArray jsonArray)
-                    {
-                        var dataBrief = jsonArrayBrief.ToObject<List<MnemObject>>();
-                        var data = jsonArray.ToObject<List<MnemObject>>();
-
-                        for (int i = 0; i < traceCount; i++)
-                        {
-                            var instructionMnemonic = traceData.Trace[i].Disasm.Split(' ').First();
-
-                            var mnemonicBrief = dataBrief.FirstOrDefault(m => m.Mnem == instructionMnemonic)?.Description ?? ""; // Using LINQ for brief mnemonic lookup
-
-                            var mnemonic = FindMnemonic(data, instructionMnemonic.ToUpper()); // Extracting mnemonic finding logic
-
-                            if (string.IsNullOrEmpty(mnemonic))
-                            {
-                                mnemonic = $"{mnemonicBrief}\nSadly thats it...\n\nMaybe this link can be helpful: https://faydoc.tripod.com/cpu/index.htm"; // String interpolation
-                            }
-
-                            var wpfRow = new WPF_TraceRow(
-                                traceData.Trace[i],
-                                (i < traceCount - 1) ? traceData.Trace[i + 1] : null,
-                                mnemonicBrief,
-                                mnemonic
-                            );
-
-                            window.InstructionViewItems.Add(wpfRow);
-                        }
-                    }
+                    mnemonic = $"{mnemonicBrief}\nSadly thats it...\n\nMaybe this link can be helpful: https://faydoc.tripod.com/cpu/index.htm"; // String interpolation
                 }
+            
+                var wpfRow = new WPF_TraceRow(
+                    traceData.Trace[i],
+                    mnemonicBrief,
+                    mnemonic
+                );
+                
+                if (prepend)
+                    window.InstructionViewItems.Insert(0, wpfRow);
+                else
+                    window.InstructionViewItems.Add(wpfRow);
             }
-
-            if (traceData.Arch == "x64")
-            {
-                var x64Regs = prefs.X64_REGS;
-
-                for (int i = 0; i < x64Regs.Count; i++)
-                {
-                    var regName = x64Regs[i].Item1;
-                    if (string.IsNullOrEmpty(regName))
-                    {
-                        continue;
-                    }
-
-                    var registerType = GetRegisterType(i); // Extracting register type determination
-
-                    var wpfRow = new WPF_RegisterRow(regName.ToUpper(), "0", registerType);
-                    window.RegisterViewItems.Add(wpfRow);
-                }
-            }
+            
         }
+
 
         private static string FindMnemonic(List<MnemObject> data, string instructionMnemonic)
         {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,71 +27,75 @@ namespace TraceViewer
         private string mnemonic; // Full mnemonic string.
         private MainWindow window; // Reference to the main window.
 
-        public WPF_TraceRow(TraceRow currentTraceRow, TraceRow? nextTraceRow, string mnemonicBriefText, string mnemonicText)
+        public WPF_TraceRow(TraceRow traceRow, string mnemonicBriefText, string mnemonicText)
         {
             InitializeComponent();
             regs = prefs.X64_REGS.ToList();
             regs.RemoveAll(reg => string.IsNullOrEmpty(reg.Item1));
             mnemonicBrief.Text = mnemonicBriefText;
             mnemonic = mnemonicText;
-            memoryAccesses = currentTraceRow.Mem;
-            Set(currentTraceRow, nextTraceRow);
+            memoryAccesses = traceRow.Mem;
+            Set(traceRow);
             window = System.Windows.Application.Current.MainWindow as MainWindow ?? throw new Exception("Main window not found");
+
+            id.Width = window.cd0.Width.Value;
+            id_border.Width = window.cd0.Width.Value;
+
+            address.Width = window.cd1.Width.Value;
+            address_border.Width = window.cd1.Width.Value;
+
+            disasm.Width = window.cd2.Width.Value;
+            disasm_border.Width = window.cd2.Width.Value;
+
+            changes.Width = window.cd3.Width.Value;
+            changes_border.Width = window.cd3.Width.Value;
+
+            comments.Width = window.cd4.Width.Value;
+            mnemonicBrief.Width = window.cd4.Width.Value;
         }
 
-        public void Set(TraceRow currentTraceRow, TraceRow? nextTraceRow)
+        public void Set(TraceRow traceRow)
         {
             changes.Inlines.Clear();
             highlights.Clear();
 
-            if (nextTraceRow != null)
+            for (int i = 0; i < traceRow.Regchanges.Count; i += 6)
             {
-                DetectRegisterChanges(currentTraceRow, nextTraceRow);
+                changes.Inlines.Add(new Run(traceRow.Regchanges[i]) { Foreground = SyntaxHighlighter.Check_Type(traceRow.Regchanges[i]) });
+                changes.Inlines.Add(new Run(traceRow.Regchanges[i + 1]) { Foreground = Brushes.White });
+                changes.Inlines.Add(new Run(traceRow.Regchanges[i + 2]) { Foreground = SyntaxHighlighter.Check_Type(traceRow.Regchanges[i + 2]) });
+                changes.Inlines.Add(new Run(traceRow.Regchanges[i + 3]) { Foreground = Brushes.White });
+                changes.Inlines.Add(new Run(traceRow.Regchanges[i + 4]) { Foreground = SyntaxHighlighter.Check_Type(traceRow.Regchanges[i + 4]) });
+                changes.Inlines.Add(new Run(traceRow.Regchanges[i + 5]) { Foreground = Brushes.White });
             }
 
-            registers_x64 = currentTraceRow.Regs;
+            registers_x64 = traceRow.Regs;
             SwapRegisters(registers_x64, 1, 3);
             SwapRegisters(registers_x64, 2, 3);
 
 
-            id.Text = currentTraceRow.Id.ToString();
+            id.Text = traceRow.Id.ToString();
             id.Foreground = Brushes.White;
 
-            address.Text = $"{HexPrefix}{currentTraceRow.Ip:X}"; // Use string interpolation for readability
+            address.Text = $"{HexPrefix}{traceRow.Ip:X}"; // Use string interpolation for readability
             address.Foreground = Brushes.White;
 
-            SetDisassemblyText(currentTraceRow.Disasm);
+            SetDisassemblyText(traceRow.Disasm);
         }
 
-        private void DetectRegisterChanges(TraceRow currentTraceRow, TraceRow nextTraceRow)
-        {
-            for (int i = 0; i < regs.Count; ++i)
-            {
-                // Compare register values and skip 'rip' register
-                if (!nextTraceRow.Regs[i].SequenceEqual(currentTraceRow.Regs[i]) && regs[i].Item1 != "rip")
-                {
-                    AddRegisterChangeInline(regs[i].Item1, currentTraceRow.Regs[i], nextTraceRow.Regs[i]);
-                    highlights.Add(regs[i].Item1); // Mark register for highlight on hover
-                }
-            }
-        }
 
         private void AddRegisterChangeInline(string regName, byte[] currentRegValue, byte[] nextRegValue)
         {
             string currentRegHex = ByteArrayToHexString(currentRegValue, true);
             string nextRegHex = ByteArrayToHexString(nextRegValue, true);
 
-            changes.Inlines.Add(new Run(regName) { Foreground = SyntaxHighlighter.Check_Type(regName) });
-            changes.Inlines.Add(new Run(RegisterValueSeparator) { Foreground = Brushes.White });
-            changes.Inlines.Add(new Run($"{HexPrefix}{currentRegHex}") { Foreground = SyntaxHighlighter.Check_Type($"{HexPrefix}{currentRegHex}") });
-            changes.Inlines.Add(new Run(ChangeArrow) { Foreground = Brushes.White });
-            changes.Inlines.Add(new Run($"{HexPrefix}{nextRegHex}") { Foreground = SyntaxHighlighter.Check_Type($"{HexPrefix}{nextRegHex}") });
-            changes.Inlines.Add(new Run(ChangeSeparator) { Foreground = Brushes.White });
+           
         }
 
         private void SetDisassemblyText(string disassemblyText)
         {
             disasm.Inlines.Clear();
+            // Faster than regex
             string[] singleInstructions = Regex.Split(disassemblyText, @"([ ,:\[\]*])");
 
             foreach (string singleInstruction in singleInstructions)
@@ -156,24 +161,37 @@ namespace TraceViewer
             registerRow.value.Text = $"{HexPrefix}{ByteArrayToHexString(registers_x64[registerIndex], false)}";
         }
 
-        private string ByteArrayToHexString(byte[] bytes, bool zeroRemoval)
+        public string ByteArrayToHexString(byte[] bytes, bool zeroRemoval)
         {
             if (bytes == null || bytes.Length == 0)
             {
                 return ZeroHexValue;
             }
 
-            string hex = string.Concat(bytes.Reverse().Select(b => b.ToString("X2")));
+            StringBuilder hexBuilder = new StringBuilder(bytes.Length * 2); 
 
             if (zeroRemoval)
             {
-                hex = string.Concat(bytes.Reverse().Where(b => b != 0x00).Select(b => b.ToString("X2")));
-                if (string.IsNullOrEmpty(hex))
+                bool leadingZero = true; // Flag to handle leading zeros correctly
+                for (int i = bytes.Length - 1; i >= 0; i--) // Iterate in reverse without Reverse()
                 {
-                    return ZeroHexValue;
+                    byte b = bytes[i];
+                    if (b != 0 || !leadingZero || i == 0) // Keep at least one zero if all bytes are zero
+                    {
+                        hexBuilder.Append(b.ToString("X2"));
+                        leadingZero = false; // No longer leading zero after a non-zero byte or the last byte is processed
+                    }
                 }
             }
-            return hex;
+            else
+            {
+                for (int i = bytes.Length - 1; i >= 0; i--) // Iterate in reverse without Reverse()
+                {
+                    hexBuilder.Append(bytes[i].ToString("X2"));
+                }
+            }
+
+            return hexBuilder.Length == 0 ? ZeroHexValue : hexBuilder.ToString(); // Handle empty builder case
         }
 
         private void SwapRegisters<T>(List<T> list, int index1, int index2)
@@ -266,6 +284,5 @@ namespace TraceViewer
             window.MnemonicReaderScrollView.Visibility = Visibility.Visible;
             window.MnemonicReader.Content = mnemonic; // Display full mnemonic
         }
-
     }
 }
