@@ -24,19 +24,54 @@ namespace TraceViewer
         private List<Tuple<string, int>> regs; // Stores register names and sizes, without padding.
         private List<string> highlights = new List<string>(); // Registers that have changed in this row.
         private List<MemoryAccess> memoryAccesses = new List<MemoryAccess>(); // Memory accesses in this row.
+
+        private TraceRow traceRow;
+
         private string mnemonic; // Full mnemonic string.
         private MainWindow window; // Reference to the main window.
 
         public WPF_TraceRow(TraceRow traceRow, string mnemonicBriefText, string mnemonicText)
         {
             InitializeComponent();
+            window = System.Windows.Application.Current.MainWindow as MainWindow ?? throw new Exception("Main window not found");
+
             regs = prefs.X64_REGS.ToList();
             regs.RemoveAll(reg => string.IsNullOrEmpty(reg.Item1));
+            
             mnemonicBrief.Text = mnemonicBriefText;
             mnemonic = mnemonicText;
             memoryAccesses = traceRow.Mem;
-            Set(traceRow);
-            window = System.Windows.Application.Current.MainWindow as MainWindow ?? throw new Exception("Main window not found");
+            this.traceRow = traceRow;
+
+            changes.Inlines.Clear();
+            highlights.Clear();
+
+            for (int i = 0; i < traceRow.Regchanges.Count; i += 6)
+            {
+                changes.Inlines.Add(new Run(traceRow.Regchanges[i]) { Foreground = SyntaxHighlighter.Check_Type(traceRow.Regchanges[i]) });
+                changes.Inlines.Add(new Run(traceRow.Regchanges[i + 1]) { Foreground = Brushes.White });
+                changes.Inlines.Add(new Run(traceRow.Regchanges[i + 2]) { Foreground = SyntaxHighlighter.Check_Type(traceRow.Regchanges[i + 2]) });
+                changes.Inlines.Add(new Run(traceRow.Regchanges[i + 3]) { Foreground = Brushes.White });
+                changes.Inlines.Add(new Run(traceRow.Regchanges[i + 4]) { Foreground = SyntaxHighlighter.Check_Type(traceRow.Regchanges[i + 4]) });
+                changes.Inlines.Add(new Run(traceRow.Regchanges[i + 5]) { Foreground = Brushes.White });
+            }
+
+            registers_x64 = traceRow.Regs;
+            SwapRegisters(registers_x64, 1, 3);
+            SwapRegisters(registers_x64, 2, 3);
+
+
+            id.Text = traceRow.Id.ToString();
+            id.Foreground = Brushes.White;
+
+            address.Text = $"{HexPrefix}{traceRow.Ip:X}"; // Use string interpolation for readability
+            address.Foreground = Brushes.White;
+
+            comments.Text = traceRow.comments;
+
+            display_mnemonic_brief(!window._toggleMnemonic);
+
+            SetDisassemblyText(traceRow.Disasm);
 
             id.Width = window.cd0.Width.Value;
             id_border.Width = window.cd0.Width.Value;
@@ -54,43 +89,6 @@ namespace TraceViewer
             mnemonicBrief.Width = window.cd4.Width.Value;
         }
 
-        public void Set(TraceRow traceRow)
-        {
-            changes.Inlines.Clear();
-            highlights.Clear();
-
-            for (int i = 0; i < traceRow.Regchanges.Count; i += 6)
-            {
-                changes.Inlines.Add(new Run(traceRow.Regchanges[i]) { Foreground = SyntaxHighlighter.Check_Type(traceRow.Regchanges[i]) });
-                changes.Inlines.Add(new Run(traceRow.Regchanges[i + 1]) { Foreground = Brushes.White });
-                changes.Inlines.Add(new Run(traceRow.Regchanges[i + 2]) { Foreground = SyntaxHighlighter.Check_Type(traceRow.Regchanges[i + 2]) });
-                changes.Inlines.Add(new Run(traceRow.Regchanges[i + 3]) { Foreground = Brushes.White });
-                changes.Inlines.Add(new Run(traceRow.Regchanges[i + 4]) { Foreground = SyntaxHighlighter.Check_Type(traceRow.Regchanges[i + 4]) });
-                changes.Inlines.Add(new Run(traceRow.Regchanges[i + 5]) { Foreground = Brushes.White });
-            }
-
-            registers_x64 = traceRow.Regs;
-            SwapRegisters(registers_x64, 1, 3);
-            SwapRegisters(registers_x64, 2, 3);
-
-
-            id.Text = traceRow.Id.ToString();
-            id.Foreground = Brushes.White;
-
-            address.Text = $"{HexPrefix}{traceRow.Ip:X}"; // Use string interpolation for readability
-            address.Foreground = Brushes.White;
-
-            SetDisassemblyText(traceRow.Disasm);
-        }
-
-
-        private void AddRegisterChangeInline(string regName, byte[] currentRegValue, byte[] nextRegValue)
-        {
-            string currentRegHex = ByteArrayToHexString(currentRegValue, true);
-            string nextRegHex = ByteArrayToHexString(nextRegValue, true);
-
-           
-        }
 
         private void SetDisassemblyText(string disassemblyText)
         {
@@ -107,7 +105,7 @@ namespace TraceViewer
         private void OnHover(object sender, MouseEventArgs e)
         {
             int registerIndex = 0;
-            HashSet<string> highlightSet = new HashSet<string>(highlights, StringComparer.OrdinalIgnoreCase);
+            HashSet<string> highlightSet = new HashSet<string>(traceRow.highlights, StringComparer.OrdinalIgnoreCase);
 
             foreach (WPF_RegisterRow registerRow in window.RegistersView.Items.OfType<WPF_RegisterRow>())
             {
@@ -232,8 +230,16 @@ namespace TraceViewer
                 if (this == window.InstructionViewItems[i])
                 {
                     int nextIndex = i + direction;
+                    if (nextIndex < 0 || nextIndex > window.InstructionViewItems.Count - 1)
+                    {
+                        if(window.ScrollControl(-direction))
+                            FocusNextCommentBox(direction);
+                        return;
+                    }
                     if (nextIndex >= 0 && nextIndex < window.InstructionViewItems.Count && window.InstructionViewItems[nextIndex] is WPF_TraceRow nextControl)
                     {
+                        comments.InvalidateVisual();  // Necessary because the current control is often not updated for some reason
+                        comments.UpdateLayout();
                         nextControl.comments.Focus();
                         nextControl.OnHover(null, null); // To refresh the register highlighting
                     }
@@ -284,5 +290,10 @@ namespace TraceViewer
             window.MnemonicReaderScrollView.Visibility = Visibility.Visible;
             window.MnemonicReader.Content = mnemonic; // Display full mnemonic
         }
+
+        private void TextChangedComments(object sender, TextChangedEventArgs e)
+        {
+            traceRow.comments = comments.Text;
+        }
     }
 }

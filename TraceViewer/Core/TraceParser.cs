@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using Gee.External.Capstone;
 using Gee.External.Capstone.X86;
 using System.Text.RegularExpressions;
+using System.Windows.Controls;
 
 namespace TraceViewer.Core
 {
@@ -108,6 +109,8 @@ namespace TraceViewer.Core
         public List<string> Regchanges { get; set; }
 
         public List<string> highlights = new List<string>();
+
+        public string comments = ""; // Will be set by WPF_TraceRow
     }
 
     public class MemoryAccess

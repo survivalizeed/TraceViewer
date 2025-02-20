@@ -85,10 +85,11 @@
                         <Label x:Name="fpu" Style="{StaticResource instructions_view_titles}" Content="   FPU   " MouseDown="Fpu_MouseDown"/>
                     </DockPanel>
                 </DockPanel>
-                <DockPanel Margin="0,150,0,15" LastChildFill="True">
+                <DockPanel Margin="0,150,0,10" LastChildFill="True">
                     <Grid x:Name="InstructionsViewGrid" DockPanel.Dock="Left">
-                        <ItemsControl x:Name="InstructionsView" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingStackPanel.VirtualizationMode="Recycling" ScrollViewer.CanContentScroll="True"
-                                      >
+                        <ItemsControl x:Name="InstructionsView" VirtualizingStackPanel.IsVirtualizing="True" 
+                                          VirtualizingStackPanel.VirtualizationMode="Recycling" 
+                                          ScrollViewer.CanContentScroll="False">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <VirtualizingStackPanel />
@@ -96,8 +97,8 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.Template>
                                 <ControlTemplate TargetType="ItemsControl">
-                                    <ScrollViewer Name="instructions_view_scrollviewer" CanContentScroll="True" 
-                                                  ScrollChanged="InstructionsScrollViewer_ScrollChanged"
+                                    <ScrollViewer Name="instructions_view_scrollviewer" CanContentScroll="False"
+                                                  VerticalScrollBarVisibility="Disabled"
                                                   PreviewMouseWheel="InstructionsScrollViewer_PreviewMouseWheel">
                                         <ItemsPresenter />
                                     </ScrollViewer>

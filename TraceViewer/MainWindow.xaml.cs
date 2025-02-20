@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Reflection.Emit;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
@@ -22,7 +23,7 @@ namespace TraceViewer
     public partial class MainWindow : Window
     {
         private bool _toggleFpu = true; // Use backing field for toggle state
-        private bool _toggleMnemonic = true; // Use backing field for toggle state
+        public bool _toggleMnemonic = true; // Use backing field for toggle state
         public double _disassemblerViewOffset = 0; // Use backing field for offset
 
         public ScrollViewer InstructionsScrollViewer { get; private set; } // Public property for ScrollViewer
@@ -266,45 +267,55 @@ namespace TraceViewer
 
 
         static int index = TraceHandler.load_count; // Default loaded size
-        private void InstructionsScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
-        {
-
-
-
-        }
 
         private void InstructionsScrollViewer_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
         {
-            if (TraceHandler.Trace == null)
-                return;
-
-            InstructionsScrollViewer.MouseWheel -= InstructionsScrollViewer_PreviewMouseWheel;
-
-            if (e.Delta > 0) // Up
+            if(Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
-                for (int i = 0; i < 4; i++) 
+                if (e.Delta > 0)
+                    ScrollControl(15);
+                else if (e.Delta < 0)
+                    ScrollControl(-15);
+            }
+            if (e.Delta > 0)
+                ScrollControl(3);
+            else if(e.Delta < 0)
+                ScrollControl(-3);
+        }
+
+        public bool ScrollControl(int steps)
+        {
+            if (TraceHandler.Trace == null)
+                return false;
+
+            bool return_value = false;
+            if (steps > 0) // Up
+            {
+                for (int i = 0; i < steps; i++)
                 {
-                    if (InstructionViewItems.Count > 0 && index - TraceHandler.load_count >= 0)
+                    if (InstructionViewItems.Count > 0 && index - TraceHandler.load_count - 1 >= 0)
                     {
                         InstructionViewItems.RemoveAt(InstructionViewItems.Count - 1);
-                        TraceHandler.LoadRange(index - TraceHandler.load_count, index - TraceHandler.load_count + 1, true);
+                        TraceHandler.LoadRange(index - TraceHandler.load_count - 1, index - TraceHandler.load_count, true);
                         index--;
+                        return_value = true;
                     }
                 }
             }
-            else if (e.Delta < 0) // Down
+            else if (steps < 0) // Down
             {
-                for (int i = 0; i < 3; i++)
+                for (int i = 0; i < Math.Abs(steps); i++)
                 {
                     if (InstructionViewItems.Count > 0)
                     {
                         InstructionViewItems.RemoveAt(0);
                         TraceHandler.LoadRange(index, index + 1, false);
                         index++;
+                        return_value = true;
                     }
                 }
-            }   
-            InstructionsScrollViewer.MouseWheel += InstructionsScrollViewer_PreviewMouseWheel;
+            }
+            return return_value; // To check if there was even a possible scroll
         }
     }
     
