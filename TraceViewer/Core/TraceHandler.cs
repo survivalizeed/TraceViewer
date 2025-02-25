@@ -20,7 +20,7 @@ namespace TraceViewer.Core
 
         private static List<MnemObject> data;
 
-        public const int load_count = 30;
+        public static int load_count = 30;
 
         public static void OpenAndLoad(string path)
         {
@@ -28,8 +28,24 @@ namespace TraceViewer.Core
             if (window == null)
                 throw new InvalidOperationException("Main window not found");
 
+            if (Trace != null)
+            {
+                Trace.Trace.Clear();
+                Trace.Regs.Clear();
+                Trace = null;
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect(); // Here needed. Otherwise the GC will wait too long to collect big unloaded traces
+            }
+
             var loader = new TraceLoader();
             Trace = loader.OpenX64dbgTrace(path);
+
+            if (Trace.Trace.Count < load_count)
+                load_count = Trace.Trace.Count;
+            else
+                load_count = 30;
+
             var uri = new Uri("pack://application:,,,/mnemdb.json");
             var stream = Application.GetResourceStream(uri)?.Stream;
             var reader = stream != null ? new StreamReader(stream) : null;

@@ -261,9 +261,9 @@ namespace TraceViewer
             if(Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
                 if (e.Delta > 0)
-                    ScrollControl(1000);
+                    ScrollControl(15);
                 else if (e.Delta < 0)
-                    ScrollControl(-1000);
+                    ScrollControl(-15);
             }
             if (e.Delta > 0)
                 ScrollControl(3);

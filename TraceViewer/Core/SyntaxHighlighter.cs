@@ -88,9 +88,6 @@ namespace TraceViewer.Core
 
     };
 
-        public static string[] MiscInstructions = new string[] {
-        "FNOP", "HLT", "IN", "INT3", "INT n", "INTO", "INVD", "INVLPG", "INVPCID", "LIDT", "LGDT", "LLDT", "LMSW", "LOCK", "MONITOR", "MWAIT", "NOP", "OUT", "OUTS", "OUTSB", "OUTSD", "OUTSW", "PAUSE", "PREFETCHh", "PREFETCHW", "PREFETCHWT1", "RDFSBASE", "RDGSBASE", "RDMSR", "RDPID", "RDPKRU", "RDPMC", "RDRAND", "RDSEED", "RDTSC", "RDTSCP", "REP", "REPE", "REPNE", "REPNZ", "REPZ", "RSM", "RSQRTPS", "RSQRTSS", "SAHF", "SGDT", "SHA1MSG1", "SHA1MSG2", "SHA1NEXTE", "SHA1RNDS4", "SHA256MSG1", "SHA256MSG2", "SHA256RNDS2", "SIDT", "SLDT", "SMSW", "SQRTPD", "SQRTPS", "SQRTSD", "SQRTSS", "STAC", "STC", "STD", "STI", "STMXCSR", "STOS", "STOSB", "STOSD", "STOSQ", "STOSW", "STR", "SWAPGS", "SYSCALL", "SYSENTER", "SYSEXIT", "SYSRET", "UD2", "UNPCKHPD", "UNPCKHPS", "UNPCKLPD", "UNPCKLPS", "WAIT", "WBINVD", "WRFSBASE", "WRGSBASE", "WRMSR", "WRPKRU", "XACQUIRE", "XRELEASE", "XRSTOR", "XRSTORS", "XSAVE", "XSAVEC", "XSAVEOPT", "XSAVES", "XSETBV", "XTEST", "INS", "INSB", "INSD", "INSW", "LODS", "LODSB", "LODSD", "LODSQ", "LODSW", "MOVS", "MOVSB", "MOVSD", "MOVSQ", "MOVSW", "OUTS", "OUTSB", "OUTSD", "OUTSW", "REP", "REPE", "REPNE", "REPNZ", "REPZ", "SCAS", "SCASB", "SCASD", "SCASW", "STOS", "STOSB", "STOSD", "STOSQ", "STOSW", "VERR", "VERW", "PTWRITE", "BNDMK", "CPUID", "FNINIT", "FNCLEX", "FNSTENV", "FNSTSW", "UD2", "WAIT", "WBINVD", "CLAC", "CLI", "CLTS", "STAC", "STI", "SWAPGS", "SYSENTER", "SYSEXIT", "SYSCALL", "SYSRET", "WBINVD", "INVD", "CLFLUSH", "CLFLUSHOPT", "MFENCE", "SFENCE", "LFENCE", "CLWB", "WBINVD", "RDTSC", "RDTSCP", "RDPMC", "RDMSR", "WRMSR", "RDSEED", "RDRAND", "RDPKRU", "WRPKRU", "ENCLS", "ENCLU", "MONITOR", "MWAIT", "INVPCID", "INVLPG", "WBINVD", "XGETBV", "XSETBV", "XSAVE", "XSAVEOPT", "XSAVES", "XRSTOR", "XRSTORS", "XSAVEC", "PTWRITE", "RSM", "HLT", "INT 3", "INT n", "INTO", "LOADALL", "SAVEALL", "ARPL", "BOUND", "LAR", "LSL", "VERR", "VERW", "STR", "LLDT", "SLDT", "SGDT", "LGDT", "LIDT", "SIDT", "SMSW", "LTR", "LES", "LFS", "LGS", "CMC", "STC", "STD", "CLI", "STI", "UD2", "PREFETCHW", "PREFETCHWT1", "PREFETCHh", "INTO", "INT 3", "INT n", "FWAIT", "FFREE", "FNCLEX", "FNINIT", "FNSTCW", "FNSTENV", "FNSTSW" // System and miscellaneous instructions, VERY EXTENSIVE MISC NOW, including string instructions, very comprehensive FPU control and system management, older/deprecated instructions, exceptions/interrupts, more FPU control/status etc. and now FWAIT/FFREE, FNINIT/FNCLEX/FNSTCW/FNSTENV/FNSTSW
-    };
 
 
         public static string[] registers = new string[] {
@@ -123,7 +120,6 @@ namespace TraceViewer.Core
             foreach (string instruction in ArithmeticInstructions) InstructionBrushes[instruction] = Brushes.LightBlue;
             foreach (string instruction in BitwiseLogicalInstructions) InstructionBrushes[instruction] = Brushes.Aqua;
             foreach (string instruction in SIMDInstructions) InstructionBrushes[instruction] = Brushes.Orange;
-            foreach (string instruction in MiscInstructions) InstructionBrushes[instruction] = Brushes.DarkGray;
             foreach (string register in registers) RegisterBrushes[register] = Brushes.Coral;
         }
         public static SolidColorBrush Check_Type(string instruction)
