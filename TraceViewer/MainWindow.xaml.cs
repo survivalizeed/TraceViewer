@@ -38,21 +38,9 @@ namespace TraceViewer
             InstructionsView.ItemsSource = InstructionViewItems;
             RegistersView.ItemsSource = RegisterViewItems;
 
-            //Thread thread = new Thread(cleaner);
-            //thread.Start();
             DisasmViewButton_MouseDown(null, null); // Will be the default view when opening the application  
         }
 
-        void cleaner()
-        {
-            while (true)
-            {
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
-                Thread.Sleep(10);
-            }
-        }
         private void InstructionsView_Loaded(object sender, RoutedEventArgs e)
         {
             if (sender is ItemsControl itemsControl && // Using pattern matching
@@ -273,9 +261,9 @@ namespace TraceViewer
             if(Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
                 if (e.Delta > 0)
-                    ScrollControl(15);
+                    ScrollControl(1000);
                 else if (e.Delta < 0)
-                    ScrollControl(-15);
+                    ScrollControl(-1000);
             }
             if (e.Delta > 0)
                 ScrollControl(3);
@@ -287,6 +275,27 @@ namespace TraceViewer
         {
             if (TraceHandler.Trace == null)
                 return false;
+
+            // If the scroll jumps one or more entire pages, it will completely skip to the target control instead of loading/unloading them all
+            int abs_steps = Math.Abs(steps);
+
+            if (abs_steps > TraceHandler.load_count)
+            {
+                int full_cap = abs_steps / TraceHandler.load_count;
+                full_cap--; // One page will later be loaded so take one away here
+                int increment = 0;
+                if (steps < 0)
+                    increment = TraceHandler.load_count;
+                else
+                    increment = -TraceHandler.load_count;
+                index += increment * full_cap;
+                if (index < TraceHandler.load_count) index = TraceHandler.load_count * 2;
+                if (index > TraceHandler.Trace.Trace.Count) 
+                    index = TraceHandler.Trace.Trace.Count - TraceHandler.load_count;
+                steps %= TraceHandler.load_count;
+                steps += -increment; // One new page has to be loaded to fully refresh the view
+                
+            }
 
             bool return_value = false;
             if (steps > 0) // Up
@@ -306,7 +315,7 @@ namespace TraceViewer
             {
                 for (int i = 0; i < Math.Abs(steps); i++)
                 {
-                    if (InstructionViewItems.Count > 0)
+                    if (InstructionViewItems.Count > 0 && index < TraceHandler.Trace.Trace.Count)
                     {
                         InstructionViewItems.RemoveAt(0);
                         TraceHandler.LoadRange(index, index + 1, false);

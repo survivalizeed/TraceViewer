@@ -5,7 +5,6 @@ using System.Windows;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Windows.UI;
 
 namespace TraceViewer.Core
 {
@@ -92,7 +91,7 @@ namespace TraceViewer.Core
 
             var traceCount = traceData.Trace.Count;
 
-            if(low < 0 || high > traceCount - 1)
+            if(low < 0 || high > traceCount)
                 throw new InvalidOperationException("low or high value out of bounds");
 
 
