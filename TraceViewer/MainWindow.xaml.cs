@@ -326,6 +326,25 @@ namespace TraceViewer
             }
             return return_value; // To check if there was even a possible scroll
         }
+
+        private void SaveProject_Click(object sender, RoutedEventArgs e)
+        {
+            if(TraceHandler.Trace == null)
+                return;
+
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.DefaultExt = ".tvproj";
+            saveFileDialog.Filter = "Trace Viewer Project (.tvproj)|*.tvproj";
+            saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            saveFileDialog.Title = "Save as";
+            saveFileDialog.ShowDialog();
+
+            Project project = new Project();
+            project.TraceData = TraceHandler.Trace;
+
+
+            //ProjectWriter.SaveProject(, saveFileDialog.FileName);
+        }
     }
     
 }

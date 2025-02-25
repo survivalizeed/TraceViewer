@@ -38,8 +38,7 @@ namespace TraceViewer.Core
                 GC.Collect(); // Here needed. Otherwise the GC will wait too long to collect big unloaded traces
             }
 
-            var loader = new TraceLoader();
-            Trace = loader.OpenX64dbgTrace(path);
+            Trace = TraceLoader.OpenX64dbgTrace(path);
 
             if (Trace.Trace.Count < load_count)
                 load_count = Trace.Trace.Count;

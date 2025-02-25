@@ -120,7 +120,7 @@ namespace TraceViewer.Core
         public ulong Value { get; set; }
     }
 
-    public class TraceLoader
+    public static class TraceLoader
     {
         private const string HexPrefix = "0x";
         private const string ChangeSeparator = "; ";
@@ -128,7 +128,7 @@ namespace TraceViewer.Core
         private const string RegisterValueSeparator = ": ";
         private const string ZeroHexValue = "00";
 
-        public TraceData OpenX64dbgTrace(string filename)
+        public static TraceData OpenX64dbgTrace(string filename)
         {
             TraceData traceData = new TraceData();
             traceData.Filename = filename;
@@ -413,7 +413,7 @@ namespace TraceViewer.Core
 
             return traceData;
         }
-        private string ByteArrayToHexString(byte[] bytes)
+        private static string ByteArrayToHexString(byte[] bytes)
         {
             if (bytes == null || bytes.Length == 0)
             {

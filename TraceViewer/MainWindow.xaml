@@ -30,7 +30,7 @@
                             <MenuItem Header="File">
                                 <MenuItem x:Name="OpenTrace" Header="Open Trace" Click="OpenTrace_Click"/>
                                 <MenuItem x:Name="OpenProject" Header="Open Project"/>
-                                <MenuItem x:Name="SaveProject" Header="Save Project"/>
+                                <MenuItem x:Name="SaveProject" Header="Save Project" Click="SaveProject_Click"/>
                                 <MenuItem x:Name="SaveProjectAs" Header="Save Project As"/>
                             </MenuItem>
                         </Menu>
