@@ -10,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using TraceViewer.Core;
+using TraceViewer.UserControls;
 
 namespace TraceViewer
 {
@@ -25,11 +26,14 @@ namespace TraceViewer
         private bool _toggleFpu = true; // Use backing field for toggle state
         public bool _toggleMnemonic = true; // Use backing field for toggle state
         public double _disassemblerViewOffset = 0; // Use backing field for offset
+        private string _current_project_path = "";
 
         public ScrollViewer InstructionsScrollViewer { get; private set; } // Public property for ScrollViewer
         public ObservableCollection<WPF_TraceRow> InstructionViewItems { get; } = new(); // Use property initializer
         public ObservableCollection<WPF_RegisterRow> RegisterViewItems { get; } = new(); // Use property initializer
         public TextBox CurrentCommentContentPartner { get; set; } // Public property
+
+        
 
         public MainWindow()
         {
@@ -37,8 +41,21 @@ namespace TraceViewer
             InstructionsView.Loaded += InstructionsView_Loaded;
             InstructionsView.ItemsSource = InstructionViewItems;
             RegistersView.ItemsSource = RegisterViewItems;
-
+            this.PreviewKeyDown += MainWindow_PreviewKeyDown;
             DisasmViewButton_MouseDown(null, null); // Will be the default view when opening the application  
+        }
+
+
+        private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            {
+                if(e.Key == Key.G && TraceHandler.Trace != null)
+                {
+                    InputDialog input = new InputDialog();
+                    input.Show();
+                }
+            }
         }
 
         private void InstructionsView_Loaded(object sender, RoutedEventArgs e)
@@ -237,20 +254,13 @@ namespace TraceViewer
             }
         }
 
-        private void OpenTrace_Click(object sender, RoutedEventArgs e)
+
+        void Unload()
         {
             InstructionViewItems.Clear();
             RegisterViewItems.Clear();
-            var openFileDialog = new OpenFileDialog
-            {
-                Filter = "Trace Files (*.trace64)|*.trace64|All Files (*.*)|*.*",
-                FilterIndex = 1,
-                Multiselect = false
-            };
-            if (openFileDialog.ShowDialog() == true)
-            {
-                TraceHandler.OpenAndLoad(openFileDialog.FileName);
-            }
+            NotesContent.Text = "";
+            _current_project_path = "";
         }
 
 
@@ -326,10 +336,84 @@ namespace TraceViewer
             }
             return return_value; // To check if there was even a possible scroll
         }
+        private void OpenTrace_Click(object sender, RoutedEventArgs e)
+        {
+            Unload();
+            var openFileDialog = new OpenFileDialog
+            {
+                Filter = "Trace Files (*.trace64)|*.trace64",
+                FilterIndex = 1,
+                Multiselect = false
+            };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                TraceHandler.OpenAndLoad(openFileDialog.FileName);
+            }
+        }
+
+        private void OpenProject_Click(object sender, RoutedEventArgs e)
+        {
+            Unload();
+            var openFileDialog = new OpenFileDialog
+            {
+                Filter = "Trace Viewer Project (.tvproj)|*.tvproj",
+                FilterIndex = 1,
+                Multiselect = false
+            };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                _current_project_path = openFileDialog.FileName;
+                Project project = ProjectLoader.OpenProject(openFileDialog.FileName);
+                TraceHandler.Trace = project.TraceData;
+                foreach(var item in project.Comments)
+                {
+                    TraceHandler.Trace.Trace[item.Item1].comments = item.Item2;
+                }
+                NotesContent.Text = project.Notes;
+                // To refresh the view to contain the correct comments
+                ScrollControl(-TraceHandler.load_count);
+                ScrollControl(TraceHandler.load_count);
+            }
+        }
 
         private void SaveProject_Click(object sender, RoutedEventArgs e)
         {
-            if(TraceHandler.Trace == null)
+            if (TraceHandler.Trace == null)
+                return;
+
+            string filename = "";
+
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.DefaultExt = ".tvproj";
+            saveFileDialog.Filter = "Trace Viewer Project (.tvproj)|*.tvproj";
+            saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            saveFileDialog.Title = "Save as";
+
+            if (_current_project_path == "")
+            {
+                saveFileDialog.ShowDialog();
+                filename = saveFileDialog.FileName;
+            }
+            else
+                filename = _current_project_path;
+
+            Project project = new Project();
+            project.TraceData = TraceHandler.Trace;
+            project.Name = TraceHandler.Trace.Filename;
+            project.Comments = new();
+            foreach (var item in TraceHandler.Trace.Trace)
+            {
+                if(item.comments != "")
+                    project.Comments.Add(new Tuple<int, string>(Convert.ToInt32(item.Id), item.comments));
+            }
+            project.Notes = NotesContent.Text;
+            
+            ProjectWriter.SaveProject(project, filename);
+        }
+
+        private void SaveProjectAs_Click(object sender, RoutedEventArgs e)
+        {
+            if (TraceHandler.Trace == null)
                 return;
 
             SaveFileDialog saveFileDialog = new SaveFileDialog();
@@ -341,9 +425,22 @@ namespace TraceViewer
 
             Project project = new Project();
             project.TraceData = TraceHandler.Trace;
+            project.Name = TraceHandler.Trace.Filename;
+            project.Comments = new();
+            foreach (var item in TraceHandler.Trace.Trace)
+            {
+                if (item.comments != "")
+                    project.Comments.Add(new Tuple<int, string>(Convert.ToInt32(item.Id), item.comments));
+            }
+            project.Notes = NotesContent.Text;
 
+            _current_project_path = saveFileDialog.FileName;
+            ProjectWriter.SaveProject(project, saveFileDialog.FileName);
+        }
 
-            //ProjectWriter.SaveProject(, saveFileDialog.FileName);
+        private void CloseProject_Click(object sender, RoutedEventArgs e)
+        {
+            Unload();
         }
     }
     

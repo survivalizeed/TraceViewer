@@ -21,17 +21,18 @@
                        VerticalContentAlignment="Center" Height="50" KeyDown="CommentContent_KeyDown"/>
             </DockPanel>
         </Grid>
-        
+
         <Grid Name="MainView" Visibility="Visible">
             <Grid Name="MenuView">
                 <StackPanel>
                     <DockPanel LastChildFill="False">
                         <Menu>
-                            <MenuItem Header="File">
+                            <MenuItem Header="FILE">
                                 <MenuItem x:Name="OpenTrace" Header="Open Trace" Click="OpenTrace_Click"/>
-                                <MenuItem x:Name="OpenProject" Header="Open Project"/>
+                                <MenuItem x:Name="OpenProject" Header="Open Project" Click="OpenProject_Click"/>
                                 <MenuItem x:Name="SaveProject" Header="Save Project" Click="SaveProject_Click"/>
-                                <MenuItem x:Name="SaveProjectAs" Header="Save Project As"/>
+                                <MenuItem x:Name="SaveProjectAs" Header="Save Project As" Click="SaveProjectAs_Click"/>
+                                <MenuItem x:Name="CloseProject" Header="Close Project/Trace" Click="CloseProject_Click"/>
                             </MenuItem>
                         </Menu>
                     </DockPanel>

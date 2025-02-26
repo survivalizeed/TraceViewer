@@ -89,7 +89,9 @@ namespace TraceViewer.Core
                 tempTraceFilename = Path.GetTempFileName();
                 File.WriteAllBytes(tempTraceFilename, traceDataBlock);
 
-                project.TraceData = TraceLoader.OpenX64dbgTrace(tempTraceFilename);
+                TraceHandler.OpenAndLoad(tempTraceFilename);
+
+                project.TraceData = TraceHandler.Trace;
 
                 tempTraceFilename = null;
 
