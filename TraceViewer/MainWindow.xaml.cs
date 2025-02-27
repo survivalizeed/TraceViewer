@@ -3,9 +3,11 @@ using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
@@ -25,7 +27,6 @@ namespace TraceViewer
     {
         private bool _toggleFpu = true; // Use backing field for toggle state
         public bool _toggleMnemonic = true; // Use backing field for toggle state
-        public double _disassemblerViewOffset = 0; // Use backing field for offset
         private string _current_project_path = "";
 
         public ScrollViewer InstructionsScrollViewer { get; private set; } // Public property for ScrollViewer
@@ -42,7 +43,29 @@ namespace TraceViewer
             InstructionsView.ItemsSource = InstructionViewItems;
             RegistersView.ItemsSource = RegisterViewItems;
             this.PreviewKeyDown += MainWindow_PreviewKeyDown;
+            this.SourceInitialized += MainWindow_SourceInitialized;
             DisasmViewButton_MouseDown(null, null); // Will be the default view when opening the application  
+        }
+
+        [DllImport("dwmapi.dll", PreserveSig = true)]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
+        private void MainWindow_SourceInitialized(object? sender, EventArgs e)
+        {
+            if (IsWindows10OrHigher())
+            {
+                var hwnd = new WindowInteropHelper(this).Handle;
+                int darkModeEnabled = 1;
+                DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkModeEnabled, sizeof(int));
+            }
+        }
+
+        private bool IsWindows10OrHigher()
+        {
+            var version = Environment.OSVersion.Version;
+            return version.Major >= 10;
         }
 
 
@@ -52,8 +75,20 @@ namespace TraceViewer
             {
                 if(e.Key == Key.G && TraceHandler.Trace != null)
                 {
-                    InputDialog input = new InputDialog();
-                    input.Show();
+                    InputDialog input = new InputDialog("Go to", "Put in a row to go to:");
+                    input.ShowDialog();
+                    var res = input.GetResult();
+                    if(res != "")
+                    {
+                        try { 
+                            int goto_row = Convert.ToInt32(res);
+                            ScrollControl(-goto_row, true);
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show("Invalid input.");
+                        }
+                    }
                 }
             }
         }
@@ -186,12 +221,6 @@ namespace TraceViewer
             MnemonicReaderScrollView.ScrollToVerticalOffset(0);
             MnemonicReaderScrollView.Visibility = Visibility.Collapsed;
             MainView.Visibility = Visibility.Visible;
-            SetInstructionsViewScrollbar(_disassemblerViewOffset);
-        }
-
-        private void SetInstructionsViewScrollbar(double offset)
-        {
-            InstructionsScrollViewer?.ScrollToVerticalOffset(offset); // Null-conditional operator
         }
 
         private DropShadowEffect glowEffect = new DropShadowEffect
@@ -281,13 +310,16 @@ namespace TraceViewer
                 ScrollControl(-3);
         }
 
-        public bool ScrollControl(int steps)
+        public bool ScrollControl(int steps, bool set = false)
         {
             if (TraceHandler.Trace == null)
                 return false;
 
             // If the scroll jumps one or more entire pages, it will completely skip to the target control instead of loading/unloading them all
             int abs_steps = Math.Abs(steps);
+
+            if (set)
+                index = TraceHandler.load_count;
 
             if (abs_steps > TraceHandler.load_count)
             {
@@ -334,6 +366,14 @@ namespace TraceViewer
                     }
                 }
             }
+
+            // To refresh the view after a set. Will only happen if above didn't already refresh
+            if(abs_steps < TraceHandler.load_count && set)
+            {
+                ScrollControl(-TraceHandler.load_count);
+                ScrollControl(TraceHandler.load_count);
+            }
+
             return return_value; // To check if there was even a possible scroll
         }
         private void OpenTrace_Click(object sender, RoutedEventArgs e)

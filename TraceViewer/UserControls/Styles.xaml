@@ -45,7 +45,7 @@
 
                             <Popup IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
                                Placement="Bottom" StaysOpen="False">
-                                <Border Background="{StaticResource instructions_view_background_hover}" CornerRadius="3">
+                                <Border Background="#151515">
                                     <StackPanel Background="Transparent">
                                         <ItemsPresenter/>
                                     </StackPanel>
@@ -109,7 +109,7 @@
                                                 <Rectangle.Effect>
                                                     <DropShadowEffect 
                                                  Color="White"
-                                                 BlurRadius="10"
+                                                 BlurRadius="15"
                                                  ShadowDepth="0"
                                                  Opacity="0.8" />
                                                 </Rectangle.Effect>
@@ -208,11 +208,32 @@
         </Style.Triggers>
     </Style>
 
+    <Style x:Key="label_button" TargetType="Label">
+        <Setter Property="Background" Value="{StaticResource instructions_view_background}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontFamily" Value="Miriam Mono CLM"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border}"/>
+        <Setter Property="BorderThickness" Value="0.5"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border_hover}"/>
+                <Setter Property="Background" Value="{StaticResource instructions_view_background_hover}"/>
+            </Trigger>
+            <Trigger Property="IsFocused" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border_hover}"/>
+                <Setter Property="Background" Value="{StaticResource comments_focused}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <Style x:Key="disasm_text_block" TargetType="TextBlock">
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Padding" Value="5"/>
-		<Setter Property="FontFamily" Value="Miriam Mono CLM"/>
+        <Setter Property="FontFamily" Value="Miriam Mono CLM"/>
         <Setter Property="Background" Value="{StaticResource instructions_view_background}"/>
     </Style>
 

@@ -5,12 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TraceViewer"
         mc:Ignorable="d"
-        Title="MainWindow" 
+        Title="survivalizeed's Trace Viewer"
         Width="{x:Static SystemParameters.PrimaryScreenWidth}"  
         Height="{x:Static SystemParameters.PrimaryScreenHeight}"
         >
     <Grid Name="window">
         <Rectangle Fill="{StaticResource CustomBackground}"/>
+      
         <ScrollViewer Name="MnemonicReaderScrollView" Visibility="Collapsed">
             <Label Name="MnemonicReader" FontSize="15" FontFamily="Miriam Mono CLM" Foreground="White" Background="#50000000"
                    MouseDown="MnemonicReader_MouseDown"/>

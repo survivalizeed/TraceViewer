@@ -288,7 +288,6 @@ namespace TraceViewer
 
         private void ActivateBigMnemonicView()
         {
-            window._disassemblerViewOffset = window.InstructionsScrollViewer.VerticalOffset; // Save scroll position
             window.MainView.Visibility = Visibility.Collapsed;
             window.MnemonicReaderScrollView.Visibility = Visibility.Visible;
             window.MnemonicReader.Content = mnemonic; // Display full mnemonic
