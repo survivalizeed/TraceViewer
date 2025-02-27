@@ -23,6 +23,16 @@
             </DockPanel>
         </Grid>
 
+        <Grid Name="DROPZONE" Visibility="Hidden" Background="#50000000">
+            <DockPanel LastChildFill="True">
+                <Label Style="{StaticResource instructions_view_titles}" Padding="2,5,2,10" FontSize="50" Content="DROP HERE" BorderThickness="0" Grid.Row="0">
+                    <Label.Effect>
+                        <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
+                    </Label.Effect>
+                </Label>
+            </DockPanel>
+        </Grid>
+
         <Grid Name="MainView" Visibility="Visible">
             <Grid Name="MenuView">
                 <StackPanel>
@@ -33,7 +43,7 @@
                                 <MenuItem x:Name="OpenProject" Header="Open Project" Click="OpenProject_Click"/>
                                 <MenuItem x:Name="SaveProject" Header="Save Project" Click="SaveProject_Click"/>
                                 <MenuItem x:Name="SaveProjectAs" Header="Save Project As" Click="SaveProjectAs_Click"/>
-                                <MenuItem x:Name="CloseProject" Header="Close Project/Trace" Click="CloseProject_Click"/>
+                                <MenuItem x:Name="CloseProject" Header="Quit Project/Trace" Click="CloseProject_Click"/>
                             </MenuItem>
                         </Menu>
                     </DockPanel>

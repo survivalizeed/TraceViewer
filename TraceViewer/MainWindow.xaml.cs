@@ -13,6 +13,7 @@ using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using TraceViewer.Core;
 using TraceViewer.UserControls;
+using TraceViewer.UserWindows;
 
 namespace TraceViewer
 {
@@ -25,16 +26,15 @@ namespace TraceViewer
 
     public partial class MainWindow : Window
     {
-        private bool _toggleFpu = true; // Use backing field for toggle state
-        public bool _toggleMnemonic = true; // Use backing field for toggle state
+        private bool _toggleFpu = true;
+        public bool _toggleMnemonic = true;
         private string _current_project_path = "";
 
-        public ScrollViewer InstructionsScrollViewer { get; private set; } // Public property for ScrollViewer
-        public ObservableCollection<WPF_TraceRow> InstructionViewItems { get; } = new(); // Use property initializer
-        public ObservableCollection<WPF_RegisterRow> RegisterViewItems { get; } = new(); // Use property initializer
-        public TextBox CurrentCommentContentPartner { get; set; } // Public property
+        public ScrollViewer InstructionsScrollViewer { get; private set; }
+        public ObservableCollection<WPF_TraceRow> InstructionViewItems { get; } = new();
+        public ObservableCollection<WPF_RegisterRow> RegisterViewItems { get; } = new();
+        public TextBox CurrentCommentContentPartner { get; set; }
 
-        
 
         public MainWindow()
         {
@@ -42,10 +42,34 @@ namespace TraceViewer
             InstructionsView.Loaded += InstructionsView_Loaded;
             InstructionsView.ItemsSource = InstructionViewItems;
             RegistersView.ItemsSource = RegisterViewItems;
-            this.PreviewKeyDown += MainWindow_PreviewKeyDown;
-            this.SourceInitialized += MainWindow_SourceInitialized;
-            DisasmViewButton_MouseDown(null, null); // Will be the default view when opening the application  
-        }
+            PreviewKeyDown += MainWindow_PreviewKeyDown;
+            SourceInitialized += MainWindow_SourceInitialized;
+
+            InstructionsView.AllowDrop = true;
+            InstructionsView.DragEnter += DragEnter;
+            InstructionsView.DragLeave += DragLeave;
+            InstructionsView.Drop += InstructionsView_Drop;
+
+            DisasmViewButton_MouseDown(null, null); // Set Disassembler View as default
+        }
+
+        private void InstructionsView_Drop(object sender, DragEventArgs e)
+        {
+            throw new NotImplementedException(); // Implementation needed for drag and drop functionality
+        }
+
+        private void DragEnter(object sender, DragEventArgs e)
+        {
+            MainView.Opacity = 0; // Make MainView transparent during drag operation
+            DROPZONE.Visibility = Visibility.Visible; // Show drop zone indicator
+        }
+
+        private void DragLeave(object sender, DragEventArgs e)
+        {
+            MainView.Opacity = 1; // Restore MainView opacity after drag leave
+            DROPZONE.Visibility = Visibility.Hidden; // Hide drop zone indicator
+        }
+
 
         [DllImport("dwmapi.dll", PreserveSig = true)]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
@@ -56,7 +80,8 @@ namespace TraceViewer
         {
             if (IsWindows10OrHigher())
             {
-                var hwnd = new WindowInteropHelper(this).Handle;
+                // Enable immersive dark mode for Windows 10 and higher
+                var hwnd = new WindowInteropHelper(this).Handle;
                 int darkModeEnabled = 1;
                 DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkModeEnabled, sizeof(int));
             }
@@ -64,30 +89,30 @@ namespace TraceViewer
 
         private bool IsWindows10OrHigher()
         {
-            var version = Environment.OSVersion.Version;
-            return version.Major >= 10;
+            // Check if the OS version is Windows 10 or higher
+            return Environment.OSVersion.Version.Major >= 10;
         }
 
 
         private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            // Handle Ctrl+G shortcut for "Go To Row" functionality
+            if ((Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && e.Key == Key.G && TraceHandler.Trace != null)
             {
-                if(e.Key == Key.G && TraceHandler.Trace != null)
+                InputDialog input = new InputDialog("GO TO", "Put in a row to go to:");
+                input.ShowDialog();
+                var res = input.GetResult();
+                if (!string.IsNullOrEmpty(res))
                 {
-                    InputDialog input = new InputDialog("Go to", "Put in a row to go to:");
-                    input.ShowDialog();
-                    var res = input.GetResult();
-                    if(res != "")
+                    try
                     {
-                        try { 
-                            int goto_row = Convert.ToInt32(res);
-                            ScrollControl(-goto_row, true);
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show("Invalid input.");
-                        }
+                        int goto_row = Convert.ToInt32(res);
+                        ScrollControl(-goto_row, true);
+                    }
+                    catch (FormatException)
+                    {
+                        MessageDialog messageDialog = new MessageDialog("INVALID INPUT", "Invalid input. Use a numerical value!");
+                        messageDialog.ShowDialog();
                     }
                 }
             }
@@ -95,79 +120,86 @@ namespace TraceViewer
 
         private void InstructionsView_Loaded(object sender, RoutedEventArgs e)
         {
-            if (sender is ItemsControl itemsControl && // Using pattern matching
-                itemsControl.Template.FindName("instructions_view_scrollviewer", itemsControl) is ScrollViewer scrollViewer)
+            // Find the ScrollViewer within the InstructionsView template
+            if (sender is ItemsControl itemsControl &&
+        itemsControl.Template.FindName("instructions_view_scrollviewer", itemsControl) is ScrollViewer scrollViewer)
             {
                 InstructionsScrollViewer = scrollViewer;
             }
             else
             {
-                throw new InvalidOperationException("ScrollViewer not found in template"); // More specific exception
+                throw new InvalidOperationException("ScrollViewer not found in template");
             }
         }
 
 
-        // Consolidated SizeChanged event handlers
         private void TitleLabel_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             if (sender is System.Windows.Controls.Label label)
             {
-                InstructionsView.BeginInit();
-                try
+                UpdateInstructionViewColumnWidth(label.Name, e.NewSize.Width);
+            }
+        }
+
+        private void UpdateInstructionViewColumnWidth(string columnName, double newWidth)
+        {
+            InstructionsView.BeginInit();
+            try
+            {
+                foreach (var item in InstructionViewItems)
                 {
-                    foreach (var item in InstructionViewItems)
+                    // Update column widths based on label name
+                    switch (columnName)
                     {
-                        // Use a dictionary or a better way to map columns to properties
-                        switch (label.Name)
-                        {
-                            case "id": // ID
-                                item.id.Width = e.NewSize.Width;
-                                item.id_border.Width = e.NewSize.Width;
-                                break;
-                            case "address": // Address
-                                item.address.Width = e.NewSize.Width;
-                                item.address_border.Width = e.NewSize.Width;
-                                break;
-                            case "disasm": // Disasm
-                                item.disasm.Width = e.NewSize.Width;
-                                item.disasm_border.Width = e.NewSize.Width;
-                                break;
-                            case "changes": // Changes
-                                item.changes.Width = e.NewSize.Width;
-                                item.changes_border.Width = e.NewSize.Width;
-                                break;
-                            case "comments": // Comments/MnemonicBrief
-                                item.comments.Width = e.NewSize.Width;
-                                item.mnemonicBrief.Width = e.NewSize.Width;
-                                break;
-                        }
+                        case "id":
+                            item.id.Width = newWidth;
+                            item.id_border.Width = newWidth;
+                            break;
+                        case "address":
+                            item.address.Width = newWidth;
+                            item.address_border.Width = newWidth;
+                            break;
+                        case "disasm":
+                            item.disasm.Width = newWidth;
+                            item.disasm_border.Width = newWidth;
+                            break;
+                        case "changes":
+                            item.changes.Width = newWidth;
+                            item.changes_border.Width = newWidth;
+                            break;
+                        case "comments":
+                            item.comments.Width = newWidth;
+                            item.mnemonicBrief.Width = newWidth; // Assuming comments and mnemonicBrief share column width
+                            break;
                     }
                 }
-                finally
-                {
-                    InstructionsView.EndInit();
-                    SetInstructionsViewWidth();
-                }
+            }
+            finally
+            {
+                InstructionsView.EndInit();
+                SetInstructionsViewWidth();
             }
         }
 
 
         private void SetInstructionsViewWidth()
         {
-            var totalWidth = cd0.Width.Value + cd1.Width.Value + cd2.Width.Value + cd3.Width.Value + cd4.Width.Value + cd5.Width.Value + 8;
-            if (totalWidth > 0)
+            // Calculate and set the minimum and maximum width of InstructionsView based on column widths
+            double totalWidth = cd0.Width.Value + cd1.Width.Value + cd2.Width.Value + cd3.Width.Value + cd4.Width.Value + cd5.Width.Value + 8; // Add a small buffer
+            if (totalWidth > 0)
             {
                 InstructionsView.MinWidth = totalWidth;
                 InstructionsView.MaxWidth = totalWidth;
             }
         }
 
-        private void Fpu_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Fpu_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            _toggleFpu = !_toggleFpu;
+            // Toggle FPU registers visibility
+            _toggleFpu = !_toggleFpu;
             fpu.Foreground = _toggleFpu ? Brushes.White : Brushes.Gray;
 
-            var fpuVisibility = _toggleFpu ? Visibility.Visible : Visibility.Collapsed;
+            Visibility fpuVisibility = _toggleFpu ? Visibility.Visible : Visibility.Collapsed;
 
             foreach (var item in RegisterViewItems)
             {
@@ -178,14 +210,15 @@ namespace TraceViewer
             }
         }
 
-        private void CommentContentGridHitbox_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void CommentContentGridHitbox_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            BigCommentEditInactive();
-        }
+            BigCommentEditInactive(); // Deactivate big comment edit mode on hitbox click
+        }
 
-        private void CommentContent_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void CommentContent_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == System.Windows.Input.Key.Enter || e.Key == System.Windows.Input.Key.Escape)
+            // Deactivate big comment edit mode on Enter or Escape key press
+            if (e.Key == Key.Enter || e.Key == Key.Escape)
             {
                 BigCommentEditInactive();
             }
@@ -193,121 +226,111 @@ namespace TraceViewer
 
         private void BigCommentEditInactive()
         {
-            CommentContentGridHitbox.Visibility = Visibility.Collapsed;
+            // Hide big comment editor and restore focus to the comment content partner
+            CommentContentGridHitbox.Visibility = Visibility.Collapsed;
             MainView.Visibility = Visibility.Visible;
-            CurrentCommentContentPartner?.Focus(); // Null-conditional operator and simplified focus setting
-            CurrentCommentContentPartner.Text = CommentContent.Text; // Update text
-        }
+            CurrentCommentContentPartner?.Focus();
+            CurrentCommentContentPartner.Text = CommentContent.Text; // Update comment text
+        }
 
-        private void Comments_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Comments_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            _toggleMnemonic = !_toggleMnemonic;
+            // Toggle between displaying comments and mnemonic brief in the comments column
+            _toggleMnemonic = !_toggleMnemonic;
             InstructionsView.BeginInit();
             foreach (var item in InstructionViewItems)
             {
-                item.display_mnemonic_brief(!_toggleMnemonic);
-            }
+                item.display_mnemonic_brief(!_toggleMnemonic); // Call display toggle on each item
+            }
             InstructionsView.EndInit();
-            comments.Content = !_toggleMnemonic ? "MNEMONIC" : "COMMENTS";
-        }
+            comments.Content = !_toggleMnemonic ? "MNEMONIC" : "COMMENTS"; // Update button content
+        }
 
-        private void MnemonicReader_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void MnemonicReader_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            BigMnemonicViewInactive();
-        }
+            BigMnemonicViewInactive(); // Deactivate big mnemonic view
+        }
 
         private void BigMnemonicViewInactive()
         {
-            MnemonicReaderScrollView.ScrollToVerticalOffset(0);
-            MnemonicReaderScrollView.Visibility = Visibility.Collapsed;
+            // Hide big mnemonic view and restore focus to main view
+            MnemonicReaderScrollView.ScrollToVerticalOffset(0); // Reset scroll position
+            MnemonicReaderScrollView.Visibility = Visibility.Collapsed;
             MainView.Visibility = Visibility.Visible;
         }
 
-        private DropShadowEffect glowEffect = new DropShadowEffect
-        {
+        private readonly DropShadowEffect glowEffect = new DropShadowEffect // Make glow effect readonly
+        {
             Color = Colors.White,
             BlurRadius = 10,
             ShadowDepth = 0,
             Opacity = 0.8
         };
 
-        private void DisasmViewButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void DisasmViewButton_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            DisasmViewButtonBorder.Background = new SolidColorBrush(Color.FromArgb(255, 40, 40, 40));
-            DisasmViewButtonBorder.Effect = glowEffect;
-            NotesViewButtonBorder.Background = Brushes.Transparent;
-            NotesViewButtonBorder.Effect = null;
-            BookmarksViewButtonBorder.Background = Brushes.Transparent;
-            BookmarksViewButtonBorder.Effect = null;
-            SetCurrentUIState(UIState.DisassemblerView);
+            SetViewButtonActive(DisasmViewButtonBorder); // Set Disassembler view button as active
+            SetViewButtonInactive(NotesViewButtonBorder); // Deactivate Notes view button
+            SetViewButtonInactive(BookmarksViewButtonBorder); // Deactivate Bookmarks view button
+            SetCurrentUIState(UIState.DisassemblerView); // Set UI state to Disassembler view
+        }
+
+        private void NotesViewButton_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            SetViewButtonInactive(DisasmViewButtonBorder); // Deactivate Disassembler view button
+            SetViewButtonActive(NotesViewButtonBorder); // Set Notes view button as active
+            SetViewButtonInactive(BookmarksViewButtonBorder); // Deactivate Bookmarks view button
+            SetCurrentUIState(UIState.NotesView); // Set UI state to Notes view
+        }
+
+        private void BookmarksViewButton_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            SetViewButtonInactive(DisasmViewButtonBorder); // Deactivate Disassembler view button
+            SetViewButtonInactive(NotesViewButtonBorder); // Deactivate Notes view button
+            SetViewButtonActive(BookmarksViewButtonBorder); // Set Bookmarks view button as active
+            SetCurrentUIState(UIState.BookmarksView); // Set UI state to Bookmarks view
+        }
+
+        private void SetViewButtonActive(Border buttonBorder)
+        {
+            buttonBorder.Background = new SolidColorBrush(Color.FromArgb(255, 40, 40, 40));
+            buttonBorder.Effect = glowEffect;
         }
 
-        private void NotesViewButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void SetViewButtonInactive(Border buttonBorder)
         {
-            DisasmViewButtonBorder.Background = Brushes.Transparent;
-            DisasmViewButtonBorder.Effect = null;
-            NotesViewButtonBorder.Background = new SolidColorBrush(Color.FromArgb(255, 40, 40, 40));
-            NotesViewButtonBorder.Effect = glowEffect;
-            BookmarksViewButtonBorder.Background = Brushes.Transparent;
-            BookmarksViewButtonBorder.Effect = null;
-            SetCurrentUIState(UIState.NotesView);
+            buttonBorder.Background = Brushes.Transparent;
+            buttonBorder.Effect = null;
         }
 
-        private void BookmarksViewButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            DisasmViewButtonBorder.Background = Brushes.Transparent;
-            DisasmViewButtonBorder.Effect = null;
-            NotesViewButtonBorder.Background = Brushes.Transparent;
-            NotesViewButtonBorder.Effect = null;
-            BookmarksViewButtonBorder.Background = new SolidColorBrush(Color.FromArgb(255, 40, 40, 40));
-            BookmarksViewButtonBorder.Effect = glowEffect;
-            SetCurrentUIState(UIState.BookmarksView);
-        }
 
         private void SetCurrentUIState(UIState uiState)
         {
-            switch (uiState)
-            {
-                case UIState.DisassemblerView:
-                    DisassemblerView.Visibility = Visibility.Visible;
-                    NotesView.Visibility = Visibility.Collapsed;
-                    break;
-                case UIState.NotesView:
-                    DisassemblerView.Visibility = Visibility.Collapsed;
-                    NotesView.Visibility = Visibility.Visible;
-                    break;
-                case UIState.BookmarksView:
-                    DisassemblerView.Visibility = Visibility.Collapsed;
-                    NotesView.Visibility = Visibility.Collapsed;
-                    break;
-            }
+            // Set visibility of different UI views based on UIState enum
+            DisassemblerView.Visibility = uiState == UIState.DisassemblerView ? Visibility.Visible : Visibility.Collapsed;
+            NotesView.Visibility = uiState == UIState.NotesView ? Visibility.Visible : Visibility.Collapsed;
+            //BookmarksView.Visibility = uiState == UIState.BookmarksView ? Visibility.Visible : Visibility.Collapsed;
         }
 
 
         void Unload()
         {
-            InstructionViewItems.Clear();
+            // Clear all data and reset UI to initial state
+            InstructionViewItems.Clear();
             RegisterViewItems.Clear();
             NotesContent.Text = "";
             _current_project_path = "";
         }
 
 
-        static int index = TraceHandler.load_count; // Default loaded size
+        static int index = TraceHandler.load_count; // Initial index for trace loading
 
-        private void InstructionsScrollViewer_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        private void InstructionsScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if(Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
-            {
-                if (e.Delta > 0)
-                    ScrollControl(15);
-                else if (e.Delta < 0)
-                    ScrollControl(-15);
-            }
-            if (e.Delta > 0)
-                ScrollControl(3);
-            else if(e.Delta < 0)
-                ScrollControl(-3);
+            // Handle mouse wheel scrolling, with Ctrl key for faster scrolling
+            int scrollStep = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl) ? 15 : 3;
+            int delta = e.Delta > 0 ? scrollStep : -scrollStep;
+            ScrollControl(delta);
         }
 
         public bool ScrollControl(int steps, bool set = false)
@@ -315,71 +338,67 @@ namespace TraceViewer
             if (TraceHandler.Trace == null)
                 return false;
 
-            // If the scroll jumps one or more entire pages, it will completely skip to the target control instead of loading/unloading them all
-            int abs_steps = Math.Abs(steps);
-
             if (set)
                 index = TraceHandler.load_count;
 
-            if (abs_steps > TraceHandler.load_count)
+            int absSteps = Math.Abs(steps);
+            if (absSteps > TraceHandler.load_count)
             {
-                int full_cap = abs_steps / TraceHandler.load_count;
-                full_cap--; // One page will later be loaded so take one away here
-                int increment = 0;
-                if (steps < 0)
-                    increment = TraceHandler.load_count;
-                else
-                    increment = -TraceHandler.load_count;
-                index += increment * full_cap;
-                if (index < TraceHandler.load_count) index = TraceHandler.load_count * 2;
-                if (index > TraceHandler.Trace.Trace.Count) 
-                    index = TraceHandler.Trace.Trace.Count - TraceHandler.load_count;
-                steps %= TraceHandler.load_count;
-                steps += -increment; // One new page has to be loaded to fully refresh the view
-                
-            }
+                int fullPageSteps = absSteps / TraceHandler.load_count - 1; // Calculate full page jumps
+                int increment = (steps < 0) ? TraceHandler.load_count : -TraceHandler.load_count; // Determine increment direction
+                index += increment * fullPageSteps; // Adjust index by full pages
 
-            bool return_value = false;
-            if (steps > 0) // Up
-            {
+                // Ensure index stays within bounds
+                if (index < TraceHandler.load_count) index = TraceHandler.load_count * 2;
+                if (index > TraceHandler.Trace.Trace.Count)
+                    index = TraceHandler.Trace.Trace.Count - TraceHandler.load_count;
+
+                steps %= TraceHandler.load_count; // Remaining steps after full page jumps
+                steps -= increment; // Load one new page for refresh
+            }
+
+            bool returnValue = false;
+            if (steps > 0) // Scroll Up
+            {
                 for (int i = 0; i < steps; i++)
                 {
                     if (InstructionViewItems.Count > 0 && index - TraceHandler.load_count - 1 >= 0)
                     {
-                        InstructionViewItems.RemoveAt(InstructionViewItems.Count - 1);
-                        TraceHandler.LoadRange(index - TraceHandler.load_count - 1, index - TraceHandler.load_count, true);
-                        index--;
-                        return_value = true;
+                        InstructionViewItems.RemoveAt(InstructionViewItems.Count - 1); // Remove last item
+                        TraceHandler.LoadRange(index - TraceHandler.load_count - 1, index - TraceHandler.load_count, true); // Load new item at top
+                        index--;
+                        returnValue = true;
                     }
                 }
             }
-            else if (steps < 0) // Down
-            {
+            else if (steps < 0) // Scroll Down
+            {
                 for (int i = 0; i < Math.Abs(steps); i++)
                 {
                     if (InstructionViewItems.Count > 0 && index < TraceHandler.Trace.Trace.Count)
                     {
-                        InstructionViewItems.RemoveAt(0);
-                        TraceHandler.LoadRange(index, index + 1, false);
-                        index++;
-                        return_value = true;
+                        InstructionViewItems.RemoveAt(0); // Remove first item
+                        TraceHandler.LoadRange(index, index + 1, false); // Load new item at bottom
+                        index++;
+                        returnValue = true;
                     }
                 }
             }
 
-            // To refresh the view after a set. Will only happen if above didn't already refresh
-            if(abs_steps < TraceHandler.load_count && set)
+            // Refresh view after setting index directly if no scroll happened within load_count range
+            if (absSteps < TraceHandler.load_count && set)
             {
                 ScrollControl(-TraceHandler.load_count);
                 ScrollControl(TraceHandler.load_count);
             }
 
-            return return_value; // To check if there was even a possible scroll
-        }
+            return returnValue; // Indicate if scroll action was possible
+        }
+
         private void OpenTrace_Click(object sender, RoutedEventArgs e)
         {
-            Unload();
-            var openFileDialog = new OpenFileDialog
+            Unload(); // Clear current project data
+            OpenFileDialog openFileDialog = new OpenFileDialog
             {
                 Filter = "Trace Files (*.trace64)|*.trace64",
                 FilterIndex = 1,
@@ -387,14 +406,14 @@ namespace TraceViewer
             };
             if (openFileDialog.ShowDialog() == true)
             {
-                TraceHandler.OpenAndLoad(openFileDialog.FileName);
-            }
+                TraceHandler.OpenAndLoad(openFileDialog.FileName); // Load selected trace file
+            }
         }
 
         private void OpenProject_Click(object sender, RoutedEventArgs e)
         {
-            Unload();
-            var openFileDialog = new OpenFileDialog
+            Unload(); // Clear current project data
+            OpenFileDialog openFileDialog = new OpenFileDialog
             {
                 Filter = "Trace Viewer Project (.tvproj)|*.tvproj",
                 FilterIndex = 1,
@@ -402,17 +421,19 @@ namespace TraceViewer
             };
             if (openFileDialog.ShowDialog() == true)
             {
-                _current_project_path = openFileDialog.FileName;
-                Project project = ProjectLoader.OpenProject(openFileDialog.FileName);
-                TraceHandler.Trace = project.TraceData;
-                foreach(var item in project.Comments)
-                {
-                    TraceHandler.Trace.Trace[item.Item1].comments = item.Item2;
+                _current_project_path = openFileDialog.FileName; // Store current project path
+                Project project = ProjectLoader.OpenProject(openFileDialog.FileName); // Load project from file
+                TraceHandler.Trace = project.TraceData; // Set loaded trace data
+                if (project.Comments != null) // Null check for comments
+                {
+                    foreach (var item in project.Comments)
+                    {
+                        TraceHandler.Trace.Trace[item.Item1].comments = item.Item2; // Apply loaded comments
+                    }
                 }
-                NotesContent.Text = project.Notes;
-                // To refresh the view to contain the correct comments
-                ScrollControl(-TraceHandler.load_count);
-                ScrollControl(TraceHandler.load_count);
+                NotesContent.Text = project.Notes ?? ""; // Load notes, handle null case
+                ScrollControl(-TraceHandler.load_count); // Refresh instruction view
+                ScrollControl(TraceHandler.load_count);
             }
         }
 
@@ -421,67 +442,69 @@ namespace TraceViewer
             if (TraceHandler.Trace == null)
                 return;
 
-            string filename = "";
+            string filename = _current_project_path; // Default to current project path
 
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.DefaultExt = ".tvproj";
-            saveFileDialog.Filter = "Trace Viewer Project (.tvproj)|*.tvproj";
-            saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            saveFileDialog.Title = "Save as";
+            if (string.IsNullOrEmpty(_current_project_path)) // If no current path, prompt for save file
+            {
+                SaveFileDialog saveFileDialog = CreateSaveFileDialog();
+                if (saveFileDialog.ShowDialog() == true)
+                    filename = saveFileDialog.FileName;
+                else
+                    return; // Do not save if dialog is cancelled
+            }
 
-            if (_current_project_path == "")
-            {
-                saveFileDialog.ShowDialog();
-                filename = saveFileDialog.FileName;
-            }
-            else
-                filename = _current_project_path;
-
-            Project project = new Project();
-            project.TraceData = TraceHandler.Trace;
-            project.Name = TraceHandler.Trace.Filename;
-            project.Comments = new();
-            foreach (var item in TraceHandler.Trace.Trace)
-            {
-                if(item.comments != "")
-                    project.Comments.Add(new Tuple<int, string>(Convert.ToInt32(item.Id), item.comments));
-            }
-            project.Notes = NotesContent.Text;
-            
-            ProjectWriter.SaveProject(project, filename);
-        }
+            SaveProjectToFile(filename); // Save project to file
+        }
 
         private void SaveProjectAs_Click(object sender, RoutedEventArgs e)
         {
             if (TraceHandler.Trace == null)
                 return;
 
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.DefaultExt = ".tvproj";
-            saveFileDialog.Filter = "Trace Viewer Project (.tvproj)|*.tvproj";
-            saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            saveFileDialog.Title = "Save as";
-            saveFileDialog.ShowDialog();
+            SaveFileDialog saveFileDialog = CreateSaveFileDialog(); // Create SaveFileDialog instance
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                _current_project_path = saveFileDialog.FileName; // Update current project path
+                SaveProjectToFile(saveFileDialog.FileName); // Save project to the newly selected file
+            }
+        }
 
-            Project project = new Project();
-            project.TraceData = TraceHandler.Trace;
-            project.Name = TraceHandler.Trace.Filename;
-            project.Comments = new();
+        private SaveFileDialog CreateSaveFileDialog()
+        {
+            // Create and configure SaveFileDialog
+            return new SaveFileDialog
+            {
+                DefaultExt = ".tvproj",
+                Filter = "Trace Viewer Project (.tvproj)|*.tvproj",
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                Title = "Save as"
+            };
+        }
+
+
+        private void SaveProjectToFile(string filename)
+        {
+            // Save project data to the specified file
+            Project project = new Project
+            {
+                TraceData = TraceHandler.Trace,
+                Name = TraceHandler.Trace.Filename,
+                Comments = new List<Tuple<int, string>>() // Initialize comments collection
+            };
             foreach (var item in TraceHandler.Trace.Trace)
             {
-                if (item.comments != "")
-                    project.Comments.Add(new Tuple<int, string>(Convert.ToInt32(item.Id), item.comments));
-            }
-            project.Notes = NotesContent.Text;
+                if (!string.IsNullOrEmpty(item.comments))
+                    project.Comments.Add(new Tuple<int, string>(Convert.ToInt32(item.Id), item.comments)); // Add comments to project
+            }
+            project.Notes = NotesContent.Text; // Save notes content
 
-            _current_project_path = saveFileDialog.FileName;
-            ProjectWriter.SaveProject(project, saveFileDialog.FileName);
-        }
+            ProjectWriter.SaveProject(project, filename); // Write project to file
+        }
+
 
         private void CloseProject_Click(object sender, RoutedEventArgs e)
         {
-            Unload();
-        }
+            Unload(); // Clear current project data
+        }
     }
-    
 }
