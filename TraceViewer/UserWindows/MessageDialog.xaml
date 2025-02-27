@@ -6,13 +6,15 @@
         xmlns:local="clr-namespace:TraceViewer.UserWindows"
         mc:Ignorable="d"
         Title="MessageDialog" Height="150" Width="500"
-        WindowStyle="SingleBorderWindow"
+        WindowStyle="None"
+        BorderBrush="White"
+        BorderThickness="0.5"
         ResizeMode="NoResize"
         Background="#0D0D0D"
         Topmost="True"
         >
     <Grid>
-        <Grid Margin="10,30,10,10">
+        <Grid Margin="10,50,10,10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>

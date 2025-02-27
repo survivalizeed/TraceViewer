@@ -48,15 +48,40 @@ namespace TraceViewer
             InstructionsView.AllowDrop = true;
             InstructionsView.DragEnter += DragEnter;
             InstructionsView.DragLeave += DragLeave;
-            InstructionsView.Drop += InstructionsView_Drop;
+            InstructionsView.Drop += Drop;
 
             DisasmViewButton_MouseDown(null, null); // Set Disassembler View as default
         }
 
-        private void InstructionsView_Drop(object sender, DragEventArgs e)
+        private void Drop(object sender, DragEventArgs e)
         {
-            throw new NotImplementedException(); // Implementation needed for drag and drop functionality
-        }
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files.Length > 0)
+                {
+                    string filePath = files[0];
+                    string fileExtension = System.IO.Path.GetExtension(filePath);
+
+                    
+                    if (fileExtension == ".trace64")
+                    {
+                        Unload();
+                        TraceHandler.OpenAndLoad(filePath);
+                    }
+                    else if (fileExtension == ".tvproj")
+                    {
+                        OpenProject(filePath);
+                    }
+                    else
+                    {
+                        MessageDialog messageDialog = new MessageDialog("INVALID FILE", "Invalid file type. Use a .trace64 or .tvproj file!");
+                        messageDialog.ShowDialog();
+                    }
+                }
+            }
+            DragLeave(null, null);
+        }
 
         private void DragEnter(object sender, DragEventArgs e)
         {
@@ -313,7 +338,7 @@ namespace TraceViewer
         }
 
 
-        void Unload()
+        public void Unload()
         {
             // Clear all data and reset UI to initial state
             InstructionViewItems.Clear();
@@ -397,7 +422,7 @@ namespace TraceViewer
 
         private void OpenTrace_Click(object sender, RoutedEventArgs e)
         {
-            Unload(); // Clear current project data
+            
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
                 Filter = "Trace Files (*.trace64)|*.trace64",
@@ -406,13 +431,13 @@ namespace TraceViewer
             };
             if (openFileDialog.ShowDialog() == true)
             {
+                Unload(); // Clear current project data
                 TraceHandler.OpenAndLoad(openFileDialog.FileName); // Load selected trace file
             }
         }
 
         private void OpenProject_Click(object sender, RoutedEventArgs e)
         {
-            Unload(); // Clear current project data
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
                 Filter = "Trace Viewer Project (.tvproj)|*.tvproj",
@@ -421,20 +446,26 @@ namespace TraceViewer
             };
             if (openFileDialog.ShowDialog() == true)
             {
-                _current_project_path = openFileDialog.FileName; // Store current project path
-                Project project = ProjectLoader.OpenProject(openFileDialog.FileName); // Load project from file
-                TraceHandler.Trace = project.TraceData; // Set loaded trace data
-                if (project.Comments != null) // Null check for comments
-                {
-                    foreach (var item in project.Comments)
-                    {
-                        TraceHandler.Trace.Trace[item.Item1].comments = item.Item2; // Apply loaded comments
-                    }
-                }
-                NotesContent.Text = project.Notes ?? ""; // Load notes, handle null case
-                ScrollControl(-TraceHandler.load_count); // Refresh instruction view
-                ScrollControl(TraceHandler.load_count);
+                OpenProject(openFileDialog.FileName); // Load selected project file
             }
+        }
+
+        public void OpenProject(string filename)
+        {
+            Unload(); // Clear current project data
+            _current_project_path = filename; // Store current project path
+            Project project = ProjectLoader.OpenProject(filename); // Load project from file
+            TraceHandler.Trace = project.TraceData; // Set loaded trace data
+            if (project.Comments != null) // Null check for comments
+            {
+                foreach (var item in project.Comments)
+                {
+                    TraceHandler.Trace.Trace[item.Item1].comments = item.Item2; // Apply loaded comments
+                }
+            }
+            NotesContent.Text = project.Notes ?? ""; // Load notes, handle null case
+            ScrollControl(-TraceHandler.load_count); // Refresh instruction view
+            ScrollControl(TraceHandler.load_count);
         }
 
         private void SaveProject_Click(object sender, RoutedEventArgs e)
