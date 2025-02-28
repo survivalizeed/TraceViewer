@@ -18,7 +18,6 @@ namespace TraceViewer
         private bool hidden = false;
         private float hiddenOpacity = 0.15f;
 
-
         private const string HexPrefix = "0x";
         private const string ChangeSeparator = "; ";
         private const string ChangeArrow = " -> ";
@@ -66,8 +65,12 @@ namespace TraceViewer
 
             registers_x64 = traceRow.Regs;
 
-            SwapRegisters(registers_x64, 2, 3);
-            SwapRegisters(registers_x64, 1, 2);
+            if (!traceRow.already_swaped)
+            {
+                SwapRegisters(registers_x64, 2, 3);
+                SwapRegisters(registers_x64, 1, 2);
+                traceRow.already_swaped = true;
+            }
 
             id.Text = traceRow.Id.ToString();
             id.Foreground = Brushes.White;

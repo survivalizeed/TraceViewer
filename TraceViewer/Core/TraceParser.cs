@@ -111,6 +111,8 @@ namespace TraceViewer.Core
         public List<string> highlights = new List<string>();
 
         public string comments = ""; // Will be set by WPF_TraceRow
+
+        public bool already_swaped = false;
     }
 
     public class MemoryAccess
