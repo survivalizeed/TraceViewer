@@ -65,9 +65,9 @@ namespace TraceViewer
             }
 
             registers_x64 = traceRow.Regs;
-            SwapRegisters(registers_x64, 1, 3);
-            SwapRegisters(registers_x64, 2, 3);
 
+            SwapRegisters(registers_x64, 2, 3);
+            SwapRegisters(registers_x64, 1, 2);
 
             id.Text = traceRow.Id.ToString();
             id.Foreground = Brushes.White;
