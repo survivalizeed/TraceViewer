@@ -31,8 +31,8 @@ namespace TraceViewer
         private string _current_project_path = "";
 
         public ScrollViewer InstructionsScrollViewer { get; private set; }
-        public ObservableCollection<WPF_TraceRow> InstructionViewItems { get; } = new();
-        public ObservableCollection<WPF_RegisterRow> RegisterViewItems { get; } = new();
+        public ObservableCollection<WPF_TraceRow> InstructionViewItems = new();
+        public ObservableCollection<WPF_RegisterRow> RegisterViewItems = new();
         public TextBox CurrentCommentContentPartner { get; set; }
 
 
