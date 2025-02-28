@@ -14,6 +14,11 @@ namespace TraceViewer
 {
     public partial class WPF_TraceRow : UserControl
     {
+        private static List<int> hiddenRows = new List<int>();
+        private bool hidden = false;
+        private float hiddenOpacity = 0.15f;
+
+
         private const string HexPrefix = "0x";
         private const string ChangeSeparator = "; ";
         private const string ChangeArrow = " -> ";
@@ -90,6 +95,9 @@ namespace TraceViewer
 
             comments.Width = window.cd4.Width.Value;
             mnemonicBrief.Width = window.cd4.Width.Value;
+
+            if(hiddenRows.Contains(traceRow.Id))
+                parent_panel.Opacity = hiddenOpacity;
         }
 
 
@@ -200,19 +208,28 @@ namespace TraceViewer
             (list[index1], list[index2]) = (list[index2], list[index1]);
         }
 
-        private void OnDoubleClickComments(object sender, MouseButtonEventArgs e)
-        {
-            ActivateBigCommentEdit();
-        }
-
-        private void OnKeyPressComments(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-                ActivateBigCommentEdit();
-        }
-
         private void PreviewOnKeyPressComments(object sender, KeyEventArgs e)
         {
+            // Grey out row
+            if(e.Key == Key.H && Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            {
+                if (!hidden)
+                {
+                    hiddenRows.Add(traceRow.Id);
+                    parent_panel.Opacity = hiddenOpacity;
+                }
+                else
+                {
+                    hiddenRows.Remove(traceRow.Id);
+                    parent_panel.Opacity = 1;
+                }
+                hidden = !hidden;
+            }
+
+            // Navigation
+            if (e.Key == Key.Enter)
+                FocusNextCommentBox(1);
+            
             if (e.Key == Key.Down)
                 if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
                     FocusNextCommentBox(5);
@@ -251,21 +268,6 @@ namespace TraceViewer
             }
         }
 
-        private void ActivateBigCommentEdit()
-        {
-            window.MainView.Visibility = Visibility.Collapsed;
-            window.CommentContentGridHitbox.Visibility = Visibility.Visible;
-
-            // Safely access the comment_content TextBox
-            if (window.CommentContentGridHitbox.Children.Count > 0 && window.CommentContentGridHitbox.Children[0] is DockPanel dockPanel 
-                && dockPanel.Children.Count > 0 && dockPanel.Children[0] is TextBox comment_content)
-            {
-                comment_content.Text = this.comments.Text;
-                comment_content.Focus();
-                comment_content.SelectionStart = comment_content.Text.Length;
-                window.CurrentCommentContentPartner = comments; // Set partner for text update
-            }
-        }
 
         public void display_mnemonic_brief(bool displayMnemonicBrief)
         {

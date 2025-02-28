@@ -16,12 +16,7 @@
             <Label Name="MnemonicReader" FontSize="15" FontFamily="Miriam Mono CLM" Foreground="White" Background="#50000000"
                    MouseDown="MnemonicReader_MouseDown"/>
         </ScrollViewer>
-        <Grid Name="CommentContentGridHitbox" Visibility="Collapsed" MouseDown="CommentContentGridHitbox_MouseDown" Background="Transparent">
-            <DockPanel Name="CommentContentPanel" LastChildFill="True">
-                <TextBox x:Name="CommentContent" Foreground="White" FontSize="30" FontFamily="Miriam Mono CLM" Background="#40000000" BorderThickness="0" HorizontalContentAlignment="Center"
-                       VerticalContentAlignment="Center" Height="50" KeyDown="CommentContent_KeyDown"/>
-            </DockPanel>
-        </Grid>
+
 
         <Grid Name="DROPZONE" Visibility="Hidden" Background="#50000000">
             <DockPanel LastChildFill="True">

@@ -7,7 +7,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid Margin="0,0,0,0" >
-         <DockPanel LastChildFill="False">
+         <DockPanel x:Name="parent_panel" LastChildFill="False">
              <Border x:Name="id_border" Style="{StaticResource disasm_text_block_border}" Width="50" DockPanel.Dock="Left">
                 <TextBlock x:Name="id" Width="50" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover"/>
              </Border>
@@ -23,7 +23,7 @@
             <TextBox Visibility="Collapsed" Style="{StaticResource comments_text_box}" x:Name="mnemonicBrief" HorizontalContentAlignment="Center" Width="300" DockPanel.Dock="Left" MouseEnter="OnHover" IsReadOnly="True"
                      MouseDoubleClick="OnDoubleClickMnemonic" KeyDown="OnKeyPressMnemonic"/>
             <TextBox Style="{StaticResource comments_text_box}" x:Name="comments" HorizontalContentAlignment="Center" Width="300" DockPanel.Dock="Left" MouseEnter="OnHover" 
-                     MouseDoubleClick="OnDoubleClickComments" KeyDown="OnKeyPressComments" PreviewKeyDown="PreviewOnKeyPressComments" TextChanged="TextChangedComments"/>
+                     PreviewKeyDown="PreviewOnKeyPressComments" TextChanged="TextChangedComments"/>
              
          </DockPanel>
     </Grid>

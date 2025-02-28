@@ -33,7 +33,6 @@ namespace TraceViewer
         public ScrollViewer InstructionsScrollViewer { get; private set; }
         public ObservableCollection<WPF_TraceRow> InstructionViewItems = new();
         public ObservableCollection<WPF_RegisterRow> RegisterViewItems = new();
-        public TextBox CurrentCommentContentPartner { get; set; }
 
 
         public MainWindow()
@@ -141,6 +140,8 @@ namespace TraceViewer
                     }
                 }
             }
+
+
         }
 
         private void InstructionsView_Loaded(object sender, RoutedEventArgs e)
@@ -234,29 +235,6 @@ namespace TraceViewer
                 }
             }
         }
-
-        private void CommentContentGridHitbox_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            BigCommentEditInactive(); // Deactivate big comment edit mode on hitbox click
-        }
-
-        private void CommentContent_KeyDown(object sender, KeyEventArgs e)
-        {
-            // Deactivate big comment edit mode on Enter or Escape key press
-            if (e.Key == Key.Enter || e.Key == Key.Escape)
-            {
-                BigCommentEditInactive();
-            }
-        }
-
-        private void BigCommentEditInactive()
-        {
-            // Hide big comment editor and restore focus to the comment content partner
-            CommentContentGridHitbox.Visibility = Visibility.Collapsed;
-            MainView.Visibility = Visibility.Visible;
-            CurrentCommentContentPartner?.Focus();
-            CurrentCommentContentPartner.Text = CommentContent.Text; // Update comment text
-        }
 
         private void Comments_MouseDown(object sender, MouseButtonEventArgs e)
         {
