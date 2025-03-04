@@ -345,7 +345,9 @@ namespace TraceViewer.Core
                                 newDataCounter++;
                             }
 
-                            if (disasm.Contains("dword"))
+                            if (disasm.Contains("qword"))
+                                value &= 0xFFFFFFFFFFFFFFFF;
+                            else if (disasm.Contains("dword"))
                                 value &= 0xFFFFFFFF;
                             else if (disasm.Contains("word"))
                                 value &= 0xFFFF;

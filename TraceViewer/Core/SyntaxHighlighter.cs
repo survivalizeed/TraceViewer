@@ -69,7 +69,7 @@ namespace TraceViewer.Core
         "KSHIFTLB", "KSHIFTLD", "KSHIFTLQ", "KSHIFTLW", "KSHIFTRB", "KSHIFTRD", "KSHIFTRQ", "KSHIFTRW", "KUNPCKBW", "KUNPCKDQ", "KUNPCKWD", "KUNPCKHWD", "PUNPCKHBW", "PUNPCKHDQ", "PUNPCKHQDQ", "PUNPCKHWD", "PUNPCKLBW", "PUNPCKLDQ", "PUNPCKLQDQ", "PUNPCKLWD",
         "VPSLLVD", "VPSLLVQ", "VPSLLVW", "VPSRAVD", "VPSRAVQ", "VPSRAVW", "VPSRLVD", "VPSRLVQ", "VPSRLVW",
          "VPLZCNTD", "VPLZCNTQ",
-         "VPTERNLOGD", "VPTERNLOGQ", "AND", "NOT", "OR", "XOR", "BSF", "BSR", "BT", "BTC", "BTR", "BTS", "LZCNT", "POPCNT", "BZHI", "ANDN", "KANDB", "KANDD", "KANDNB", "KANDND", "KANDNQ", "KANDNW", "KANDQ", "KANDW", "KNOTB", "KNOTD", "KNOTQ", "KNOTW", "KORB", "KORD", "KORQ", "KORW", "KXNORB", "KXNORD", "KXNORQ", "KXNORW", "KXORB", "KXORD", "KXORQ", "KXORW", "PAND", "PANDN", "POR", "PXOR" // added basic logical and bit manipulation instructions again, and extended bit manipulation and some vector logical instructions.
+         "VPTERNLOGD", "VPTERNLOGQ", "AND", "NOT", "OR", "XOR", "BSF", "BSR", "BT", "BTC", "BTR", "BTS", "LZCNT", "POPCNT", "BZHI", "ANDN", "KANDB", "KANDD", "KANDNB", "KANDND", "KANDNQ", "KANDNW", "KANDQ", "KANDW", "KNOTB", "KNOTD", "KNOTQ", "KNOTW", "KORB", "KORD", "KORQ", "KORW", "KXNORB", "KXNORD", "KXNORQ", "KXNORW", "KXORB", "KXORD", "KXORQ", "KXORW", "PAND", "PANDN", "POR", "PXOR", "STC" // added basic logical and bit manipulation instructions again, and extended bit manipulation and some vector logical instructions.
     };
 
         public static string[] SIMDInstructions = new string[] {
@@ -114,13 +114,13 @@ namespace TraceViewer.Core
         {
             foreach (string instruction in JumpInstructions) InstructionBrushes[instruction] = Brushes.Red;
             foreach (string instruction in CallInstructions) InstructionBrushes[instruction] = Brushes.Red;
-            foreach (string instruction in MoveInstructions) InstructionBrushes[instruction] = Brushes.LightGreen;
-            foreach (string instruction in StackInstructions) InstructionBrushes[instruction] = Brushes.Turquoise;
+            foreach (string instruction in MoveInstructions) InstructionBrushes[instruction] = Brushes.LightSkyBlue;
+            foreach (string instruction in StackInstructions) InstructionBrushes[instruction] = Brushes.LightSkyBlue;
             foreach (string instruction in CompareInstructions) InstructionBrushes[instruction] = Brushes.Yellow;
-            foreach (string instruction in ArithmeticInstructions) InstructionBrushes[instruction] = Brushes.LightBlue;
-            foreach (string instruction in BitwiseLogicalInstructions) InstructionBrushes[instruction] = Brushes.Aqua;
-            foreach (string instruction in SIMDInstructions) InstructionBrushes[instruction] = Brushes.Orange;
-            foreach (string register in registers) RegisterBrushes[register] = Brushes.Coral;
+            foreach (string instruction in ArithmeticInstructions) InstructionBrushes[instruction] = Brushes.LightSkyBlue;
+            foreach (string instruction in BitwiseLogicalInstructions) InstructionBrushes[instruction] = Brushes.LightSkyBlue;
+            foreach (string instruction in SIMDInstructions) InstructionBrushes[instruction] = Brushes.LightSkyBlue;
+            foreach (string register in registers) RegisterBrushes[register] = Brushes.LightPink;
         }
         public static SolidColorBrush Check_Type(string instruction)
         {

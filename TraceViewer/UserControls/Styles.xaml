@@ -170,7 +170,7 @@
 	<Style x:Key="memory_view_label" TargetType="Label">
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="FontSize" Value="15"/>
-		<Setter Property="FontFamily" Value="Miriam Mono CLM"/>
+        <Setter Property="FontFamily" Value="Consolas"/>
 		<Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
     </Style>
@@ -178,7 +178,7 @@
     <Style x:Key="comments_text_box" TargetType="TextBox">
         <Setter Property="Background" Value="{StaticResource instructions_view_background}"/>
         <Setter Property="Foreground" Value="White"/>
-		<Setter Property="FontFamily" Value="Miriam Mono CLM"/>
+        <Setter Property="FontFamily" Value="Lucida Console"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border}"/>
         <Setter Property="BorderThickness" Value="0.5"/>
@@ -211,7 +211,7 @@
     <Style x:Key="label_button" TargetType="Label">
         <Setter Property="Background" Value="{StaticResource instructions_view_background}"/>
         <Setter Property="Foreground" Value="White"/>
-        <Setter Property="FontFamily" Value="Miriam Mono CLM"/>
+        <Setter Property="FontFamily" Value="Lucida Console"/>
         <Setter Property="FontSize" Value="15"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border}"/>
@@ -232,8 +232,10 @@
     <Style x:Key="disasm_text_block" TargetType="TextBlock">
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="Padding" Value="5"/>
-        <Setter Property="FontFamily" Value="Miriam Mono CLM"/>
+        <Setter Property="Padding" Value="4"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontFamily" Value="Lucida Console"/>
         <Setter Property="Background" Value="{StaticResource instructions_view_background}"/>
     </Style>
 

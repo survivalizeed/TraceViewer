@@ -20,7 +20,7 @@ namespace TraceViewer.Core
 
         private static List<MnemObject> data;
 
-        public static int load_count = 30;
+        public static int load_count = 40;
 
         public static void OpenAndLoad(string path)
         {
@@ -43,7 +43,7 @@ namespace TraceViewer.Core
             if (Trace.Trace.Count < load_count)
                 load_count = Trace.Trace.Count;
             else
-                load_count = 30;
+                load_count = 40;
 
             var uri = new Uri("pack://application:,,,/mnemdb.json");
             var stream = Application.GetResourceStream(uri)?.Stream;

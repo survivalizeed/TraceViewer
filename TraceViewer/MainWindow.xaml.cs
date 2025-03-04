@@ -391,8 +391,7 @@ namespace TraceViewer
             // Refresh view after setting index directly if no scroll happened within load_count range
             if (absSteps < TraceHandler.load_count && set)
             {
-                ScrollControl(-TraceHandler.load_count);
-                ScrollControl(TraceHandler.load_count);
+                RefreshView();
             }
 
             return returnValue; // Indicate if scroll action was possible
@@ -441,9 +440,8 @@ namespace TraceViewer
                     TraceHandler.Trace.Trace[item.Item1].comments = item.Item2; // Apply loaded comments
                 }
             }
-            NotesContent.Text = project.Notes ?? ""; // Load notes, handle null case
-            ScrollControl(-TraceHandler.load_count); // Refresh instruction view
-            ScrollControl(TraceHandler.load_count);
+            NotesContent.Text = project.Notes ?? ""; // Load notes, handle null 
+            RefreshView(); // Refresh view after loading project
         }
 
         private void SaveProject_Click(object sender, RoutedEventArgs e)
@@ -510,10 +508,15 @@ namespace TraceViewer
             ProjectWriter.SaveProject(project, filename); // Write project to file
         }
 
-
         private void CloseProject_Click(object sender, RoutedEventArgs e)
         {
             Unload(); // Clear current project data
         }
+
+        public void RefreshView()
+        {
+            ScrollControl(-TraceHandler.load_count);
+            ScrollControl(TraceHandler.load_count);
+        }
     }
 }
