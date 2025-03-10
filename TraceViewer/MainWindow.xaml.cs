@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Threading;
 using TraceViewer.Core;
+using TraceViewer.Core.Analysis;
 using TraceViewer.UserControls;
 using TraceViewer.UserWindows;
 
@@ -74,7 +75,7 @@ namespace TraceViewer
                     }
                     else
                     {
-                        MessageDialog messageDialog = new MessageDialog("INVALID FILE", "Invalid file type. Use a .trace64 or .tvproj file!");
+                        MessageDialog messageDialog = new MessageDialog("Invalid file type. Use a .trace64 or .tvproj file!");
                         messageDialog.ShowDialog();
                     }
                 }
@@ -123,7 +124,7 @@ namespace TraceViewer
             // Handle Ctrl+G shortcut for "Go To Row" functionality
             if ((Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && e.Key == Key.G && TraceHandler.Trace != null)
             {
-                InputDialog input = new InputDialog("GO TO", "Put in a row to go to:");
+                InputDialog input = new InputDialog("Put in a row to go to:");
                 input.ShowDialog();
                 var res = input.GetResult();
                 if (!string.IsNullOrEmpty(res))
@@ -135,12 +136,14 @@ namespace TraceViewer
                     }
                     catch (FormatException)
                     {
-                        MessageDialog messageDialog = new MessageDialog("INVALID INPUT", "Invalid input. Use a numerical value!");
+                        MessageDialog messageDialog = new MessageDialog("Invalid input. Use a numerical value!");
                         messageDialog.ShowDialog();
                     }
                 }
             }
 
+            if (e.Key == Key.T)
+                DeObfus.DeObfuscate();
 
         }
 
@@ -323,6 +326,7 @@ namespace TraceViewer
             RegisterViewItems.Clear();
             NotesContent.Text = "";
             _current_project_path = "";
+            WPF_TraceRow.hiddenRows.Clear();
         }
 
 

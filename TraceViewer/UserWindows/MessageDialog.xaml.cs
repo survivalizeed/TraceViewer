@@ -21,11 +21,10 @@ namespace TraceViewer.UserWindows
     /// </summary>
     public partial class MessageDialog : Window
     {
-        public MessageDialog(string Title, string Prompt)
+        public MessageDialog(string Prompt)
         {
             InitializeComponent();
             this.SourceInitialized += InputDialog_SourceInitialized;
-            this.Title = Title;
             this.Prompt.Content = Prompt;
             this.Owner = Application.Current.MainWindow;
             this.WindowStartupLocation = WindowStartupLocation.CenterOwner;

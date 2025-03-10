@@ -14,9 +14,10 @@ namespace TraceViewer
 {
     public partial class WPF_TraceRow : UserControl
     {
-        private static List<int> hiddenRows = new List<int>();
+        public static List<int> hiddenRows = new List<int>();
+
         private bool hidden = false;
-        private float hiddenOpacity = 0.15f;
+        private float hiddenOpacity = 0.25f;
 
         private const string HexPrefix = "0x";
         private const string ChangeSeparator = "; ";
@@ -52,14 +53,22 @@ namespace TraceViewer
 
             if (traceRow.Regchanges != null)
             {
-                for (int i = 0; i < traceRow.Regchanges.Count; i += 6)
+                // Incase its untraced
+                if (traceRow.Regchanges.Count == 1)
                 {
-                    changes.Inlines.Add(new Run(traceRow.Regchanges[i]) { Foreground = SyntaxHighlighter.Check_Type(traceRow.Regchanges[i]) });
-                    changes.Inlines.Add(new Run(traceRow.Regchanges[i + 1]) { Foreground = Brushes.White });
-                    changes.Inlines.Add(new Run(traceRow.Regchanges[i + 2]) { Foreground = SyntaxHighlighter.Check_Type(traceRow.Regchanges[i + 2]) });
-                    changes.Inlines.Add(new Run(traceRow.Regchanges[i + 3]) { Foreground = Brushes.White });
-                    changes.Inlines.Add(new Run(traceRow.Regchanges[i + 4]) { Foreground = SyntaxHighlighter.Check_Type(traceRow.Regchanges[i + 4]) });
-                    changes.Inlines.Add(new Run(traceRow.Regchanges[i + 5]) { Foreground = Brushes.White });
+                    changes.Inlines.Add(new Run(traceRow.Regchanges[0]) { Foreground = Brushes.White });
+                }
+                else
+                {
+                    for (int i = 0; i < traceRow.Regchanges.Count; i += 6)
+                    {
+                        changes.Inlines.Add(new Run(traceRow.Regchanges[i]) { Foreground = SyntaxHighlighter.Check_Type(traceRow.Regchanges[i]) });
+                        changes.Inlines.Add(new Run(traceRow.Regchanges[i + 1]) { Foreground = Brushes.White });
+                        changes.Inlines.Add(new Run(traceRow.Regchanges[i + 2]) { Foreground = SyntaxHighlighter.Check_Type(traceRow.Regchanges[i + 2]) });
+                        changes.Inlines.Add(new Run(traceRow.Regchanges[i + 3]) { Foreground = Brushes.White });
+                        changes.Inlines.Add(new Run(traceRow.Regchanges[i + 4]) { Foreground = SyntaxHighlighter.Check_Type(traceRow.Regchanges[i + 4]) });
+                        changes.Inlines.Add(new Run(traceRow.Regchanges[i + 5]) { Foreground = Brushes.White });
+                    }
                 }
             }
 
@@ -216,17 +225,7 @@ namespace TraceViewer
             // Grey out row
             if(e.Key == Key.H && Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
-                if (!hidden)
-                {
-                    hiddenRows.Add(traceRow.Id);
-                    parent_panel.Opacity = hiddenOpacity;
-                }
-                else
-                {
-                    hiddenRows.Remove(traceRow.Id);
-                    parent_panel.Opacity = 1;
-                }
-                hidden = !hidden;
+                ToggleHide();
             }
 
             // Navigation
@@ -244,6 +243,36 @@ namespace TraceViewer
                     FocusNextCommentBox(-5);
                 else
                     FocusNextCommentBox(-1);   
+        }
+
+        private void ToggleHide()
+        {
+            if (!hidden)
+            {
+                hiddenRows.Add(traceRow.Id);
+                parent_panel.Opacity = hiddenOpacity;
+            }
+            else
+            {
+                hiddenRows.Remove(traceRow.Id);
+                parent_panel.Opacity = 1;
+            }
+            hidden = !hidden;
+        }
+
+        public void Hide(bool hide)
+        {
+            if (hide)
+            {
+                hiddenRows.Add(traceRow.Id);
+                parent_panel.Opacity = hiddenOpacity;
+            }
+            else
+            {
+                hiddenRows.Remove(traceRow.Id);
+                parent_panel.Opacity = 1;
+            }
+            hidden = hide;
         }
 
         private void FocusNextCommentBox(int direction)

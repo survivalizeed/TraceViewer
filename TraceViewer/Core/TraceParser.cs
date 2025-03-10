@@ -414,7 +414,9 @@ namespace TraceViewer.Core
                     }
                 }
             }
-
+            if(traceData.Trace.Last().Regchanges == null)
+                traceData.Trace.Last().Regchanges = new List<string>();
+            traceData.Trace.Last().Regchanges.Add("UNTRACED");
             return traceData;
         }
         private static string ByteArrayToHexString(byte[] bytes)

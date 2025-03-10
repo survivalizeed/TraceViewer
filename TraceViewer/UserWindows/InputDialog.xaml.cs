@@ -21,11 +21,10 @@ namespace TraceViewer.UserControls
     {
         private string result = "";
 
-        public InputDialog(string Title, string Prompt)
+        public InputDialog(string Prompt)
         {
             InitializeComponent();
             this.SourceInitialized += InputDialog_SourceInitialized;
-            this.Title = Title;
             this.Prompt.Content = Prompt;
             this.Owner = Application.Current.MainWindow;
             this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
