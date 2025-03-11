@@ -15,7 +15,7 @@ namespace TraceViewer.Core.Analysis
     public enum DisasmType
     {
         Setter,
-        Storer,
+        User,
         Manipulator,
         Other
     }
@@ -234,15 +234,19 @@ namespace TraceViewer.Core.Analysis
         public static DisasmType ClassifyInstruction(string instruction)
         {
             string[] setters = { "mov", "lea", "pop", "movabs" , "movsx", "movsxd", "movzx"};
-            string[] storeres = { "push" };
+
+            string[] users = { "cmp", "test", "jmp", "je", "jz", "jne", "jnz", "jg", "jnle", "jge", 
+                "jnl", "jl", "jnge", "jle", "jng", "ja", "jnbe", "jae", "jnb", "jb", "jnae", "jbe", "jna", 
+                "jo", "jno", "js", "jns", "jp", "jpe", "jnp", "jpo", "loop", "loope", "loopz", "loopne", "loopnz", "jcxz", "jecxz" };
+
             string[] manipulators = { "add", "sub", "mul", "div", "inc", "dec", "neg", "not", "and", "or", 
                 "xor", "shl", "shr", "sar", "rol", "ror", "rcl", "rcr", "imul", "idiv", "sal", "sar", "shl", "shr", 
-                "bswap", "bsf", "bsr", "bt", "btc", "btr", "bts", "set", "xadd", "adc", "sbb", "lahf", "sahf", "setne" };
+                "bswap", "bsf", "bsr", "bt", "btc", "btr", "bts", "set", "xadd", "adc", "sbb", "lahf", "sahf", "setne"};
 
             if(setters.Contains(instruction))
                 return DisasmType.Setter;
-            if (storeres.Contains(instruction))
-                return DisasmType.Storer;
+            if (users.Contains(instruction))
+                return DisasmType.User;
             if (manipulators.Contains(instruction))
                 return DisasmType.Manipulator;
 
@@ -259,33 +263,48 @@ namespace TraceViewer.Core.Analysis
 
             if (disasmParts.Length > 1 && disasmDescriptor.type != DisasmType.Other)
             {
-                if(disasmDescriptor.type != DisasmType.Storer)
+                if(disasmDescriptor.type != DisasmType.User)
                     disasmDescriptor.write_to = disasmParts[1];
-
-                string read_from = disasmParts[1];
-                if(disasmParts.Length > 2)
-                    read_from = disasmParts[2];
-
-                string[] splitted = read_from.Split(new char[] { '[', ']', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var split in splitted)
+                if (disasmDescriptor.type == DisasmType.User)
                 {
-                    if (split.StartsWith("0x"))
-                    {
-                        disasmDescriptor.read_from.Add("intermediate");
-                        continue;
-                    }
-                    foreach (var family in registerFamilies)
-                    {
-                        if (family.Value.Contains(split))
-                        {
-                            disasmDescriptor.read_from.Add(split);
-                            break;
-                        }
-                    }
+                    // Both registers are read from. Aka. cmp or test
+                    disasmDescriptor.read_from.AddRange(SplitReader(disasmParts[1]));
+                    if(disasmParts.Length > 2)
+                        disasmDescriptor.read_from.AddRange(SplitReader(disasmParts[2]));
+                }
+                else
+                {
+                    string read_from = disasmParts[1];
+                    if (disasmParts.Length > 2)
+                        read_from = disasmParts[2];
+                    disasmDescriptor.read_from.AddRange(SplitReader(read_from));
                 }
             }
 
             return disasmDescriptor;
         }
+
+        private static List<string> SplitReader(string read_from)
+        {
+            List<string> dD = new List<string>();
+            string[] splitted = read_from.Split(new char[] { '[', ']', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var split in splitted)
+            {
+                if (split.StartsWith("0x"))
+                {
+                    dD.Add("intermediate");
+                    continue;
+                }
+                foreach (var family in registerFamilies)
+                {
+                    if (family.Value.Contains(split))
+                    {
+                        dD.Add(split);
+                        break;
+                    }
+                }
+            }
+            return dD;
+        } 
     }
 }
