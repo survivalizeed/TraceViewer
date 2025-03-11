@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using TraceViewer.UserControls;
 using TraceViewer.UserWindows;
 
 namespace TraceViewer.Core.Analysis
@@ -13,21 +14,23 @@ namespace TraceViewer.Core.Analysis
 
     public enum DisasmType
     {
-        Assigning,
-        Manipulating,
-        Storing,
-        Undef
+        Setter,
+        Storer,
+        Manipulator,
+        Other
     }
 
     public class DisasmDescriptor
     {
-        public string val;
-
         public DisasmType type;
 
-        public DisasmDescriptor(string val, DisasmType type)
+        public string write_to = "";
+        public List<string> read_from = new List<string>();
+
+        public bool useless = false; // Will be set by the analyzer
+
+        public DisasmDescriptor(DisasmType type)
         {
-            this.val = val;
             this.type = type;
         }
 
@@ -37,6 +40,27 @@ namespace TraceViewer.Core.Analysis
 
     class DeObfus
     {
+
+        private static Dictionary<string, string[]> registerFamilies = new Dictionary<string, string[]>
+        {
+            { "raxx", new[] { "rax", "eax", "ax", "ah", "al" } },
+            { "rbxx", new[] { "rbx", "ebx", "bx", "bh", "bl" } },
+            { "rcxx", new[] { "rcx", "ecx", "cx", "ch", "cl" } },
+            { "rdxx", new[] { "rdx", "edx", "dx", "dh", "dl" } },
+            { "rspx", new[] { "rsp", "esp", "sp", "spl" } },
+            { "rbpx", new[] { "rbp", "ebp", "bp", "bpl" } },
+            { "rsix", new[] { "rsi", "esi", "si", "sil" } },
+            { "rdix", new[] { "rdi", "edi", "di", "dil" } },
+            { "r8x",  new[] { "r8", "r8d", "r8w", "r8b" } },
+            { "r9x",  new[] { "r9", "r9d", "r9w", "r9b" } },
+            { "r10x", new[] { "r10", "r10d", "r10w", "r10b" } },
+            { "r11x", new[] { "r11", "r11d", "r11w", "r11b" } },
+            { "r12x", new[] { "r12", "r12d", "r12w", "r12b" } },
+            { "r13x", new[] { "r13", "r13d", "r13w", "r13b" } },
+            { "r14x", new[] { "r14", "r14d", "r14w", "r14b" } },
+            { "r15x", new[] { "r15", "r15d", "r15w", "r15b" } }
+        };
+
         public static void DeObfuscate()
         {
             if (TraceHandler.Trace == null)
@@ -45,110 +69,95 @@ namespace TraceViewer.Core.Analysis
 
             var TraceRows = TraceHandler.Trace.Trace;
 
-            //HideUselessInstructions(TraceRows);
-            //
-            //HideObfuscatedUslessInstructions(TraceRows);
-
-            //MessageDialog messageDialog = new MessageDialog("Deobfuscation is experimental. Use at your own risk!");
-            //messageDialog.ShowDialog();
-
-            Deob(TraceRows);
-
-            window.RefreshView();
-        }
-
-        private static void HideUselessInstructions(List<TraceRow> TraceRows)
-        {
-            for (int i = 0; i < TraceRows.Count; i++)
+            InputDialog input = new InputDialog("The Deobfuscation tries to detect useless code.\r\nUse at your own risk!\r\nInput an analysis depth iteration count:");
+            input.ShowDialog();
+            var res = input.GetResult();
+            if (!string.IsNullOrEmpty(res))
             {
-                var row = TraceRows[i];
-                var next_row = i < TraceRows.Count - 1 ? TraceRows[i + 1] : null;
-
-                bool hasOnlyReadOrEmpty = true;
-                foreach (var mem in row.Mem)
+                try
                 {
-                    if (mem.Access != "READ")
-                    {
-                        hasOnlyReadOrEmpty = false;
-                        break;
-                    }
+                    int iterations = Convert.ToInt32(res);
+                    Analyze(TraceRows, iterations);
+                    window.RefreshView();
                 }
-
-                // Hide rows with only rflags changes which don't have any other changes at all
-                if (row.Regchanges == null || row.Regchanges.Count == 0 && hasOnlyReadOrEmpty)
-                    WPF_TraceRow.hiddenRows.Add(row.Id);
-                if (row.Regchanges != null && row.Regchanges.Count == 6 && row.Regchanges[0] == "rflags" && hasOnlyReadOrEmpty)
-                    WPF_TraceRow.hiddenRows.Add(row.Id);
-            }
-        }
-
-        private static void HideObfuscatedUslessInstructions(List<TraceRow> TraceRows)
-        {
-            for (int i = 0; i < TraceRows.Count; i++)
-            {
-                var row = TraceRows[i];
-                var next_row = i < TraceRows.Count - 1 ? TraceRows[i + 1] : null;
-                if (next_row == null) return;
-                if (row.Disasm.StartsWith("push") && next_row.Disasm.StartsWith("ret"))
+                catch (FormatException)
                 {
-                    WPF_TraceRow.hiddenRows.Add(row.Id);
-                    WPF_TraceRow.hiddenRows.Add(next_row.Id);
-                    i++;
+                    MessageDialog messageDialog = new MessageDialog("Invalid input. Use a numerical value!");
+                    messageDialog.ShowDialog();
                 }
             }
+           
         }
 
-        private static void Deob(List<TraceRow> TraceRows)
+        private static void Analyze(List<TraceRow> TraceRows, int iterations)
         {
-            Dictionary<string, string[]> registerFamilies = new Dictionary<string, string[]>
-            {
-                { "raxx", new[] { "rax", "eax", "ax", "ah", "al" } },
-                { "rbxx", new[] { "rbx", "ebx", "bx", "bh", "bl" } },
-                { "rcxx", new[] { "rcx", "ecx", "cx", "ch", "cl" } },
-                { "rdxx", new[] { "rdx", "edx", "dx", "dh", "dl" } },
-                { "rspx", new[] { "rsp", "esp", "sp", "spl" } },
-                { "rbpx", new[] { "rbp", "ebp", "bp", "bpl" } },
-                { "rsix", new[] { "rsi", "esi", "si", "sil" } },
-                { "rdix", new[] { "rdi", "edi", "di", "dil" } },
-                { "r8x", new[]  { "r8", "r8d", "r8w", "r8b" } },
-                { "r9x", new[]  { "r9", "r9d", "r9w", "r9b" } },
-                { "r10x", new[] { "r10", "r10d", "r10w", "r10b" } },
-                { "r11x", new[] { "r11", "r11d", "r11w", "r11b" } },
-                { "r12x", new[] { "r12", "r12d", "r12w", "r12b" } },
-                { "r13x", new[] { "r13", "r13d", "r13w", "r13b" } },
-                { "r14x", new[] { "r14", "r14d", "r14w", "r14b" } },
-                { "r15x", new[] { "r15", "r15d", "r15w", "r15b" } }
-            };
-
+            WPF_TraceRow.hiddenRows.Clear();
+            List<DisasmDescriptor> descriptors = new List<DisasmDescriptor>();
             for (int i = 0; i < TraceRows.Count; i++)
             {
-                var row = TraceRows[i];
-                var asm = SliceASM(row);
-
-
-                if (asm?["instruction"].type == DisasmType.Assigning)
+                descriptors.Add(SliceASM(TraceRows[i]));
+            }
+            for (int h = 0; h < iterations; h++)
+            {
+                for (int i = 0; i < descriptors.Count; i++)
                 {
-                    if (!asm.ContainsKey("operand1")) continue;
-                    string currentOperand = asm["operand1"].val;
+                    var currentDescriptor = descriptors[i];
 
-                    if (registerFamilies["rspx"].Contains(currentOperand)) // rsp is too hard to track
+                    if (currentDescriptor.type != DisasmType.Setter && currentDescriptor.type != DisasmType.Manipulator)
                         continue;
 
-                    for (int j = 1; i - j >= 0; j++)
+                    if (string.IsNullOrEmpty(currentDescriptor.write_to))
+                        continue;
+
+                    if(currentDescriptor.useless)
+                        continue;
+
+                    bool found = false;
+                    foreach(var rspx in registerFamilies["rspx"])
                     {
-                        if (j == 30) break; // Maximum lookup
-                        var prev_row = TraceRows[i - j];
-                        var prev_asm = SliceASM(prev_row);
+                        if (TraceRows[i].Disasm.Contains(rspx))
+                            found = true;
+                    }
+                    if (found)
+                        continue;
 
-                        if (prev_asm != null && prev_asm.ContainsKey("operand1") && prev_asm.Count > 1)
+                    string writtenRegister = currentDescriptor.write_to;
+                    bool isUseless = true;
+
+                    for (int j = i + 1; j < descriptors.Count; j++)
+                    {
+                        var nextDescriptor = descriptors[j];
+                        if (nextDescriptor.type == DisasmType.Other)
+                            continue;
+
+                        foreach (var readReg in nextDescriptor.read_from)
                         {
-                            string prevOperand = prev_asm["operand1"].val;
-
-                            if (IsSubRegisterOf(currentOperand, prevOperand, registerFamilies) && prev_asm["instruction"].type != DisasmType.Storing)
-                                WPF_TraceRow.hiddenRows.Add(prev_row.Id);
-                            else if (IsSubRegisterOf(currentOperand, prevOperand, registerFamilies) && prev_asm["instruction"].type == DisasmType.Storing)
-                                break;
+                            if (!nextDescriptor.useless)
+                                if (IsSubRegisterOf(writtenRegister, readReg, registerFamilies) || IsSubRegisterOf(readReg, writtenRegister, registerFamilies) || writtenRegister == readReg) // Check if any read register is sub-register or super-register or the same register as writtenRegister
+                                {
+                                    // Not useless, because it was used
+                                    isUseless = false;
+                                    break;
+                                }
                         }
+                        if (!isUseless)
+                            break;
+
+                        if (nextDescriptor.type == DisasmType.Setter)
+                        {
+                            if (IsSubRegisterOf(writtenRegister, nextDescriptor.write_to, registerFamilies) || IsSubRegisterOf(nextDescriptor.write_to, writtenRegister, registerFamilies) || writtenRegister == nextDescriptor.write_to)
+                            {
+                                // Useless because it was overwritten
+                                break;
+                            }
+                        }
+
+                    }
+
+                    if (isUseless)
+                    {
+                        currentDescriptor.useless = true;
+                        WPF_TraceRow.hiddenRows.Add(i);
                     }
                 }
             }
@@ -166,8 +175,7 @@ namespace TraceViewer.Core.Analysis
                 }
             }
             return false;
-        }
-
+        }   
 
         public static string[] ParseDisassembly(string rawDisassembly)
         {
@@ -233,41 +241,61 @@ namespace TraceViewer.Core.Analysis
             return parts.ToArray();
         }
 
-        private static Dictionary<string, DisasmDescriptor> SliceASM(TraceRow traceRow)
+        public static DisasmType ClassifyInstruction(string instruction)
+        {
+            string[] setters = { "mov", "lea", "pop", "movabs" , "movsx", "movsxd", "movzx"};
+            string[] storeres = { "push" };
+            string[] manipulators = { "add", "sub", "mul", "div", "inc", "dec", "neg", "not", "and", "or", 
+                "xor", "shl", "shr", "sar", "rol", "ror", "rcl", "rcr", "imul", "idiv", "sal", "sar", "shl", "shr", 
+                "bswap", "bsf", "bsr", "bt", "btc", "btr", "bts", "set", "xadd", "adc", "sbb", "lahf", "sahf" };
+
+            if(setters.Contains(instruction))
+                return DisasmType.Setter;
+            if (storeres.Contains(instruction))
+                return DisasmType.Storer;
+            if (manipulators.Contains(instruction))
+                return DisasmType.Manipulator;
+
+            return DisasmType.Other;
+        }
+        private static DisasmDescriptor SliceASM(TraceRow traceRow)
         {
             string rawDisassembly = traceRow.Disasm;
-
             string[] disasmParts = ParseDisassembly(rawDisassembly);
 
-            Dictionary<string, DisasmDescriptor> disasmSlices = new Dictionary<string, DisasmDescriptor>();
+            DisasmDescriptor disasmDescriptor = new DisasmDescriptor();
 
-            if (disasmParts.Length > 0 && !string.IsNullOrEmpty(disasmParts[0]))
+            disasmDescriptor.type = ClassifyInstruction(disasmParts[0]);
+
+            if (disasmParts.Length > 1 && disasmDescriptor.type != DisasmType.Other)
             {
-                DisasmDescriptor disasmDescriptor = new DisasmDescriptor();
-                disasmDescriptor.val = disasmParts[0];
+                if(disasmDescriptor.type != DisasmType.Storer)
+                    disasmDescriptor.write_to = disasmParts[1];
 
-                // Has to be extended
-                if (disasmDescriptor.val.StartsWith("mov") || disasmDescriptor.val.StartsWith("lea") || disasmDescriptor.val == "pop")
-                    disasmDescriptor.type = DisasmType.Assigning;
-                else if (disasmDescriptor.val.StartsWith("push"))
-                    disasmDescriptor.type = DisasmType.Storing;
-                else
-                    disasmDescriptor.type = DisasmType.Undef;
+                string read_from = disasmParts[1];
+                if(disasmParts.Length > 2)
+                    read_from = disasmParts[2];
 
-                disasmSlices["instruction"] = disasmDescriptor;
-
-                if (disasmParts.Length > 1 && !string.IsNullOrEmpty(disasmParts[1]))
+                string[] splitted = read_from.Split(new char[] { '[', ']', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var split in splitted)
                 {
-                    disasmSlices["operand1"] = new DisasmDescriptor(disasmParts[1], DisasmType.Undef);
+                    if (split.StartsWith("0x"))
+                    {
+                        disasmDescriptor.read_from.Add("intermediate");
+                        continue;
+                    }
+                    foreach (var family in registerFamilies)
+                    {
+                        if (family.Value.Contains(split))
+                        {
+                            disasmDescriptor.read_from.Add(split);
+                            break;
+                        }
+                    }
                 }
-
-                if (disasmParts.Length > 2 && !string.IsNullOrEmpty(disasmParts[2]))
-                {
-                    disasmSlices["operand2"] = new DisasmDescriptor(disasmParts[2], DisasmType.Undef);
-                }
-                return disasmSlices;
             }
-            return null;
+
+            return disasmDescriptor;
         }
     }
 }

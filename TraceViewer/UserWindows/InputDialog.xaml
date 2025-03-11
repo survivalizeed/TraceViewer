@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TraceViewer.UserControls"
         mc:Ignorable="d"
-        Title="InputDialog" Height="180" Width="300"
+        Title="InputDialog" Height="180" Width="500"
         WindowStyle="None"
         BorderBrush="White"
         BorderThickness="0.5"
@@ -14,14 +14,14 @@
         Topmost="True"
         >
     <Grid>
-        <Grid Margin="10,50,10,10">
+        <Grid Margin="10,40,10,10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Label Style="{StaticResource instructions_view_titles}" x:Name="Prompt" Padding="2,5,2,10" FontSize="15" Content="PROMPT" BorderThickness="0" Grid.Row="0">
+            <Label Style="{StaticResource instructions_view_titles}" x:Name="Prompt" HorizontalContentAlignment="Left"  Padding="2,5,2,10" FontSize="15" Content="PROMPT" BorderThickness="0" Grid.Row="0">
                 <Label.Effect>
                     <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
                 </Label.Effect>
