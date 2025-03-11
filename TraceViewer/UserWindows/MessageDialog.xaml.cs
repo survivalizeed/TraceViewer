@@ -28,7 +28,10 @@ namespace TraceViewer.UserWindows
             this.Prompt.Content = Prompt;
             this.Owner = Application.Current.MainWindow;
             this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            this.PreviewKeyDown += MessageDialog_PreviewKeyDown; ;
         }
+
+
 
         [DllImport("dwmapi.dll", PreserveSig = true)]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
@@ -49,6 +52,14 @@ namespace TraceViewer.UserWindows
         {
             var version = Environment.OSVersion.Version;
             return version.Major >= 10;
+        }
+
+        private void MessageDialog_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key == Key.Enter)
+            {
+                this.Close();
+            }
         }
 
         private void Ok_MouseDown(object sender, MouseButtonEventArgs e)

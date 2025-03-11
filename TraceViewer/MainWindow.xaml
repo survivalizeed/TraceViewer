@@ -40,6 +40,12 @@
                                 <MenuItem x:Name="SaveProjectAs" Header="Save Project As" Click="SaveProjectAs_Click"/>
                                 <MenuItem x:Name="CloseProject" Header="Quit Project/Trace" Click="CloseProject_Click"/>
                             </MenuItem>
+                            <MenuItem Header="VIEW">
+                                
+                            </MenuItem>
+                            <MenuItem Header="DEOBFUSCATOR">
+                                <MenuItem x:Name="DetectUselessAssignments" Header="Detect Useless Assignments" Click="DetectUselessAssignments_Click"/>
+                            </MenuItem>
                         </Menu>
                     </DockPanel>
                     <DockPanel Margin="0,30,0,0"  LastChildFill="False">

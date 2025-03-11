@@ -276,8 +276,13 @@ namespace TraceViewer.Core.Analysis
                 {
                     string read_from = disasmParts[1];
                     if (disasmParts.Length > 2)
-                        read_from = disasmParts[2];
-                    disasmDescriptor.read_from.AddRange(SplitReader(read_from));
+                            read_from = disasmParts[2];
+
+                    // Extra case for pop, because the read would have been the same as write which would have made it non setting
+                    if (disasmParts[0] == "pop")
+                        disasmDescriptor.read_from.Add("memory");
+                    else
+                        disasmDescriptor.read_from.AddRange(SplitReader(read_from));
                 }
             }
 

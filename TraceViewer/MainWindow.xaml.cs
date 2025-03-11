@@ -142,9 +142,6 @@ namespace TraceViewer
                 }
             }
 
-            if (e.Key == Key.T)
-                DeObfus.DeObfuscate();
-
         }
 
         private void InstructionsView_Loaded(object sender, RoutedEventArgs e)
@@ -524,5 +521,12 @@ namespace TraceViewer
             ScrollControl(-TraceHandler.load_count);
             ScrollControl(TraceHandler.load_count);
         }
+
+
+        private void DetectUselessAssignments_Click(object sender, RoutedEventArgs e)
+        {
+            DeObfus.DeObfuscate();
+        }
+
     }
 }
