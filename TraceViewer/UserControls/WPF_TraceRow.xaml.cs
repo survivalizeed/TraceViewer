@@ -14,7 +14,7 @@ namespace TraceViewer
 {
     public partial class WPF_TraceRow : UserControl
     {
-        public static List<int> hiddenRows = new List<int>();
+        public static HashSet<int> hiddenRows = new HashSet<int>();
 
         private bool hidden = false;
         private float hiddenOpacity = 0.25f;

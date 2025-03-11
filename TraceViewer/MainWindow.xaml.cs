@@ -445,6 +445,7 @@ namespace TraceViewer
                 }
             }
             NotesContent.Text = project.Notes ?? ""; // Load notes, handle null 
+            WPF_TraceRow.hiddenRows = project.HiddenRows; // Load hidden rows
             RefreshView(); // Refresh view after loading project
         }
 
@@ -500,6 +501,7 @@ namespace TraceViewer
             {
                 TraceData = TraceHandler.Trace,
                 Name = TraceHandler.Trace.Filename,
+                HiddenRows = WPF_TraceRow.hiddenRows,
                 Comments = new List<Tuple<int, string>>() // Initialize comments collection
             };
             foreach (var item in TraceHandler.Trace.Trace)

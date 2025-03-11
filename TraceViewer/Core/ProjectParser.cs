@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace TraceViewer.Core
 {
@@ -13,8 +14,10 @@ namespace TraceViewer.Core
     {
         public TraceData TraceData;
 
-        public List<Tuple<int, string>> Comments; 
-        
+        public List<Tuple<int, string>> Comments;
+
+        public HashSet<int> HiddenRows;
+
         public string Name;
 
         public string Notes;
@@ -52,11 +55,11 @@ namespace TraceViewer.Core
 
                 if (new string(header.Magic) != "TRVI")
                 {
-                    throw new InvalidDataException("Ungültige Magic Number im Header.");
+                    throw new InvalidDataException("Invalid Magic!");
                 }
                 if (header.Version != 1)
                 {
-                    throw new InvalidDataException("Ungültige Version im Header. Erwartet wurde Version 1.");
+                    throw new InvalidDataException("Invalid Version!");
                 }
                 project.Name = header.TraceName;
 
@@ -100,12 +103,13 @@ namespace TraceViewer.Core
                 {
                     decompressedMs.Position = 0;
 
-
                     ReadDescriptor(decompressedReader);
 
                     decompressedReader.BaseStream.Seek(descriptor.TraceLength, SeekOrigin.Current);
 
                     project.Comments = ReadComments(decompressedReader);
+
+                    project.HiddenRows = ReadHiddenRows(decompressedReader);
 
                     project.Notes = ReadNotes(decompressedReader);
                 }
@@ -148,6 +152,17 @@ namespace TraceViewer.Core
             return comments;
         }
 
+        private static HashSet<int> ReadHiddenRows(BinaryReader reader)
+        {
+            HashSet<int> hiddenRows = new HashSet<int>();
+            int hiddenRowCount = reader.ReadInt32();
+            for (int i = 0; i < hiddenRowCount; i++)
+            {
+                hiddenRows.Add(reader.ReadInt32());
+            }
+            return hiddenRows;
+        }
+
         private static string ReadNotes(BinaryReader reader)
         {
             return Encoding.UTF8.GetString(reader.ReadBytes((int)(reader.BaseStream.Length - reader.BaseStream.Position)));
@@ -175,6 +190,8 @@ namespace TraceViewer.Core
 
                 byte[] commentsData = WriteComments(project.Comments);
 
+                byte[] hiddenRowsData = WriteHiddenRows(project.HiddenRows);
+
                 byte[] notesData = Encoding.UTF8.GetBytes(project.Notes);
 
                 using (MemoryStream decompressedMs = new MemoryStream())
@@ -183,6 +200,7 @@ namespace TraceViewer.Core
                     WriteDescriptor(decompressedWriter, traceData.Length);
                     decompressedWriter.Write(traceData);
                     decompressedWriter.Write(commentsData);
+                    decompressedWriter.Write(hiddenRowsData);
                     decompressedWriter.Write(notesData);
 
                     byte[] decompressedBlock = decompressedMs.ToArray();
@@ -230,6 +248,20 @@ namespace TraceViewer.Core
                     writer.Write(comment.Item1);
                     writer.Write((short)comment.Item2.Length);
                     writer.Write(comment.Item2.ToCharArray()); 
+                }
+                return ms.ToArray();
+            }
+        }
+
+        private static byte[] WriteHiddenRows(HashSet<int> hiddenRows)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(ms))
+            {
+                writer.Write(hiddenRows.Count);
+                foreach (var hiddenRow in hiddenRows)
+                {
+                    writer.Write(hiddenRow);
                 }
                 return ms.ToArray();
             }
