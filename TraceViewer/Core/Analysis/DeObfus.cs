@@ -69,27 +69,15 @@ namespace TraceViewer.Core.Analysis
 
             var TraceRows = TraceHandler.Trace.Trace;
 
-            InputDialog input = new InputDialog("The Deobfuscation tries to detect useless code.\r\nUse at your own risk!\r\nInput an analysis depth iteration count:");
+            MessageDialog input = new MessageDialog("The Deobfuscation tries to detect useless code.\r\nUse at your own risk!");
             input.ShowDialog();
-            var res = input.GetResult();
-            if (!string.IsNullOrEmpty(res))
-            {
-                try
-                {
-                    int iterations = Convert.ToInt32(res);
-                    Analyze(TraceRows, iterations);
-                    window.RefreshView();
-                }
-                catch (FormatException)
-                {
-                    MessageDialog messageDialog = new MessageDialog("Invalid input. Use a numerical value!");
-                    messageDialog.ShowDialog();
-                }
-            }
+            
+            Analyze(TraceRows);
+            window.RefreshView();
            
         }
 
-        private static void Analyze(List<TraceRow> TraceRows, int iterations)
+        private static void Analyze(List<TraceRow> TraceRows)
         {
             WPF_TraceRow.hiddenRows.Clear();
             List<DisasmDescriptor> descriptors = new List<DisasmDescriptor>();
@@ -97,8 +85,11 @@ namespace TraceViewer.Core.Analysis
             {
                 descriptors.Add(SliceASM(TraceRows[i]));
             }
-            for (int h = 0; h < iterations; h++)
+
+            bool found_something_useless = false;
+            do
             {
+                found_something_useless = false;
                 for (int i = 0; i < descriptors.Count; i++)
                 {
                     var currentDescriptor = descriptors[i];
@@ -106,14 +97,11 @@ namespace TraceViewer.Core.Analysis
                     if (currentDescriptor.type != DisasmType.Setter && currentDescriptor.type != DisasmType.Manipulator)
                         continue;
 
-                    if (string.IsNullOrEmpty(currentDescriptor.write_to))
-                        continue;
-
-                    if(currentDescriptor.useless)
+                    if (string.IsNullOrEmpty(currentDescriptor.write_to) || currentDescriptor.useless)
                         continue;
 
                     bool found = false;
-                    foreach(var rspx in registerFamilies["rspx"])
+                    foreach (var rspx in registerFamilies["rspx"]) // rsp won't be touched as its too hard to track
                     {
                         if (TraceRows[i].Disasm.Contains(rspx))
                             found = true;
@@ -132,6 +120,7 @@ namespace TraceViewer.Core.Analysis
 
                         foreach (var readReg in nextDescriptor.read_from)
                         {
+                            // Can't use nextDescriptor as proof that current instruction is useful if nextDescriptor is marked as useless
                             if (!nextDescriptor.useless)
                                 if (IsSubRegisterOf(writtenRegister, readReg, registerFamilies) || IsSubRegisterOf(readReg, writtenRegister, registerFamilies) || writtenRegister == readReg) // Check if any read register is sub-register or super-register or the same register as writtenRegister
                                 {
@@ -156,11 +145,12 @@ namespace TraceViewer.Core.Analysis
 
                     if (isUseless)
                     {
+                        found_something_useless = true;
                         currentDescriptor.useless = true;
                         WPF_TraceRow.hiddenRows.Add(i);
                     }
                 }
-            }
+            } while (found_something_useless);
         }
 
         private static bool IsSubRegisterOf(string widerReg, string narrowerReg, Dictionary<string, string[]> registerFamilies)
@@ -247,7 +237,7 @@ namespace TraceViewer.Core.Analysis
             string[] storeres = { "push" };
             string[] manipulators = { "add", "sub", "mul", "div", "inc", "dec", "neg", "not", "and", "or", 
                 "xor", "shl", "shr", "sar", "rol", "ror", "rcl", "rcr", "imul", "idiv", "sal", "sar", "shl", "shr", 
-                "bswap", "bsf", "bsr", "bt", "btc", "btr", "bts", "set", "xadd", "adc", "sbb", "lahf", "sahf" };
+                "bswap", "bsf", "bsr", "bt", "btc", "btr", "bts", "set", "xadd", "adc", "sbb", "lahf", "sahf", "setne" };
 
             if(setters.Contains(instruction))
                 return DisasmType.Setter;
