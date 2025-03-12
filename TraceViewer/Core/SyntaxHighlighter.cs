@@ -27,7 +27,7 @@ namespace TraceViewer.Core
         "CMP", "CMPPD", "CMPPS", "CMPS", "CMPSB", "CMPSD",  "CMPSQ", "CMPSS", "CMPSW", "TEST", "COMISD", "COMISS", "UCOMISD", "UCOMISS",
         "KORTESTB", "KORTESTD", "KORTESTQ", "KORTESTW", "KTESTB", "KTESTD", "KTESTQ", "KTESTW", "VPTESTMB", "VPTESTMD", "VPTESTMQ", "VPTESTMW", "VPTESTNMB", "VPTESTNMD", "VPTESTNMQ", "VPTESTNMW", "VTESTPD", "VTESTPS", "SETcc", "CMPXCHG", "CMPXCHG8B", "CMPXCHG16B",
         "FCOM", "FCOMI", "FCOMIP", "FCOMP", "FCOMPP", "FTST", "FUCOM", "FUCOMI", "FUCOMIP", "FUCOMP", "FUCOMPP",
-        "VRANGEPD", "VRANGEPS", "VRANGESD", "VRANGESS", "VFPCLASSPD", "VFPCLASSPS", "VFPCLASSSD", "VFPCLASSSS", "VPCMPB", "VPCMPD", "VPCMPQ", "VPCMPUB", "VPCMPUD", "VPCMPUQ", "VPCMPUW", "VPCMPW", "ARPL", "BOUND", "LAR", "LSL", "VERR", "VERW", "STR", "LLDT", "SLDT", "SGDT", "LGDT", "LIDT", "SIDT", "SMSW", "LTR", "LES", "LFS", "LGS",  "CMC", "PTWRITE" // CMC - Complement Carry Flag, related to conditional operations, und System-Level Compare-ähnliche Befehle, PTWRITE - writes data based on predicate (comparison result)
+        "VRANGEPD", "VRANGEPS", "VRANGESD", "VRANGESS", "VFPCLASSPD", "VFPCLASSPS", "VFPCLASSSD", "VFPCLASSSS", "VPCMPB", "VPCMPD", "VPCMPQ", "VPCMPUB", "VPCMPUD", "VPCMPUQ", "VPCMPUW", "VPCMPW", "ARPL", "BOUND", "LAR", "LSL", "VERR", "VERW", "STR", "LLDT", "SLDT", "SGDT", "LGDT", "LIDT", "SIDT", "SMSW", "LTR", "LES", "LFS", "LGS", "PTWRITE" // CMC - Complement Carry Flag, related to conditional operations, und System-Level Compare-ähnliche Befehle, PTWRITE - writes data based on predicate (comparison result)
     };
 
         public static string[] MoveInstructions = new string[] {
@@ -68,7 +68,7 @@ namespace TraceViewer.Core
         "PROLD", "PROLQ", "PROLVD", "PROLVQ", "PRORD", "PRORQ", "PRORVD", "PRORVQ",
         "KSHIFTLB", "KSHIFTLD", "KSHIFTLQ", "KSHIFTLW", "KSHIFTRB", "KSHIFTRD", "KSHIFTRQ", "KSHIFTRW", "KUNPCKBW", "KUNPCKDQ", "KUNPCKWD", "KUNPCKHWD", "PUNPCKHBW", "PUNPCKHDQ", "PUNPCKHQDQ", "PUNPCKHWD", "PUNPCKLBW", "PUNPCKLDQ", "PUNPCKLQDQ", "PUNPCKLWD",
         "VPSLLVD", "VPSLLVQ", "VPSLLVW", "VPSRAVD", "VPSRAVQ", "VPSRAVW", "VPSRLVD", "VPSRLVQ", "VPSRLVW",
-         "VPLZCNTD", "VPLZCNTQ",
+         "VPLZCNTD", "VPLZCNTQ", "CMC", "CLC",
          "VPTERNLOGD", "VPTERNLOGQ", "AND", "NOT", "OR", "XOR", "BSF", "BSR", "BT", "BTC", "BTR", "BTS", "LZCNT", "POPCNT", "BZHI", "ANDN", "KANDB", "KANDD", "KANDNB", "KANDND", "KANDNQ", "KANDNW", "KANDQ", "KANDW", "KNOTB", "KNOTD", "KNOTQ", "KNOTW", "KORB", "KORD", "KORQ", "KORW", "KXNORB", "KXNORD", "KXNORQ", "KXNORW", "KXORB", "KXORD", "KXORQ", "KXORW", "PAND", "PANDN", "POR", "PXOR", "STC" // added basic logical and bit manipulation instructions again, and extended bit manipulation and some vector logical instructions.
     };
 

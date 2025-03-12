@@ -58,7 +58,8 @@ namespace TraceViewer.Core.Analysis
             { "r12x", new[] { "r12", "r12d", "r12w", "r12b" } },
             { "r13x", new[] { "r13", "r13d", "r13w", "r13b" } },
             { "r14x", new[] { "r14", "r14d", "r14w", "r14b" } },
-            { "r15x", new[] { "r15", "r15d", "r15w", "r15b" } }
+            { "r15x", new[] { "r15", "r15d", "r15w", "r15b" } },
+            { "ripx", new[] { "rip", "eip" } }
         };
 
         public static void DeObfuscate()
@@ -106,11 +107,17 @@ namespace TraceViewer.Core.Analysis
                         if (TraceRows[i].Disasm.Contains(rspx))
                             found = true;
                     }
+                    foreach (var ripx in registerFamilies["ripx"]) // rip won't be touched as its too hard to track
+                    {
+                        if (TraceRows[i].Disasm.Contains(ripx))
+                            found = true;
+                    }
                     if (found)
                         continue;
 
+
                     string writtenRegister = currentDescriptor.write_to;
-                    bool isUseless = true;
+                    bool isUseless = false;
 
                     for (int j = i + 1; j < descriptors.Count; j++)
                     {
@@ -124,25 +131,22 @@ namespace TraceViewer.Core.Analysis
                             if (!nextDescriptor.useless)
                                 if (IsSubRegisterOf(writtenRegister, readReg, registerFamilies) || IsSubRegisterOf(readReg, writtenRegister, registerFamilies) || writtenRegister == readReg) // Check if any read register is sub-register or super-register or the same register as writtenRegister
                                 {
-                                    // Not useless, because it was used
-                                    isUseless = false;
-                                    break;
+                                    goto leave;
                                 }
                         }
-                        if (!isUseless)
-                            break;
 
                         if (nextDescriptor.type == DisasmType.Setter)
                         {
                             if (IsSubRegisterOf(writtenRegister, nextDescriptor.write_to, registerFamilies) || IsSubRegisterOf(nextDescriptor.write_to, writtenRegister, registerFamilies) || writtenRegister == nextDescriptor.write_to)
                             {
                                 // Useless because it was overwritten
+                                isUseless = true;
                                 break;
                             }
                         }
 
                     }
-
+                leave:
                     if (isUseless)
                     {
                         found_something_useless = true;
@@ -241,7 +245,8 @@ namespace TraceViewer.Core.Analysis
 
             string[] manipulators = { "add", "sub", "mul", "div", "inc", "dec", "neg", "not", "and", "or", 
                 "xor", "shl", "shr", "sar", "rol", "ror", "rcl", "rcr", "imul", "idiv", "sal", "sar", "shl", "shr", 
-                "bswap", "bsf", "bsr", "bt", "btc", "btr", "bts", "set", "xadd", "adc", "sbb", "lahf", "sahf", "setne"};
+                "bswap", "bsf", "bsr", "bt", "btc", "btr", "bts", "set", "xadd", "adc", "sbb", "lahf", "sahf", "setne", 
+                "setae"};
 
             if(setters.Contains(instruction))
                 return DisasmType.Setter;
