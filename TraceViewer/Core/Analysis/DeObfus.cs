@@ -80,7 +80,6 @@ namespace TraceViewer.Core.Analysis
 
         private static void Analyze(List<TraceRow> TraceRows)
         {
-            WPF_TraceRow.hiddenRows.Clear();
             List<DisasmDescriptor> descriptors = new List<DisasmDescriptor>();
             for (int i = 0; i < TraceRows.Count; i++)
             {

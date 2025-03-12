@@ -522,11 +522,15 @@ namespace TraceViewer
             ScrollControl(TraceHandler.load_count);
         }
 
-
-        private void DetectUselessAssignments_Click(object sender, RoutedEventArgs e)
+        private void HideUselessAssignments_Click(object sender, RoutedEventArgs e)
         {
             DeObfus.DeObfuscate();
         }
 
+        private void ResetHidden_Click(object sender, RoutedEventArgs e)
+        {
+            WPF_TraceRow.hiddenRows.Clear();
+            RefreshView();
+        }
     }
 }

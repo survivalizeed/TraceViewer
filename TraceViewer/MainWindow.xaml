@@ -32,7 +32,7 @@
             <Grid Name="MenuView">
                 <StackPanel>
                     <DockPanel LastChildFill="False">
-                        <Menu>
+                        <Menu ClipToBounds="False">
                             <MenuItem Header="FILE">
                                 <MenuItem x:Name="OpenTrace" Header="Open Trace" Click="OpenTrace_Click"/>
                                 <MenuItem x:Name="OpenProject_" Header="Open Project" Click="OpenProject_Click"/>
@@ -44,7 +44,8 @@
                                 
                             </MenuItem>
                             <MenuItem Header="DEOBFUSCATOR">
-                                <MenuItem x:Name="DetectUselessAssignments" Header="Detect Useless Assignments" Click="DetectUselessAssignments_Click"/>
+                                <MenuItem x:Name="HideUselessAssignments" Header="Hide Useless Assignments" Click="HideUselessAssignments_Click"/>
+                                <MenuItem x:Name="ResetHidden" Header="Reset Hidden" Click="ResetHidden_Click"/>
                             </MenuItem>
                         </Menu>
                     </DockPanel>

@@ -36,13 +36,17 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="MenuItem">
-                    <Border Background="Transparent">
+                    <Border Background="{TemplateBinding Background}">
                         <Grid>
                             <StackPanel Orientation="Horizontal" Background="Transparent">
-                                <TextBlock Text="{TemplateBinding Header}" Foreground="White" Padding="10,5,5,5" Background="Transparent"/>
-                                <ContentPresenter ContentSource="Icon" Margin="15,0,0,0"/>
+                                <TextBlock x:Name="menuHeaderText"
+                                       Text="{TemplateBinding Header}"
+                                       Foreground="{TemplateBinding Foreground}"
+                                       Padding="10,5,5,5"
+                                       Background="Transparent"
+                                       Margin="5,5,5,5"/>
+                                <ContentPresenter ContentSource="Icon" Margin="30,0,0,0"/>
                             </StackPanel>
-
                             <Popup IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
                                Placement="Bottom" StaysOpen="False">
                                 <Border Background="#151515">
@@ -53,19 +57,37 @@
                             </Popup>
                         </Grid>
                     </Border>
-
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ThicknessAnimation Storyboard.TargetName="menuHeaderText"
+                                                        Storyboard.TargetProperty="Margin"
+                                                        Duration="0:0:0.2"
+                                                        To="30,5,5,5">
+                                            <ThicknessAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseOut"/>
+                                            </ThicknessAnimation.EasingFunction>
+                                        </ThicknessAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <ThicknessAnimation Storyboard.TargetName="menuHeaderText"
+                                                        Storyboard.TargetProperty="Margin"
+                                                        Duration="0:0:0.2"
+                                                        To="5,5,5,5">
+                                            <ThicknessAnimation.EasingFunction>
+                                                <SineEase EasingMode="EaseOut"/>
+                                            </ThicknessAnimation.EasingFunction>
+                                        </ThicknessAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                             <Setter Property="Background" Value="{StaticResource instructions_view_background_hover}"/>
-                            <Setter Property="Effect">
-                                <Setter.Value>
-                                    <DropShadowEffect Color="White" BlurRadius="15" ShadowDepth="0" Opacity="0.8"/>
-                                </Setter.Value>
-                            </Setter>
-                        </Trigger>
-
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter Property="Background" Value="{StaticResource comments_focused}"/>
                             <Setter Property="Effect">
                                 <Setter.Value>
                                     <DropShadowEffect Color="White" BlurRadius="15" ShadowDepth="0" Opacity="0.8"/>
@@ -77,6 +99,8 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+
 
     <Style TargetType="ScrollBar">
         <Setter Property="Background" Value="#202020" />
