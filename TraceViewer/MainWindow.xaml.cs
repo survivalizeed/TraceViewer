@@ -142,16 +142,6 @@ namespace TraceViewer
                 }
             }
 
-            if(e.Key == Key.T)
-            {
-                YMMDialog dial0 = new YMMDialog("000000000000000000000000000000000000020EA073C0A00000020EA073E370");
-                dial0.ShowDialog();
-                XMMDialog dial2 = new XMMDialog("0000020EA073C0A00000020EA073E370");
-                dial2.ShowDialog();
-                QWORDDialog dial1 = new QWORDDialog("00007FF79566F008");
-                dial1.ShowDialog();
-            }
-
         }
 
         private void InstructionsView_Loaded(object sender, RoutedEventArgs e)

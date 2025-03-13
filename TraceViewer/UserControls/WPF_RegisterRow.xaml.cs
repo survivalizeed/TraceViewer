@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TraceViewer.UserWindows;
 
 namespace TraceViewer
 {
@@ -41,6 +42,25 @@ namespace TraceViewer
         public void Set(string value)
         {
             this.value.Text = value;
+        }
+
+        private void value_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (register.Text.StartsWith("YMM"))
+            {
+                YMMDialog dialog = new YMMDialog(value.Text.Substring(2));
+                dialog.ShowDialog();
+            }
+            else if(register.Text.StartsWith("XMM"))
+            {
+                XMMDialog dialog = new XMMDialog(value.Text.Substring(2));
+                dialog.ShowDialog();
+            }
+            else
+            {
+                QWORDDialog dialog = new QWORDDialog(value.Text.Substring(2));
+                dialog.ShowDialog();
+            }
         }
     }
 }

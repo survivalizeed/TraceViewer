@@ -57,6 +57,7 @@ namespace TraceViewer.UserWindows
 
             wordLabels[0].Opacity = 0.2;
             wordLabels[1].Opacity = 0.2;
+            wordLabels[2].Opacity = 0.2;
 
             byteLabels[0].Opacity = 0.2;
             byteLabels[1].Opacity = 0.2;
