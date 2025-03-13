@@ -24,34 +24,10 @@ namespace TraceViewer.UserWindows
         public MessageDialog(string Prompt)
         {
             InitializeComponent();
-            this.SourceInitialized += InputDialog_SourceInitialized;
             this.Prompt.Content = Prompt;
             this.Owner = Application.Current.MainWindow;
             this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            this.PreviewKeyDown += MessageDialog_PreviewKeyDown; ;
-        }
-
-
-
-        [DllImport("dwmapi.dll", PreserveSig = true)]
-        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
-
-        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
-
-        private void InputDialog_SourceInitialized(object? sender, EventArgs e)
-        {
-            if (IsWindows10OrHigher())
-            {
-                var hwnd = new WindowInteropHelper(this).Handle;
-                int darkModeEnabled = 1;
-                DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkModeEnabled, sizeof(int));
-            }
-        }
-
-        private bool IsWindows10OrHigher()
-        {
-            var version = Environment.OSVersion.Version;
-            return version.Major >= 10;
+            this.PreviewKeyDown += MessageDialog_PreviewKeyDown;
         }
 
         private void MessageDialog_PreviewKeyDown(object sender, KeyEventArgs e)

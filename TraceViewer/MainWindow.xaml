@@ -8,6 +8,7 @@
         Title="survivalizeed's Trace Viewer"
         Width="{x:Static SystemParameters.PrimaryScreenWidth}"  
         Height="{x:Static SystemParameters.PrimaryScreenHeight}"
+        WindowStartupLocation="CenterScreen"
         >
     <Grid Name="window">
         <Rectangle Fill="{StaticResource CustomBackground}"/>

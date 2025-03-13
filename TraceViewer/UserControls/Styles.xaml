@@ -11,6 +11,13 @@
     
     <SolidColorBrush x:Key="comments_focused" Color="#404040"/>
 
+    <SolidColorBrush x:Key="ymm" Color="Orange"/>
+    <SolidColorBrush x:Key="xmm" Color="PaleVioletRed"/>
+    <SolidColorBrush x:Key="qword" Color="Coral"/>
+    <SolidColorBrush x:Key="dword" Color="IndianRed"/>
+    <SolidColorBrush x:Key="word" Color="DarkGoldenrod"/>
+    <SolidColorBrush x:Key="byte" Color="HotPink"/>
+
     <LinearGradientBrush x:Key="CustomBackground" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#151515" Offset="0.0"/>
         <GradientStop Color="#0D0D0D" Offset="0.6"/>
@@ -235,7 +242,7 @@
     <Style x:Key="label_button" TargetType="Label">
         <Setter Property="Background" Value="{StaticResource instructions_view_background}"/>
         <Setter Property="Foreground" Value="White"/>
-        <Setter Property="FontFamily" Value="Lucida Console"/>
+        <Setter Property="FontFamily" Value="Consolas"/>
         <Setter Property="FontSize" Value="15"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border}"/>

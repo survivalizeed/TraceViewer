@@ -142,6 +142,12 @@ namespace TraceViewer
                 }
             }
 
+            if(e.Key == Key.T)
+            {
+                YMMDialog dial = new YMMDialog("000000000000000000000000000000000000020EA073C0A00000020EA073E370");
+                dial.ShowDialog();
+            }
+
         }
 
         private void InstructionsView_Loaded(object sender, RoutedEventArgs e)
