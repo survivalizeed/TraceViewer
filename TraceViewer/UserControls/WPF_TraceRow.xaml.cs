@@ -17,7 +17,7 @@ namespace TraceViewer
         public static HashSet<int> hiddenRows = new HashSet<int>();
 
         private bool hidden = false;
-        private float hiddenOpacity = 0.25f;
+        private float hiddenOpacity = 0.2f;
 
         private const string HexPrefix = "0x";
         private const string ChangeSeparator = "; ";

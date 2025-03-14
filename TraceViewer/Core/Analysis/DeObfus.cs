@@ -290,7 +290,29 @@ namespace TraceViewer.Core.Analysis
                 }
             }
 
+            AdditionalInstructions(disasmParts[0], disasmDescriptor);
+
             return disasmDescriptor;
+        }
+
+        private static void AdditionalInstructions(string instruction, DisasmDescriptor disasmDescriptor)
+        {
+            if (disasmDescriptor.type != DisasmType.Other)
+                return;
+
+            if(instruction == "cdqe")
+            {
+                disasmDescriptor.type = DisasmType.Manipulator;
+                disasmDescriptor.write_to = "rax";
+                disasmDescriptor.read_from.Add("eax");
+            }
+            else if (instruction == "cwde")
+            {
+                disasmDescriptor.type = DisasmType.Manipulator;
+                disasmDescriptor.write_to = "eax";
+                disasmDescriptor.read_from.Add("ax");
+            }
+
         }
 
         private static List<string> SplitReader(string read_from)
