@@ -110,7 +110,7 @@ namespace TraceViewer.Core
         private static readonly Dictionary<string, SolidColorBrush> RegisterBrushes = new Dictionary<string, SolidColorBrush>(StringComparer.OrdinalIgnoreCase);
 
 
-        static SyntaxHighlighter() // Statischer Konstruktor
+        static SyntaxHighlighter()
         {
             foreach (string instruction in JumpInstructions) InstructionBrushes[instruction] = Brushes.Red;
             foreach (string instruction in CallInstructions) InstructionBrushes[instruction] = Brushes.Red;

@@ -15,7 +15,7 @@
                 <TextBlock x:Name="address" Width="100" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover"/>
              </Border>
             <Border x:Name="disasm_border" Style="{StaticResource disasm_text_block_border}" Width="300" DockPanel.Dock="Left">
-                <TextBlock x:Name="disasm" Width="300" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover"/>
+                <TextBlock x:Name="disasm" Width="300" Style="{StaticResource disasm_text_block}" Focusable="True" DockPanel.Dock="Left" MouseEnter="OnHover" MouseDown="disasm_MouseDown"/>
              </Border>
             <Border x:Name="changes_border" Style="{StaticResource disasm_text_block_border}" Width="300" DockPanel.Dock="Left">
                 <TextBlock x:Name="changes" Width="300" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover"/>

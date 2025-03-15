@@ -9,12 +9,15 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using TraceViewer.Core;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace TraceViewer
 {
     public partial class WPF_TraceRow : UserControl
     {
         public static HashSet<int> hiddenRows = new HashSet<int>();
+
+        public static string highlightedRegisterFamily = "";
 
         private bool hidden = false;
         private float hiddenOpacity = 0.2f;
@@ -120,8 +123,12 @@ namespace TraceViewer
             string[] singleInstructions = Regex.Split(disassemblyText, @"([ ,:\[\]*])");
 
             foreach (string singleInstruction in singleInstructions)
-            {
-                disasm.Inlines.Add(new Run(singleInstruction) { Foreground = SyntaxHighlighter.Check_Type(singleInstruction) });
+            {           
+                if (highlightedRegisterFamily != "" && Globals.registerFamilies[highlightedRegisterFamily].Contains(singleInstruction))
+                    disasm.Inlines.Add(new Run(singleInstruction) { Foreground = SyntaxHighlighter.Check_Type(singleInstruction), 
+                        Background = Brushes.DarkRed });
+                else
+                    disasm.Inlines.Add(new Run(singleInstruction) { Foreground = SyntaxHighlighter.Check_Type(singleInstruction) });
             }
         }
 
@@ -331,5 +338,57 @@ namespace TraceViewer
         {
             traceRow.comments = comments.Text;
         }
+
+
+        private void disasm_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            Point mousePosition = Mouse.GetPosition(disasm);
+            TextPointer textPointer = disasm.GetPositionFromPoint(mousePosition, true);
+
+            if (textPointer != null)
+            {
+                TextPointer wordStart = textPointer;
+                TextPointer wordEnd = textPointer;
+
+                while (wordStart != null &&
+                       wordStart.GetPointerContext(LogicalDirection.Backward) == TextPointerContext.Text)
+                {
+                    string textRun = wordStart.GetTextInRun(LogicalDirection.Backward);
+                    if (string.IsNullOrEmpty(textRun) || char.IsWhiteSpace(textRun.Last()))
+                        break;
+                    wordStart = wordStart.GetPositionAtOffset(-1, LogicalDirection.Backward);
+                }
+
+                while (wordEnd != null &&
+                       wordEnd.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.Text)
+                {
+                    string textRun = wordEnd.GetTextInRun(LogicalDirection.Forward);
+                    if (string.IsNullOrEmpty(textRun) || char.IsWhiteSpace(textRun.First()))
+                        break;
+                    wordEnd = wordEnd.GetPositionAtOffset(1, LogicalDirection.Forward);
+                }
+
+                var wordRange = new TextRange(wordStart, wordEnd);
+                string wordUnderMouse = wordRange.Text.Trim();
+
+
+                foreach (var registerFamily in Globals.registerFamilies)
+                {
+                    foreach (var register in registerFamily.Value)
+                    {
+                        if (wordUnderMouse.Equals(register, StringComparison.OrdinalIgnoreCase))
+                        {
+                            highlightedRegisterFamily = highlightedRegisterFamily == registerFamily.Key
+                                ? ""
+                                : registerFamily.Key;
+
+                            window.RefreshView();
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
     }
 }

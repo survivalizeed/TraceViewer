@@ -41,27 +41,6 @@ namespace TraceViewer.Core.Analysis
     class DeObfus
     {
 
-        private static Dictionary<string, string[]> registerFamilies = new Dictionary<string, string[]>
-        {
-            { "raxx", new[] { "rax", "eax", "ax", "ah", "al" } },
-            { "rbxx", new[] { "rbx", "ebx", "bx", "bh", "bl" } },
-            { "rcxx", new[] { "rcx", "ecx", "cx", "ch", "cl" } },
-            { "rdxx", new[] { "rdx", "edx", "dx", "dh", "dl" } },
-            { "rspx", new[] { "rsp", "esp", "sp", "spl" } },
-            { "rbpx", new[] { "rbp", "ebp", "bp", "bpl" } },
-            { "rsix", new[] { "rsi", "esi", "si", "sil" } },
-            { "rdix", new[] { "rdi", "edi", "di", "dil" } },
-            { "r8x",  new[] { "r8", "r8d", "r8w", "r8b" } },
-            { "r9x",  new[] { "r9", "r9d", "r9w", "r9b" } },
-            { "r10x", new[] { "r10", "r10d", "r10w", "r10b" } },
-            { "r11x", new[] { "r11", "r11d", "r11w", "r11b" } },
-            { "r12x", new[] { "r12", "r12d", "r12w", "r12b" } },
-            { "r13x", new[] { "r13", "r13d", "r13w", "r13b" } },
-            { "r14x", new[] { "r14", "r14d", "r14w", "r14b" } },
-            { "r15x", new[] { "r15", "r15d", "r15w", "r15b" } },
-            { "ripx", new[] { "rip", "eip" } }
-        };
-
         public static void DeObfuscate()
         {
             if (TraceHandler.Trace == null)
@@ -101,12 +80,12 @@ namespace TraceViewer.Core.Analysis
                         continue;
 
                     bool found = false;
-                    foreach (var rspx in registerFamilies["rspx"]) // rsp won't be touched as its too hard to track
+                    foreach (var rspx in Globals.registerFamilies["rspx"]) // rsp won't be touched as its too hard to track
                     {
                         if (TraceRows[i].Disasm.Contains(rspx))
                             found = true;
                     }
-                    foreach (var ripx in registerFamilies["ripx"]) // rip won't be touched as its too hard to track
+                    foreach (var ripx in Globals.registerFamilies["ripx"]) // rip won't be touched as its too hard to track
                     {
                         if (TraceRows[i].Disasm.Contains(ripx))
                             found = true;
@@ -128,7 +107,7 @@ namespace TraceViewer.Core.Analysis
                         {
                             // Can't use nextDescriptor as proof that current instruction is useful if nextDescriptor is marked as useless
                             if (!nextDescriptor.useless)
-                                if (IsSubRegisterOf(writtenRegister, readReg, registerFamilies) || IsSubRegisterOf(readReg, writtenRegister, registerFamilies) || writtenRegister == readReg) // Check if any read register is sub-register or super-register or the same register as writtenRegister
+                                if (IsSubRegisterOf(writtenRegister, readReg, Globals.registerFamilies) || IsSubRegisterOf(readReg, writtenRegister, Globals.registerFamilies) || writtenRegister == readReg) // Check if any read register is sub-register or super-register or the same register as writtenRegister
                                 {
                                     goto leave;
                                 }
@@ -136,7 +115,7 @@ namespace TraceViewer.Core.Analysis
 
                         if (nextDescriptor.type == DisasmType.Setter)
                         {
-                            if (IsSubRegisterOf(writtenRegister, nextDescriptor.write_to, registerFamilies) || IsSubRegisterOf(nextDescriptor.write_to, writtenRegister, registerFamilies) || writtenRegister == nextDescriptor.write_to)
+                            if (IsSubRegisterOf(writtenRegister, nextDescriptor.write_to, Globals.registerFamilies) || IsSubRegisterOf(nextDescriptor.write_to, writtenRegister, Globals.registerFamilies) || writtenRegister == nextDescriptor.write_to)
                             {
                                 // Useless because it was overwritten
                                 isUseless = true;
@@ -326,7 +305,7 @@ namespace TraceViewer.Core.Analysis
                     dD.Add("intermediate");
                     continue;
                 }
-                foreach (var family in registerFamilies)
+                foreach (var family in Globals.registerFamilies)
                 {
                     if (family.Value.Contains(split))
                     {
