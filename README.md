@@ -30,9 +30,10 @@ Trace Viewer is a modern, powerful and user-friendly tool, developed using C#, d
 ![Trace](.github/res/QWORD.png)
 ![Trace](.github/res/YMM.png)
 
+
 ## Contributing
 
-We welcome contributions from the community! If you have ideas for new features, bug fixes, or improvements, please feel free to:
+I welcome contributions from the community! If you have ideas for new features, bug fixes, or improvements, please feel free to:
 
 1.  Fork the repository.
 2.  Create a new branch for your changes.
@@ -40,11 +41,14 @@ We welcome contributions from the community! If you have ideas for new features,
 4.  Push your changes to your fork.
 5.  Submit a pull request.
 
-Please ensure your C# code adheres to the project's coding style and includes appropriate tests.
+Please ensure your C# code adheres to the project's coding style.
 
 ## License
 
 This project is licensed under the [GPL-3.0 license](LICENSE). See the `LICENSE` file for more information.
+
+## Credits
+To x64dbg and the docs and the creator of the Execution Trace Viewer
 
 ## Author
 
