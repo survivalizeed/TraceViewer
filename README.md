@@ -1,9 +1,9 @@
 # Trace Viewer
 
-[![GitHub Stars](https://img.shields.io/github/stars/survivalizeed/trace-viewer?style=social)](https://github.com/survivalizeed/TraceViewer)
-[![GitHub Issues](https://img.shields.io/github/issues/survivalizeed/trace-viewer)](https://github.com/survivalizeed/TraceViewer/issues)
-[![GitHub Last Commit](https://img.shields.io/github/last-commit/survivalizeed/trace-viewer)](https://github.com/survivalizeed/TraceViewer/commits/main)
-[![License](https://img.shields.io/github/license/survivalizeed/trace-viewer)](https://github.com/survivalizeed/TraceViewer/blob/main/LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/survivalizeed/TraceViewer?style=social)](https://github.com/survivalizeed/TraceViewer)
+[![GitHub Issues](https://img.shields.io/github/issues/survivalizeed/TraceViewer)](https://github.com/survivalizeed/TraceViewer/issues)
+[![GitHub Last Commit](https://img.shields.io/github/last-commit/survivalizeed/TraceViewer)](https://github.com/survivalizeed/TraceViewer/commits/main)
+[![License](https://img.shields.io/github/license/survivalizeed/TraceViewer)](https://github.com/survivalizeed/TraceViewer/blob/main/LICENSE)
 
 **Inspect, Analyze, and Deobfuscate x64dbg Trace Files with Ease.**
 
