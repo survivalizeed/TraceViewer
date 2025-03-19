@@ -19,7 +19,7 @@ Trace Viewer is a modern, powerful and user-friendly tool, developed using C#, d
 
 ### Highlighting
 
-![Trace](.github/res/Highlights.png)
+![Trace](.github/res/Highlighting.png)
 
 
 ## Contributing
