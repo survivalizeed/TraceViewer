@@ -26,6 +26,10 @@ Trace Viewer is a modern, powerful and user-friendly tool, developed using C#, d
 ![Trace](.github/res/MnemonicBrief.png)
 ![Trace](.github/res/Mnemonic.png)
 
+### Data Visualization
+![Trace](.github/res/QWORD.png)
+![Trace](.github/res/YMM.png)
+
 ## Contributing
 
 We welcome contributions from the community! If you have ideas for new features, bug fixes, or improvements, please feel free to:
