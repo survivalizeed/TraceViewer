@@ -41,10 +41,7 @@
                                 <MenuItem x:Name="SaveProjectAs" Header="Save Project As" Click="SaveProjectAs_Click"/>
                                 <MenuItem x:Name="CloseProject" Header="Quit Project/Trace" Click="CloseProject_Click"/>
                             </MenuItem>
-                            <MenuItem Header="VIEW">
-                                
-                            </MenuItem>
-                            <MenuItem Header="DEOBFUSCATOR">
+                            <MenuItem Header="ANALYZER">
                                 <MenuItem x:Name="HideUselessAssignments" Header="Hide Useless Assignments" Click="HideUselessAssignments_Click"/>
                                 <MenuItem x:Name="ResetHidden" Header="Reset Hidden" Click="ResetHidden_Click"/>
                             </MenuItem>
