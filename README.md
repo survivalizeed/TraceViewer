@@ -3,7 +3,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/survivalizeed/TraceViewer?style=social)](https://github.com/survivalizeed/TraceViewer)
 [![GitHub Issues](https://img.shields.io/github/issues/survivalizeed/TraceViewer)](https://github.com/survivalizeed/TraceViewer/issues)
 [![GitHub Last Commit](https://img.shields.io/github/last-commit/survivalizeed/TraceViewer)](https://github.com/survivalizeed/TraceViewer/commits/main)
-[![License](https://img.shields.io/github/license/survivalizeed/TraceViewer)](https://github.com/survivalizeed/TraceViewer/blob/main/LICENSE)
+[![License](https://img.shields.io/github/license/survivalizeed/TraceViewer)](https://github.com/survivalizeed/TraceViewer/blob/master/LICENSE)
 
 **Inspect, Analyze, and Deobfuscate x64dbg Trace Files with Ease.**
 
