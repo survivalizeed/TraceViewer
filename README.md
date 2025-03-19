@@ -13,9 +13,14 @@ Trace Viewer is a modern, powerful and user-friendly tool, developed using C#, d
 
 ![Trace](.github/res/Trace.png)
 
-### Automatic Useless Assignment detection:
+### Automatic Useless Assignment Detection
 
 ![Trace](.github/res/DeOb.png)
+
+### Highlighting
+
+![Trace](.github/res/Highlights.png)
+
 
 ## Contributing
 
