@@ -15,7 +15,7 @@ This Repository is an early stage so bugs are expected
 
 ![Trace](.github/res/Trace.png)
 
-### Automatic Useless Assignment Detection
+### Automatic Useless Assignment Detection (Beta)
 
 ![Trace](.github/res/DeOb.png)
 
