@@ -394,5 +394,48 @@ namespace TraceViewer
             }
         }
 
+        private void Copy_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            MenuItem? menuItem = sender as MenuItem;
+            if (menuItem != null)
+            {
+                ContextMenu? contextMenu = menuItem.Parent as ContextMenu;
+                if (contextMenu != null)
+                {
+                    if (contextMenu.PlacementTarget is TextBlock sourceTextBlock)
+                    {
+                        string textToCopy = sourceTextBlock.Text;
+                        if (textToCopy == "")
+                        {
+                            if (sourceTextBlock == disasm)
+                                textToCopy = traceRow.Disasm;
+                            else if (sourceTextBlock == changes)
+                            {
+                                foreach (string change in traceRow.Regchanges)
+                                {
+                                    textToCopy += change;
+                                }
+                            }
+                        }
+                        Clipboard.SetText(textToCopy);
+                    }
+                }
+            }
+        }
+
+        private void CopyRow_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            string changesText = "";
+            foreach(string change in traceRow.Regchanges)
+            {
+                changesText += change;
+            }
+            Clipboard.SetText($"#: {id.Text} | {address.Text} | {traceRow.Disasm} | {changesText} | {comments.Text}");
+        }
+
+        private void AddBookmark_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+
+        }
     }
 }

@@ -32,6 +32,7 @@ namespace TraceViewer.UserControls
 
         private void Ok_MouseDown(object sender, MouseButtonEventArgs e)
         {
+
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 result = Input.Text;
@@ -56,11 +57,12 @@ namespace TraceViewer.UserControls
         {
             if(e.Key == Key.Enter)
             {
-                Ok_MouseDown(null, null);
+                result = Input.Text;
+                this.Close();
             }
             if (e.Key == Key.Escape)
             {
-                Cancel_MouseDown(null, null);
+                this.Close();
             }
         }
     }

@@ -175,6 +175,12 @@
                          BorderThickness="0"/>
                 </Border>
             </Grid>
+
+            <Grid Name="BookmarksView">
+                <Border Margin="0,104,0,15" BorderThickness="0.5" BorderBrush="{StaticResource instructions_view_border}">
+                    
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 </Window>

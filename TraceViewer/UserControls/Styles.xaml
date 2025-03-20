@@ -202,6 +202,7 @@
         </Setter>
     </Style>
 
+
     <Style TargetType="ScrollBar">
         <Setter Property="Background" Value="#202020" />
         <Setter Property="BorderBrush" Value="Transparent" />

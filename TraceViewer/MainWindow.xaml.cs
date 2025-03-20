@@ -319,7 +319,7 @@ namespace TraceViewer
             // Set visibility of different UI views based on UIState enum
             DisassemblerView.Visibility = uiState == UIState.DisassemblerView ? Visibility.Visible : Visibility.Collapsed;
             NotesView.Visibility = uiState == UIState.NotesView ? Visibility.Visible : Visibility.Collapsed;
-            //BookmarksView.Visibility = uiState == UIState.BookmarksView ? Visibility.Visible : Visibility.Collapsed;
+            BookmarksView.Visibility = uiState == UIState.BookmarksView ? Visibility.Visible : Visibility.Collapsed;
         }
 
 

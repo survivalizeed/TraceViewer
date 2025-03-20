@@ -5,28 +5,29 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:TraceViewer"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800"
+             >
+    <UserControl.Resources>
+        <ContextMenu x:Key="ContextMenu" Style="{StaticResource disasm_context_menu}">
+            <MenuItem Name="Copy" Header="Copy" PreviewMouseDown="Copy_PreviewMouseDown"/>
+            <MenuItem Name="CopyRow" Header="Copy Row" PreviewMouseDown="CopyRow_PreviewMouseDown"/>
+            <MenuItem Name="AddBookmark" Header="Add Bookmark" PreviewMouseDown="AddBookmark_PreviewMouseDown"/>
+        </ContextMenu>
+    </UserControl.Resources>
     <Grid Margin="0,0,0,0" >
          <DockPanel x:Name="parent_panel" LastChildFill="False">
              <Border x:Name="id_border" Style="{StaticResource disasm_text_block_border}" Width="50" DockPanel.Dock="Left">
-                <TextBlock x:Name="id" Width="50" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover"/>
+                <TextBlock x:Name="id" Width="50" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover" ContextMenu="{StaticResource ContextMenu}"/>
              </Border>
             <Border x:Name="address_border" Style="{StaticResource disasm_text_block_border}" Width="100" DockPanel.Dock="Left">
-                <TextBlock x:Name="address" Width="100" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover"/>
+                <TextBlock x:Name="address" Width="100" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover" ContextMenu="{StaticResource ContextMenu}"/>
              </Border>
             <Border x:Name="disasm_border" Style="{StaticResource disasm_text_block_border}" Width="300" DockPanel.Dock="Left">
-                <TextBlock x:Name="disasm" Width="300" Style="{StaticResource disasm_text_block}" Focusable="True" DockPanel.Dock="Left" MouseEnter="OnHover" MouseDown="disasm_MouseDown">
-                    <TextBlock.ContextMenu>
-                        <ContextMenu Style="{StaticResource disasm_context_menu}">
-                            <MenuItem Header="Copy"/>
-                            <MenuItem Header="Copy Row"/>
-                        </ContextMenu>
-                    </TextBlock.ContextMenu>
-                </TextBlock>
+                <TextBlock x:Name="disasm" Width="300" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover" MouseDown="disasm_MouseDown" ContextMenu="{StaticResource ContextMenu}"/>
             </Border>
             <Border x:Name="changes_border" Style="{StaticResource disasm_text_block_border}" Width="300" DockPanel.Dock="Left">
-                <TextBlock x:Name="changes" Width="300" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover"/>
-             </Border>
+                <TextBlock x:Name="changes" Width="300" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover" ContextMenu="{StaticResource ContextMenu}"/>
+            </Border>
             <TextBox Visibility="Collapsed" Style="{StaticResource comments_text_box}" x:Name="mnemonicBrief" HorizontalContentAlignment="Center" Width="300" DockPanel.Dock="Left" MouseEnter="OnHover" IsReadOnly="True"
                      MouseDoubleClick="OnDoubleClickMnemonic" KeyDown="OnKeyPressMnemonic"/>
             <TextBox Style="{StaticResource comments_text_box}" x:Name="comments" HorizontalContentAlignment="Center" Width="300" DockPanel.Dock="Left" MouseEnter="OnHover" 
