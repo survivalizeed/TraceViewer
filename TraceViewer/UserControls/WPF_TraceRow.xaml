@@ -19,7 +19,7 @@
                     <TextBlock.ContextMenu>
                         <ContextMenu Style="{StaticResource disasm_context_menu}">
                             <MenuItem Header="Copy"/>
-                            <MenuItem Header="Cut"/>
+                            <MenuItem Header="Copy Row"/>
                         </ContextMenu>
                     </TextBlock.ContextMenu>
                 </TextBlock>

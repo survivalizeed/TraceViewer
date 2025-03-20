@@ -109,13 +109,10 @@
 
     <Style TargetType="{x:Type ContextMenu}" x:Key="disasm_context_menu">
         <Setter Property="Background" Value="#151515"/>
-        <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ContextMenu}">
-                    <Border Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}">
+                    <Border Background="{TemplateBinding Background}">
                         <ScrollViewer CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                             <ItemsPresenter KeyboardNavigation.TabNavigation="Cycle" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
                         </ScrollViewer>
@@ -129,7 +126,7 @@
                     <Setter Property="Background" Value="Transparent"/>
                     <Setter Property="Foreground" Value="White"/>
                     <Setter Property="Padding" Value="5"/>
-                    <Setter Property="FontSize" Value="10"/>
+                    <Setter Property="FontSize" Value="12"/>
                     <Setter Property="FontFamily" Value="Consolas"/>
                     <Setter Property="FontWeight" Value="Bold"/>
                     <Setter Property="VerticalContentAlignment" Value="Center"/>

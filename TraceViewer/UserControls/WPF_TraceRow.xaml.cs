@@ -346,6 +346,9 @@ namespace TraceViewer
             Point mousePosition = Mouse.GetPosition(disasm);
             TextPointer textPointer = disasm.GetPositionFromPoint(mousePosition, true);
 
+            if (string.IsNullOrWhiteSpace(textPointer.GetTextInRun(LogicalDirection.Forward)))
+                return;
+
             if (textPointer != null)
             {
                 TextPointer wordStart = textPointer;
