@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace TraceViewer.UserWindows
@@ -143,6 +144,7 @@ namespace TraceViewer.UserWindows
 
         private void signed_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
             if (displayType == DisplayType.Signed) return;
             displayType = DisplayType.Signed;
             Fill(xmmLabel.Content.ToString());
@@ -166,6 +168,7 @@ namespace TraceViewer.UserWindows
 
         private void hexadecimal_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
             if (displayType == DisplayType.Hex) return;
             displayType = DisplayType.Hex;
             Fill(xmmLabel.Content.ToString());
@@ -173,6 +176,7 @@ namespace TraceViewer.UserWindows
 
         private void unsigned_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
             if (displayType == DisplayType.Unsigned) return;
             displayType = DisplayType.Unsigned;
             Fill(xmmLabel.Content.ToString());
@@ -196,6 +200,7 @@ namespace TraceViewer.UserWindows
 
         private void float_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
             if (displayType == DisplayType.Float) return;
             displayType = DisplayType.Float;
             Fill(xmmLabel.Content.ToString());
@@ -219,7 +224,8 @@ namespace TraceViewer.UserWindows
 
         private void ok_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            this.Close();
+            if (e.LeftButton == MouseButtonState.Pressed)
+                this.Close();
         }
     }
 }

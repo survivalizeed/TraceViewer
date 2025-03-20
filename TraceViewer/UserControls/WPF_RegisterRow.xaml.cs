@@ -46,6 +46,7 @@ namespace TraceViewer
 
         private void value_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
             if (register.Text.StartsWith("YMM"))
             {
                 YMMDialog dialog = new YMMDialog(value.Text.Substring(2));

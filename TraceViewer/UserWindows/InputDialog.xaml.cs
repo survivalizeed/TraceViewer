@@ -32,13 +32,17 @@ namespace TraceViewer.UserControls
 
         private void Ok_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            result = Input.Text;
-            this.Close();
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                result = Input.Text;
+                this.Close();
+            }
         }
 
         private void Cancel_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            this.Close();
+            if(e.LeftButton == MouseButtonState.Pressed)
+                this.Close();
         }
 
         public string GetResult()

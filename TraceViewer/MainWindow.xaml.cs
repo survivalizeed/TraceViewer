@@ -221,6 +221,7 @@ namespace TraceViewer
 
         private void Fpu_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
             // Toggle FPU registers visibility
             _toggleFpu = !_toggleFpu;
             fpu.Foreground = _toggleFpu ? Brushes.White : Brushes.Gray;
@@ -238,6 +239,7 @@ namespace TraceViewer
 
         private void Comments_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
             // Toggle between displaying comments and mnemonic brief in the comments column
             _toggleMnemonic = !_toggleMnemonic;
             InstructionsView.BeginInit();
@@ -251,6 +253,7 @@ namespace TraceViewer
 
         private void MnemonicReader_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
             BigMnemonicViewInactive(); // Deactivate big mnemonic view
         }
 
@@ -272,6 +275,8 @@ namespace TraceViewer
 
         private void DisasmViewButton_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if(e != null)
+                if (e.LeftButton != MouseButtonState.Pressed) return;
             SetViewButtonActive(DisasmViewButtonBorder); // Set Disassembler view button as active
             SetViewButtonInactive(NotesViewButtonBorder); // Deactivate Notes view button
             SetViewButtonInactive(BookmarksViewButtonBorder); // Deactivate Bookmarks view button
@@ -280,6 +285,7 @@ namespace TraceViewer
 
         private void NotesViewButton_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
             SetViewButtonInactive(DisasmViewButtonBorder); // Deactivate Disassembler view button
             SetViewButtonActive(NotesViewButtonBorder); // Set Notes view button as active
             SetViewButtonInactive(BookmarksViewButtonBorder); // Deactivate Bookmarks view button
@@ -288,6 +294,7 @@ namespace TraceViewer
 
         private void BookmarksViewButton_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
             SetViewButtonInactive(DisasmViewButtonBorder); // Deactivate Disassembler view button
             SetViewButtonInactive(NotesViewButtonBorder); // Deactivate Notes view button
             SetViewButtonActive(BookmarksViewButtonBorder); // Set Bookmarks view button as active

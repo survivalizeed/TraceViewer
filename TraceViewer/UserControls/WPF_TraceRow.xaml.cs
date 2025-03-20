@@ -342,6 +342,7 @@ namespace TraceViewer
 
         private void disasm_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
             Point mousePosition = Mouse.GetPosition(disasm);
             TextPointer textPointer = disasm.GetPositionFromPoint(mousePosition, true);
 

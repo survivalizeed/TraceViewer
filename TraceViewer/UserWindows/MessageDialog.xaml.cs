@@ -40,7 +40,8 @@ namespace TraceViewer.UserWindows
 
         private void Ok_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            this.Close();
+            if (e.LeftButton == MouseButtonState.Pressed)
+                this.Close();
         }
     }
 }
