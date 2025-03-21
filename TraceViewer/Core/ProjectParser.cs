@@ -18,8 +18,6 @@ namespace TraceViewer.Core
 
         public HashSet<int> HiddenRows;
 
-        public string Name;
-
         public string Notes;
 
     }
@@ -28,8 +26,6 @@ namespace TraceViewer.Core
     {
         public char[] Magic; // "TRVI"
         public int Version; // 1
-        public short NameLength;
-        public string TraceName;
         public int BlockSize;
     }
 
@@ -61,7 +57,6 @@ namespace TraceViewer.Core
                 {
                     throw new InvalidDataException("Invalid Version!");
                 }
-                project.Name = header.TraceName;
 
                 byte[] compressedBlock = reader.ReadBytes(header.BlockSize);
 
@@ -123,8 +118,6 @@ namespace TraceViewer.Core
             Header header = new Header();
             header.Magic = reader.ReadChars(4);
             header.Version = reader.ReadInt32();
-            header.NameLength = reader.ReadInt16();
-            header.TraceName = new string(reader.ReadChars(header.NameLength));
             header.BlockSize = reader.ReadInt32();
             return header;
         }
@@ -215,19 +208,17 @@ namespace TraceViewer.Core
                         compressedBlock = compressedStream.ToArray();
                     }
 
-                    WriteHeader(writer, project.Name, compressedBlock.Length);
+                    WriteHeader(writer, compressedBlock.Length);
 
                     writer.Write(compressedBlock);
                 }
             }
         }
 
-        private static void WriteHeader(BinaryWriter writer, string traceName, int blockSize)
+        private static void WriteHeader(BinaryWriter writer, int blockSize)
         {
             writer.Write("TRVI".ToCharArray());
             writer.Write(1); // Version
-            writer.Write((short)traceName.Length);
-            writer.Write(traceName.ToCharArray());
             writer.Write(blockSize);
         }
 

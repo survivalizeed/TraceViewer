@@ -497,14 +497,13 @@ namespace TraceViewer
             };
         }
 
-
+        // For some reason the tmp name is stored in the project file
         private void SaveProjectToFile(string filename)
         {
             // Save project data to the specified file
             Project project = new Project
             {
                 TraceData = TraceHandler.Trace,
-                Name = TraceHandler.Trace.Filename,
                 HiddenRows = WPF_TraceRow.hiddenRows,
                 Comments = new List<Tuple<int, string>>() // Initialize comments collection
             };
