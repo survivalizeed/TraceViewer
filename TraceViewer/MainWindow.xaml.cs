@@ -527,14 +527,14 @@ namespace TraceViewer
             ScrollControl(TraceHandler.load_count);
         }
 
-        private void HideUselessAssignments_Click(object sender, RoutedEventArgs e)
+        private void RemoveUselessAssignments_Click(object sender, RoutedEventArgs e)
         {
             DeObfus.DeObfuscate();
         }
 
-        private void ResetHidden_Click(object sender, RoutedEventArgs e)
+        private void RemoveDeobfuscation_Click(object sender, RoutedEventArgs e)
         {
-            WPF_TraceRow.hiddenRows.Clear();
+            DeObfus.deObHiddenRows.Clear();
             RefreshView();
         }
     }

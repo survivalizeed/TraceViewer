@@ -9,6 +9,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using TraceViewer.Core;
+using TraceViewer.Core.Analysis;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace TraceViewer
@@ -111,7 +112,7 @@ namespace TraceViewer
             comments.Width = window.cd4.Width.Value;
             mnemonicBrief.Width = window.cd4.Width.Value;
 
-            if(hiddenRows.Contains(traceRow.Id))
+            if(hiddenRows.Contains(traceRow.Id) || DeObfus.deObHiddenRows.Contains(traceRow.Id))
                 parent_panel.Opacity = hiddenOpacity;
         }
 
@@ -262,6 +263,7 @@ namespace TraceViewer
             else
             {
                 hiddenRows.Remove(traceRow.Id);
+                DeObfus.deObHiddenRows.Remove(traceRow.Id); // Also remove there so the users input ALWAYS overwrites the deobfuscation
                 parent_panel.Opacity = 1;
             }
             hidden = !hidden;
@@ -277,6 +279,7 @@ namespace TraceViewer
             else
             {
                 hiddenRows.Remove(traceRow.Id);
+                DeObfus.deObHiddenRows.Remove(traceRow.Id); // Also remove there so the users input ALWAYS overwrites the deobfuscation
                 parent_panel.Opacity = 1;
             }
             hidden = hide;

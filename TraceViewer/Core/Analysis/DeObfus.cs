@@ -40,6 +40,7 @@ namespace TraceViewer.Core.Analysis
 
     class DeObfus
     {
+        public static HashSet<int> deObHiddenRows = new HashSet<int>();
 
         public static void DeObfuscate()
         {
@@ -52,12 +53,12 @@ namespace TraceViewer.Core.Analysis
             MessageDialog input = new MessageDialog("The Deobfuscation tries to detect useless code.\r\nUse at your own risk!");
             input.ShowDialog();
             
-            Analyze(TraceRows);
+            HideUselessAssignments(TraceRows);
             window.RefreshView();
            
         }
 
-        private static void Analyze(List<TraceRow> TraceRows)
+        private static void HideUselessAssignments(List<TraceRow> TraceRows)
         {
             List<DisasmDescriptor> descriptors = new List<DisasmDescriptor>();
             for (int i = 0; i < TraceRows.Count; i++)
@@ -133,7 +134,7 @@ namespace TraceViewer.Core.Analysis
                     {
                         found_something_useless = true;
                         currentDescriptor.useless = true;
-                        WPF_TraceRow.hiddenRows.Add(i);
+                        deObHiddenRows.Add(i);
                     }
                 }
             } while (found_something_useless);

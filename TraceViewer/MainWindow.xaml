@@ -42,8 +42,8 @@
                                 <MenuItem x:Name="CloseProject" Header="Quit Project/Trace" Click="CloseProject_Click"/>
                             </MenuItem>
                             <MenuItem Header="ANALYZER">
-                                <MenuItem x:Name="HideUselessAssignments" Header="Hide Useless Assignments" Click="HideUselessAssignments_Click"/>
-                                <MenuItem x:Name="ResetHidden" Header="Reset Hidden" Click="ResetHidden_Click"/>
+                                <MenuItem x:Name="RemoveUselessAssignments" Header="Remove Useless Assignments" Click="RemoveUselessAssignments_Click"/>
+                                <MenuItem x:Name="RemoveDeobfuscation" Header="Remove Deobfuscation" Click="RemoveDeobfuscation_Click"/>
                             </MenuItem>
                         </Menu>
                     </DockPanel>
