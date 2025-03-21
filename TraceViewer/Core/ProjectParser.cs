@@ -89,6 +89,8 @@ namespace TraceViewer.Core
 
                 TraceHandler.OpenAndLoad(tempTraceFilename);
 
+                File.Delete(tempTraceFilename);
+
                 project.TraceData = TraceHandler.Trace;
 
                 tempTraceFilename = null;

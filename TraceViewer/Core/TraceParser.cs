@@ -316,7 +316,11 @@ namespace TraceViewer.Core
                                 foreach(string slice in sliced)
                                 {
                                     string newSlice = slice;
-                                    if (Regex.IsMatch(slice, @"^[0-9A-F]$"))
+                                    if(newSlice == "*")
+                                    {
+                                        newSlice = " * "; // To fix the missing spacing for mul. Not sure why capstone doesnt do this...
+                                    }
+                                    else if (Regex.IsMatch(slice, @"^[0-9A-F]$"))
                                     {
                                         newSlice = newSlice.ToUpper();
                                         newSlice = slice.Insert(0, "0x");    

@@ -90,6 +90,10 @@ namespace TraceViewer.Core.Analysis
                         if (TraceRows[i].Disasm.Contains(ripx))
                             found = true;
                     }
+                    if(currentDescriptor.write_to == "memory")
+                    {
+                        found = true;
+                    }
                     if (found)
                         continue;
 
@@ -246,8 +250,13 @@ namespace TraceViewer.Core.Analysis
 
             if (disasmParts.Length > 1 && disasmDescriptor.type != DisasmType.Other)
             {
-                if(disasmDescriptor.type != DisasmType.User)
-                    disasmDescriptor.write_to = disasmParts[1];
+                if (disasmDescriptor.type != DisasmType.User)
+                {
+                    if (disasmParts[1].Contains('['))
+                        disasmDescriptor.write_to = "memory";
+                    else
+                        disasmDescriptor.write_to = disasmParts[1];
+                }
                 if (disasmDescriptor.type == DisasmType.User)
                 {
                     // Both registers are read from. Aka. cmp or test
@@ -300,11 +309,6 @@ namespace TraceViewer.Core.Analysis
             string[] splitted = read_from.Split(new char[] { '[', ']', ' ' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (var split in splitted)
             {
-                if (split.StartsWith("0x"))
-                {
-                    dD.Add("intermediate");
-                    continue;
-                }
                 foreach (var family in Globals.registerFamilies)
                 {
                     if (family.Value.Contains(split))

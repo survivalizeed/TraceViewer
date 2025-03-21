@@ -497,7 +497,6 @@ namespace TraceViewer
             };
         }
 
-        // For some reason the tmp name is stored in the project file
         private void SaveProjectToFile(string filename)
         {
             // Save project data to the specified file
