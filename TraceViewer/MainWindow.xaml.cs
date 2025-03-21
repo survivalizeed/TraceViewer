@@ -331,6 +331,10 @@ namespace TraceViewer
             NotesContent.Text = "";
             _current_project_path = "";
             WPF_TraceRow.hiddenRows.Clear();
+            DeObfus.deObHiddenRows.Clear();
+            memory1.Visibility = Visibility.Collapsed;
+            memory2.Visibility = Visibility.Collapsed;
+            memory3.Visibility = Visibility.Collapsed;
         }
 
 
@@ -450,6 +454,7 @@ namespace TraceViewer
             }
             NotesContent.Text = project.Notes ?? ""; // Load notes, handle null 
             WPF_TraceRow.hiddenRows = project.HiddenRows; // Load hidden rows
+            DeObfus.deObHiddenRows = project.DeObHiddenRows; // Load deobfuscated hidden rows
             RefreshView(); // Refresh view after loading project
         }
 
@@ -504,14 +509,15 @@ namespace TraceViewer
             {
                 TraceData = TraceHandler.Trace,
                 HiddenRows = WPF_TraceRow.hiddenRows,
-                Comments = new List<Tuple<int, string>>() // Initialize comments collection
-            };
+                DeObHiddenRows = DeObfus.deObHiddenRows,
+                Comments = new List<Tuple<int, string>>(), // Initialize comments collection
+                Notes = NotesContent.Text // Save notes to project
+            };
             foreach (var item in TraceHandler.Trace.Trace)
             {
                 if (!string.IsNullOrEmpty(item.comments))
                     project.Comments.Add(new Tuple<int, string>(Convert.ToInt32(item.Id), item.comments)); // Add comments to project
             }
-            project.Notes = NotesContent.Text; // Save notes content
 
             ProjectWriter.SaveProject(project, filename); // Write project to file
         }

@@ -8,7 +8,8 @@
              d:DesignHeight="450" d:DesignWidth="800"
              >
     <UserControl.Resources>
-        <ContextMenu x:Key="ContextMenu" Style="{StaticResource disasm_context_menu}">
+        <ContextMenu x:Key="ContextMenu" Style="{StaticResource disasm_context_menu}" Opened="ContextMenu_Opened" Closed="ContextMenu_Closed" StaysOpen="False">
+            <MenuItem Name="ShowOrRemove" Header="Show/Remove" PreviewMouseDown="ShowOrRemove_PreviewMouseDown"/>
             <MenuItem Name="Copy" Header="Copy" PreviewMouseDown="Copy_PreviewMouseDown"/>
             <MenuItem Name="CopyRow" Header="Copy Row" PreviewMouseDown="CopyRow_PreviewMouseDown"/>
             <MenuItem Name="AddBookmark" Header="Add Bookmark" PreviewMouseDown="AddBookmark_PreviewMouseDown"/>

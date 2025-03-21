@@ -399,6 +399,7 @@ namespace TraceViewer
 
         private void Copy_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
             MenuItem? menuItem = sender as MenuItem;
             if (menuItem != null)
             {
@@ -428,6 +429,7 @@ namespace TraceViewer
 
         private void CopyRow_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
             string changesText = "";
             foreach(string change in traceRow.Regchanges)
             {
@@ -438,7 +440,24 @@ namespace TraceViewer
 
         private void AddBookmark_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
 
+        }
+
+        private void ShowOrRemove_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
+            ToggleHide();
+        }
+
+        private void ContextMenu_Opened(object sender, RoutedEventArgs e)
+        {
+            window.DimmingOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void ContextMenu_Closed(object sender, RoutedEventArgs e)
+        {
+            window.DimmingOverlay.Visibility = Visibility.Collapsed;
         }
     }
 }

@@ -18,6 +18,8 @@ namespace TraceViewer.Core
 
         public HashSet<int> HiddenRows;
 
+        public HashSet<int> DeObHiddenRows;
+
         public string Notes;
 
     }
@@ -88,9 +90,7 @@ namespace TraceViewer.Core
                 File.WriteAllBytes(tempTraceFilename, traceDataBlock);
 
                 TraceHandler.OpenAndLoad(tempTraceFilename);
-
-                File.Delete(tempTraceFilename);
-
+                
                 project.TraceData = TraceHandler.Trace;
 
                 tempTraceFilename = null;
@@ -107,6 +107,8 @@ namespace TraceViewer.Core
                     project.Comments = ReadComments(decompressedReader);
 
                     project.HiddenRows = ReadHiddenRows(decompressedReader);
+
+                    project.DeObHiddenRows = ReadHiddenRows(decompressedReader);
 
                     project.Notes = ReadNotes(decompressedReader);
                 }
@@ -187,6 +189,8 @@ namespace TraceViewer.Core
 
                 byte[] hiddenRowsData = WriteHiddenRows(project.HiddenRows);
 
+                byte[] deObHiddenRowsData = WriteHiddenRows(project.DeObHiddenRows);
+
                 byte[] notesData = Encoding.UTF8.GetBytes(project.Notes);
 
                 using (MemoryStream decompressedMs = new MemoryStream())
@@ -196,6 +200,7 @@ namespace TraceViewer.Core
                     decompressedWriter.Write(traceData);
                     decompressedWriter.Write(commentsData);
                     decompressedWriter.Write(hiddenRowsData);
+                    decompressedWriter.Write(deObHiddenRowsData);
                     decompressedWriter.Write(notesData);
 
                     byte[] decompressedBlock = decompressedMs.ToArray();
@@ -215,6 +220,8 @@ namespace TraceViewer.Core
                     writer.Write(compressedBlock);
                 }
             }
+
+            File.Delete(project.TraceData.Filename);
         }
 
         private static void WriteHeader(BinaryWriter writer, int blockSize)

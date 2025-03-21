@@ -28,7 +28,8 @@
                 </Label>
             </DockPanel>
         </Grid>
-
+        <Canvas x:Name="DimmingOverlay" Background="Black" Opacity="0.3" Visibility="Collapsed" Panel.ZIndex="1000">
+        </Canvas>
         <Grid Name="MainView" Visibility="Visible">
             <Grid Name="MenuView">
                 <StackPanel>

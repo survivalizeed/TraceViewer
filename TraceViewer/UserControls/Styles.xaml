@@ -125,7 +125,6 @@
                 <Style TargetType="MenuItem">
                     <Setter Property="Background" Value="Transparent"/>
                     <Setter Property="Foreground" Value="White"/>
-                    <Setter Property="Padding" Value="5"/>
                     <Setter Property="FontSize" Value="12"/>
                     <Setter Property="FontFamily" Value="Consolas"/>
                     <Setter Property="FontWeight" Value="Bold"/>
@@ -143,7 +142,7 @@
                                                    Foreground="{TemplateBinding Foreground}"
                                                    Padding="10,5,5,5"
                                                    Background="Transparent"
-                                                   Margin="5,5,5,5"/>
+                                                   Margin="5,5,100,5"/>
                                             <ContentPresenter ContentSource="Icon" Margin="30,0,0,0"/>
                                         </StackPanel>
                                         <Popup IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
@@ -164,7 +163,7 @@
                                                     <ThicknessAnimation Storyboard.TargetName="menuHeaderText"
                                                                     Storyboard.TargetProperty="Margin"
                                                                     Duration="0:0:0.2"
-                                                                    To="30,5,5,5">
+                                                                    To="30,5,100,5">
                                                         <ThicknessAnimation.EasingFunction>
                                                             <SineEase EasingMode="EaseOut"/>
                                                         </ThicknessAnimation.EasingFunction>
@@ -178,7 +177,7 @@
                                                     <ThicknessAnimation Storyboard.TargetName="menuHeaderText"
                                                                     Storyboard.TargetProperty="Margin"
                                                                     Duration="0:0:0.2"
-                                                                    To="5,5,5,5">
+                                                                    To="5,5,100,5">
                                                         <ThicknessAnimation.EasingFunction>
                                                             <SineEase EasingMode="EaseOut"/>
                                                         </ThicknessAnimation.EasingFunction>
