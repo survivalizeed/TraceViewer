@@ -30,7 +30,7 @@ namespace TraceViewer
         private bool _toggleFpu = true;
         public bool _toggleMnemonic = true;
         private string _current_project_path = "";
-
+        private string original_title = "survivalizeed's Trace Viewer";
         public ScrollViewer InstructionsScrollViewer { get; private set; }
         public ObservableCollection<WPF_TraceRow> InstructionViewItems = new();
         public ObservableCollection<WPF_RegisterRow> RegisterViewItems = new();
@@ -330,6 +330,7 @@ namespace TraceViewer
             RegisterViewItems.Clear();
             NotesContent.Text = "";
             _current_project_path = "";
+            SetTitle("survivalizeed's Trace Viewer", false);
             WPF_TraceRow.hiddenRows.Clear();
             DeObfus.deObHiddenRows.Clear();
             memory1.Visibility = Visibility.Collapsed;
@@ -421,6 +422,7 @@ namespace TraceViewer
             if (openFileDialog.ShowDialog() == true)
             {
                 Unload(); // Clear current project data
+                SetTitle("  -  UNSAVED WORK", true); // Set title to indicate unsaved work
                 TraceHandler.OpenAndLoad(openFileDialog.FileName); // Load selected trace file
             }
         }
@@ -443,6 +445,7 @@ namespace TraceViewer
         {
             Unload(); // Clear current project data
             _current_project_path = filename; // Store current project path
+            SetTitle(original_title + "  -  " + _current_project_path, false);
             Project project = ProjectLoader.OpenProject(filename); // Load project from file
             TraceHandler.Trace = project.TraceData; // Set loaded trace data
             if (project.Comments != null) // Null check for comments
@@ -485,8 +488,7 @@ namespace TraceViewer
             SaveFileDialog saveFileDialog = CreateSaveFileDialog(); // Create SaveFileDialog instance
             if (saveFileDialog.ShowDialog() == true)
             {
-                _current_project_path = saveFileDialog.FileName; // Update current project path
-                SaveProjectToFile(saveFileDialog.FileName); // Save project to the newly selected file
+                SaveProjectToFile(saveFileDialog.FileName); // Save project to the newly selected file
             }
         }
 
@@ -504,6 +506,8 @@ namespace TraceViewer
 
         private void SaveProjectToFile(string filename)
         {
+            _current_project_path = filename; // Update current project path
+            SetTitle(original_title + "  -  " + filename, false);
             // Save project data to the specified file
             Project project = new Project
             {
@@ -526,6 +530,11 @@ namespace TraceViewer
         {
             Unload(); // Clear current project data
         }
+
+        private void SetTitle(string text, bool append)
+        {
+            Title = append ? Title + text : text;
+        }
 
         public void RefreshView()
         {

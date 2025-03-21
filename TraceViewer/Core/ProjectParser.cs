@@ -220,8 +220,6 @@ namespace TraceViewer.Core
                     writer.Write(compressedBlock);
                 }
             }
-
-            File.Delete(project.TraceData.Filename);
         }
 
         private static void WriteHeader(BinaryWriter writer, int blockSize)
