@@ -147,7 +147,7 @@
                         <Grid x:Name="MemoryViewGrid" Grid.Row="1" Margin="0,20,0,0">
                             <Border BorderThickness="0.5" BorderBrush="{StaticResource instructions_view_border}">
                                 <ScrollViewer Name="StackScroller" VerticalScrollBarVisibility="Auto">
-                                    <TextBlock Name="Stack" Style="{StaticResource disasm_text_block}" Text="" TextWrapping="Wrap"
+                                    <TextBlock Name="Stack" Style="{StaticResource disasm_text_block}" Text="" FontSize="13" TextWrapping="Wrap"
                                         VerticalAlignment="Top" Background="Transparent" />
                                 </ScrollViewer>
                             </Border>

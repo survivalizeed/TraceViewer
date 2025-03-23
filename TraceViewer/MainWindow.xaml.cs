@@ -333,6 +333,7 @@ namespace TraceViewer
             SetTitle("survivalizeed's Trace Viewer", false);
             WPF_TraceRow.hiddenRows.Clear();
             DeObfus.deObHiddenRows.Clear();
+            StackHandler.stacks.Clear();
             //memory1.Visibility = Visibility.Collapsed;
             //memory2.Visibility = Visibility.Collapsed;
             //memory3.Visibility = Visibility.Collapsed;

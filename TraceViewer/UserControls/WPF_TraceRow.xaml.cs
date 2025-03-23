@@ -155,18 +155,35 @@ namespace TraceViewer
             if (traceRow.Id - 1 < 0)
                 return;
 
+            int alignment = 8;
+            int alignment_counter = 0;
+            string composed = "";
+            int rsp_index = 0;
+
             var stack = StackHandler.stacks[traceRow.Id - 1];
             foreach (var entry in stack) 
             {
-                if (StackHandler.stacks[traceRow.Id].Last().Equals(entry))
-                    end = true;
+                alignment_counter++;
 
-                window.Stack.Text += $"{HexPrefix}{entry.Key:X} : {HexPrefix}{entry.Value:X2}";
-                
+                composed += $"{entry.Value:X2}";
+
                 if (entry.Key == updated_rsp)
-                    window.Stack.Text += " <--- RSP";
-                if(!end)
+                    rsp_index = alignment_counter;
+
+                if (alignment_counter == alignment)
+                {
+                    window.Stack.Text += $"{HexPrefix}{entry.Key:X} : {HexPrefix}{composed}";
+                    if (rsp_index != 0)
+                        window.Stack.Text += $" <--- RSP {rsp_index}";
                     window.Stack.Text += "\r\n";
+                    alignment_counter = 0;
+                    composed = "";
+                    rsp_index = 0;
+                }
+
+                
+
+                
             }
             //window.StackScroller.ScrollToBottom();
         }
