@@ -148,31 +148,27 @@ namespace TraceViewer
                 registerIndex++;
             }
 
-            window.memory1.Visibility = Visibility.Collapsed;
-            window.memory2.Visibility = Visibility.Collapsed;
-            window.memory3.Visibility = Visibility.Collapsed;
+            window.Stack.Text = "";
+            ulong updated_rsp = BitConverter.ToUInt64(TraceHandler.Trace.Trace[traceRow.Id].Regs[4], 0);
 
-            if (memoryAccesses.Count > 0)
+            bool end = false;
+            if (traceRow.Id - 1 < 0)
+                return;
+
+            var stack = StackHandler.stacks[traceRow.Id - 1];
+            foreach (var entry in stack) 
             {
-                window.memory1.Visibility = Visibility.Visible;
-                window.write1.Content = memoryAccesses[0].Access;
-                window.address1.Content = $"{HexPrefix}{memoryAccesses[0].Addr:X}";
-                window.value1.Content = $"{HexPrefix}{memoryAccesses[0].Value:X}";
+                if (StackHandler.stacks[traceRow.Id].Last().Equals(entry))
+                    end = true;
+
+                window.Stack.Text += $"{HexPrefix}{entry.Key:X} : {HexPrefix}{entry.Value:X2}";
+                
+                if (entry.Key == updated_rsp)
+                    window.Stack.Text += " <--- RSP";
+                if(!end)
+                    window.Stack.Text += "\r\n";
             }
-            if (memoryAccesses.Count > 1)
-            {
-                window.memory2.Visibility = Visibility.Visible;
-                window.write2.Content = memoryAccesses[1].Access;
-                window.address2.Content = $"{HexPrefix}{memoryAccesses[1].Addr:X}";
-                window.value2.Content = $"{HexPrefix}{memoryAccesses[1].Value:X}";
-            }
-            if (memoryAccesses.Count > 2) // Wouldnt know what to do with more than 3 memory accesses
-            {
-                window.memory3.Visibility = Visibility.Visible;
-                window.write3.Content = memoryAccesses[2].Access;
-                window.address3.Content = $"{HexPrefix}{memoryAccesses[2].Addr:X}";
-                window.value3.Content = $"{HexPrefix}{memoryAccesses[2].Value:X}";
-            }
+            //window.StackScroller.ScrollToBottom();
         }
 
         private void UpdateRegisterDisplay(WPF_RegisterRow registerRow, int registerIndex, bool isHighlighted)
@@ -185,7 +181,7 @@ namespace TraceViewer
             else
             {
                 registerRow.register.Foreground = Brushes.Coral;
-                registerRow.value.Foreground = Brushes.DarkGoldenrod;
+                registerRow.value.Foreground = Brushes.White;
             }
             registerRow.value.Text = $"{HexPrefix}{ByteArrayToHexString(registers_x64[registerIndex], false)}";
         }

@@ -121,8 +121,8 @@
                     </Grid>
                     <Grid Margin="20,0,0,0">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="650" />
-                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="400" />
+                            <RowDefinition Height="360"/>
                         </Grid.RowDefinitions>
                         <Border BorderThickness="0.5" BorderBrush="{StaticResource instructions_view_border}">
                             <Grid x:Name="RegistersViewGrid" Grid.Row="0" Margin="7,4,0,0">
@@ -143,27 +143,14 @@
                                 </ItemsControl>
                             </Grid>
                         </Border>
+
                         <Grid x:Name="MemoryViewGrid" Grid.Row="1" Margin="0,20,0,0">
-                            <StackPanel Margin="0,0,0,0">
-                                <DockPanel Name="memory1" Visibility="Collapsed" LastChildFill="False">
-                                    <Label Content="WRITE:" Name="write1" Width="70" FontWeight="SemiBold" Style="{StaticResource memory_view_label}" Foreground="Red"/>
-                                    <Label Content="0 --> " Name="address1" Width="215" Style="{StaticResource memory_view_label}"/>
-                                    <Label Content="0" Name="value1" Width="170" Style="{StaticResource memory_view_label}" 
-                                        BorderThickness="1" BorderBrush="White"/>
-                                </DockPanel>
-                                <DockPanel Name="memory2" Visibility="Collapsed" LastChildFill="False">
-                                    <Label Content="WRITE:" Name="write2" Width="70" FontWeight="SemiBold" Style="{StaticResource memory_view_label}" Foreground="Red"/>
-                                    <Label Content="0 --> " Name="address2" Width="215" Style="{StaticResource memory_view_label}"/>
-                                    <Label Content="0" Name="value2" Width="170" Style="{StaticResource memory_view_label}"
-                                        BorderThickness="1" BorderBrush="White"/>
-                                </DockPanel>
-                                <DockPanel Name="memory3" Visibility="Collapsed" LastChildFill="False">
-                                    <Label Content="WRITE:" Name="write3" Width="70" FontWeight="SemiBold" Style="{StaticResource memory_view_label}" Foreground="Red"/>
-                                    <Label Content="0 --> " Name="address3" Width="215" Style="{StaticResource memory_view_label}"/>
-                                    <Label Content="0" Name="value3" Width="170" Style="{StaticResource memory_view_label}" 
-                                        BorderThickness="1" BorderBrush="White"/>
-                                </DockPanel>
-                            </StackPanel>
+                            <Border BorderThickness="0.5" BorderBrush="{StaticResource instructions_view_border}">
+                                <ScrollViewer Name="StackScroller" VerticalScrollBarVisibility="Auto">
+                                    <TextBlock Name="Stack" Style="{StaticResource disasm_text_block}" Text="" TextWrapping="Wrap"
+                                        VerticalAlignment="Top" Background="Transparent" />
+                                </ScrollViewer>
+                            </Border>
                         </Grid>
                     </Grid>
                 </DockPanel>
@@ -172,7 +159,7 @@
             <Grid Name="NotesView">
                 <Border Margin="0,104,0,15" BorderThickness="0.5" BorderBrush="{StaticResource instructions_view_border}">
                     <TextBox Name="NotesContent" Text="" Foreground="White" AcceptsReturn="True" TextWrapping="Wrap"
-                         Background="#50000000" FontSize="15" FontFamily="Miriam Mono CLM"
+                         Background="#50000000" FontSize="15" FontFamily="Consolas"
                          BorderThickness="0"/>
                 </Border>
             </Grid>
