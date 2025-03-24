@@ -170,10 +170,15 @@ namespace TraceViewer
                 dataRun.Foreground = System.Windows.Media.Brushes.White;
                 window.Stack.Inlines.Add(addressRun);
                 window.Stack.Inlines.Add(dataRun);
-
+                if (entry.Key == stack_alignment_base)
+                {
+                    Run baseMark = new Run($" (BASE)");
+                    baseMark.Foreground = System.Windows.Media.Brushes.Red;
+                    window.Stack.Inlines.Add(baseMark);
+                }
                 if (rsp_index != 0)
                 {
-                    Run rspIndicatorRun = new Run($" <---- RSP (past {rsp_index}th byte)");
+                    Run rspIndicatorRun = new Run($" <--- RSP (past {rsp_index}th byte)");
                     rspIndicatorRun.Foreground = System.Windows.Media.Brushes.Coral;
                     window.Stack.Inlines.Add(rspIndicatorRun);
                 }
@@ -199,12 +204,12 @@ namespace TraceViewer
                         {
                             WriteCurrent(entry);
                         }
-                        Run paddingDataRun = new Run($".....(0x{difference - 1:X} bytes).....");
+                        Run paddingDataRun = new Run($"PADDING      : (0x{difference - 1:X} bytes)");
                         paddingDataRun.Foreground = System.Windows.Media.Brushes.Gray;
                         window.Stack.Inlines.Add(paddingDataRun);
                         if (updated_rsp > entry.Key && updated_rsp < previous_entry.Key)
                         {
-                            Run rspIndicatorRun = new Run($" <---- RSP (past byte 0x{previous_entry.Key - updated_rsp:X})");
+                            Run rspIndicatorRun = new Run($" <--- RSP (past byte 0x{previous_entry.Key - updated_rsp:X})");
                             rspIndicatorRun.Foreground = System.Windows.Media.Brushes.Coral;
                             window.Stack.Inlines.Add(rspIndicatorRun);
                         }

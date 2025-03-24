@@ -47,6 +47,10 @@
                                 <MenuItem x:Name="RemoveUselessAssignments" Header="Remove Useless Assignments" Click="RemoveUselessAssignments_Click"/>
                                 <MenuItem x:Name="RemoveDeobfuscation" Header="Remove Deobfuscation" Click="RemoveDeobfuscation_Click"/>
                             </MenuItem>
+                            <MenuItem Header="STACK">
+                                <MenuItem x:Name="SetAlignmentBase" Header="Set Alignment Base Address" Click="SetAlignmentBase_Click"/>
+                                <MenuItem x:Name="ChangeAlignment" Header="Change Alignment" Click="ChangeAlignment_Click"/>
+                            </MenuItem>
                         </Menu>
                     </DockPanel>
                     <DockPanel Margin="0,30,0,0"  LastChildFill="False">
@@ -69,11 +73,11 @@
                     <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left">
                         <Grid x:Name="TitlesGrid" DockPanel.Dock="Left">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="50"  MinWidth="30" MaxWidth="100" Name="cd0"/>
-                                <ColumnDefinition Width="120" MinWidth="30" MaxWidth="150" Name="cd1"/>
-                                <ColumnDefinition Width="300" MinWidth="30" MaxWidth="450" Name="cd2"/>
-                                <ColumnDefinition Width="300" MinWidth="30" MaxWidth="600" Name="cd3"/>
-                                <ColumnDefinition Width="300" MinWidth="30" MaxWidth="500" Name="cd4"/>
+                                <ColumnDefinition Width="40"  MinWidth="20" MaxWidth="80" Name="cd0"/>
+                                <ColumnDefinition Width="100" MinWidth="20" MaxWidth="130" Name="cd1"/>
+                                <ColumnDefinition Width="300" MinWidth="20" MaxWidth="450" Name="cd2"/>
+                                <ColumnDefinition Width="300" MinWidth="20" MaxWidth="600" Name="cd3"/>
+                                <ColumnDefinition Width="300" MinWidth="20" MaxWidth="500" Name="cd4"/>
                                 <ColumnDefinition Width="*" Name="cd5"/>
                             </Grid.ColumnDefinitions>
 
