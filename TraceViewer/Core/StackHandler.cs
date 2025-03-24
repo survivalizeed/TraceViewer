@@ -16,7 +16,7 @@ namespace TraceViewer.Core
         { "eax", "ebx", "ecx", "edx", "esp", "ebp", "esi", "edi", "r8d", "r9d", "r10d", "r11d", "r12d", "r13d", "r14d", "r15d", "eip" };
 
         // The range +- rsp in which a memory access is considered to be a stack access
-        public static readonly ulong region_size = 50;
+        public static readonly ulong region_size = 0x100;
         public static List<Dictionary<ulong, ulong>> stacks = new List<Dictionary<ulong, ulong>>();
 
         public static void ComposeStack(TraceData traceData)

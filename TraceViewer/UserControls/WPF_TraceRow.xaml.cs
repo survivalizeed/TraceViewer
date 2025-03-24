@@ -20,6 +20,10 @@ namespace TraceViewer
 
         public static string highlightedRegisterFamily = "";
 
+        public static ulong stack_alignment_base = 0; // By default should be the first address being in a strict 8 byte layout (aka. calls, pushes, etc.)
+        public static int stack_alignment = 8;
+
+
         private bool hidden = false;
         private float hiddenOpacity = 0.2f;
 
@@ -149,77 +153,91 @@ namespace TraceViewer
             }
 
             window.Stack.Text = "";
-            ulong updated_rsp = BitConverter.ToUInt64(TraceHandler.Trace.Trace[traceRow.Id].Regs[4], 0);
 
-            bool end = false;
             if (traceRow.Id - 1 < 0)
                 return;
 
-            int alignment = 8;
+            ulong updated_rsp = BitConverter.ToUInt64(TraceHandler.Trace.Trace[traceRow.Id].Regs[4], 0);
+
             int alignment_counter = 0;
             string composed = "";
             int rsp_index = 0;
-            bool rsp_found = false;
 
-            var stack = StackHandler.stacks[traceRow.Id - 1].ToList();
-            foreach (var entry in stack)
-            {
-                alignment_counter++;
-
-                composed += $"{entry.Value:X2}";
-
-                if (entry.Key == updated_rsp)
-                {
-                    rsp_index = alignment_counter;
-                    rsp_found = true;
-                }
-
-                if (alignment_counter == alignment)
-                {
-
-                    Run addressRun = new Run($"{HexPrefix}{entry.Key:X} : ");
-                    addressRun.Foreground = System.Windows.Media.Brushes.DarkGoldenrod;
-
-                    Run dataRun = new Run($"{HexPrefix}{composed}");
-                    dataRun.Foreground = System.Windows.Media.Brushes.White;
-
-                    window.Stack.Inlines.Add(addressRun);
-                    window.Stack.Inlines.Add(dataRun);
-
-                    if (rsp_index != 0)
-                    {
-                        Run rspIndicatorRun = new Run($" <---- RSP (past byte {rsp_index})");
-                        rspIndicatorRun.Foreground = System.Windows.Media.Brushes.Coral;
-                        window.Stack.Inlines.Add(rspIndicatorRun);
-                    }
-
-                    window.Stack.Inlines.Add(new LineBreak());
-
-                    alignment_counter = 0;
-                    composed = "";
-                    rsp_index = 0;
-                }
-            }
-
-            // If there are bytes remaining
-            if (alignment_counter > 0)
-            {
-                Run addressRun = new Run($"{HexPrefix}{stack.Last().Key:X} : ");
+            Action<KeyValuePair<ulong, ulong>> WriteCurrent = entry => {
+                Run addressRun = new Run($"{HexPrefix}{entry.Key:X} : ");
                 addressRun.Foreground = System.Windows.Media.Brushes.DarkGoldenrod;
-
                 Run dataRun = new Run($"{HexPrefix}{composed}");
                 dataRun.Foreground = System.Windows.Media.Brushes.White;
-
                 window.Stack.Inlines.Add(addressRun);
                 window.Stack.Inlines.Add(dataRun);
 
                 if (rsp_index != 0)
                 {
-                    Run rspIndicatorRun = new Run($" <---- RSP (past byte {rsp_index})");
+                    Run rspIndicatorRun = new Run($" <---- RSP (past {rsp_index}th byte)");
                     rspIndicatorRun.Foreground = System.Windows.Media.Brushes.Coral;
                     window.Stack.Inlines.Add(rspIndicatorRun);
                 }
                 window.Stack.Inlines.Add(new LineBreak());
+                alignment_counter = 0;
+                composed = "";
+                rsp_index = 0;
+            };
+
+            var stack = StackHandler.stacks[traceRow.Id - 1].ToList();
+
+            for (int i = 0; i < stack.Count; i++)
+            {
+                var entry = stack[i];    
+
+                if (i > 0)
+                {
+                    var previous_entry = stack[i - 1];
+                    long difference = (long)previous_entry.Key - (long)entry.Key;
+                    if (difference > 1)
+                    {
+                        if(alignment_counter > 0)
+                        {
+                            WriteCurrent(entry);
+                        }
+                        Run paddingDataRun = new Run($".....(0x{difference - 1:X} bytes).....");
+                        paddingDataRun.Foreground = System.Windows.Media.Brushes.Gray;
+                        window.Stack.Inlines.Add(paddingDataRun);
+                        if (updated_rsp > entry.Key && updated_rsp < previous_entry.Key)
+                        {
+                            Run rspIndicatorRun = new Run($" <---- RSP (past byte 0x{previous_entry.Key - updated_rsp:X})");
+                            rspIndicatorRun.Foreground = System.Windows.Media.Brushes.Coral;
+                            window.Stack.Inlines.Add(rspIndicatorRun);
+                        }
+
+                        window.Stack.Inlines.Add(new LineBreak());
+                    }
+                }
+                alignment_counter++;
+
+                composed += $"{entry.Value:X2}";
+
+                if (stack_alignment_base + (ulong)stack_alignment == entry.Key)
+                {
+                    if (alignment_counter > 0)
+                    {
+                        WriteCurrent(entry);
+                    }
+                }
+
+                if (entry.Key == updated_rsp)
+                {
+                    rsp_index = alignment_counter;
+                }
+
+                if (alignment_counter == stack_alignment)
+                {
+                    WriteCurrent(entry);
+                }
+            }
+            // If there are remaining bytes after the loop
+            if (alignment_counter > 0)
+            {
+                WriteCurrent(stack.Last());
             }
         }
 
