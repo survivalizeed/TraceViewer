@@ -159,33 +159,68 @@ namespace TraceViewer
             int alignment_counter = 0;
             string composed = "";
             int rsp_index = 0;
+            bool rsp_found = false;
 
-            var stack = StackHandler.stacks[traceRow.Id - 1];
-            foreach (var entry in stack) 
+            var stack = StackHandler.stacks[traceRow.Id - 1].ToList();
+            foreach (var entry in stack)
             {
                 alignment_counter++;
 
                 composed += $"{entry.Value:X2}";
 
                 if (entry.Key == updated_rsp)
+                {
                     rsp_index = alignment_counter;
+                    rsp_found = true;
+                }
 
                 if (alignment_counter == alignment)
                 {
-                    window.Stack.Text += $"{HexPrefix}{entry.Key:X} : {HexPrefix}{composed}";
+
+                    Run addressRun = new Run($"{HexPrefix}{entry.Key:X} : ");
+                    addressRun.Foreground = System.Windows.Media.Brushes.DarkGoldenrod;
+
+                    Run dataRun = new Run($"{HexPrefix}{composed}");
+                    dataRun.Foreground = System.Windows.Media.Brushes.White;
+
+                    window.Stack.Inlines.Add(addressRun);
+                    window.Stack.Inlines.Add(dataRun);
+
                     if (rsp_index != 0)
-                        window.Stack.Text += $" <---- RSP (past byte {rsp_index})";
-                    window.Stack.Text += "\r\n";
+                    {
+                        Run rspIndicatorRun = new Run($" <---- RSP (past byte {rsp_index})");
+                        rspIndicatorRun.Foreground = System.Windows.Media.Brushes.Coral;
+                        window.Stack.Inlines.Add(rspIndicatorRun);
+                    }
+
+                    window.Stack.Inlines.Add(new LineBreak());
+
                     alignment_counter = 0;
                     composed = "";
                     rsp_index = 0;
                 }
-
-                
-
-                
             }
-            //window.StackScroller.ScrollToBottom();
+
+            // If there are bytes remaining
+            if (alignment_counter > 0)
+            {
+                Run addressRun = new Run($"{HexPrefix}{stack.Last().Key:X} : ");
+                addressRun.Foreground = System.Windows.Media.Brushes.DarkGoldenrod;
+
+                Run dataRun = new Run($"{HexPrefix}{composed}");
+                dataRun.Foreground = System.Windows.Media.Brushes.White;
+
+                window.Stack.Inlines.Add(addressRun);
+                window.Stack.Inlines.Add(dataRun);
+
+                if (rsp_index != 0)
+                {
+                    Run rspIndicatorRun = new Run($" <---- RSP (past byte {rsp_index})");
+                    rspIndicatorRun.Foreground = System.Windows.Media.Brushes.Coral;
+                    window.Stack.Inlines.Add(rspIndicatorRun);
+                }
+                window.Stack.Inlines.Add(new LineBreak());
+            }
         }
 
         private void UpdateRegisterDisplay(WPF_RegisterRow registerRow, int registerIndex, bool isHighlighted)
