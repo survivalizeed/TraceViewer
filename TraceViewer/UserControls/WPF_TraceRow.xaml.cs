@@ -174,7 +174,7 @@ namespace TraceViewer
                 {
                     window.Stack.Text += $"{HexPrefix}{entry.Key:X} : {HexPrefix}{composed}";
                     if (rsp_index != 0)
-                        window.Stack.Text += $" <--- RSP {rsp_index}";
+                        window.Stack.Text += $" <---- RSP (past byte {rsp_index})";
                     window.Stack.Text += "\r\n";
                     alignment_counter = 0;
                     composed = "";
