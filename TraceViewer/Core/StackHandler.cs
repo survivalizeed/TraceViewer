@@ -42,6 +42,12 @@ namespace TraceViewer.Core
                         byte[] bytes = Array.Empty<byte>();
                         if (diff == 0)
                         {
+                            if (row.Disasm.Contains("xmmword"))
+                            {
+                                //bytes = new byte[16];
+                                //Buffer.BlockCopy(access.Value, 0, bytes, 0, 16);
+                                //diff = 16;
+                            }
                             if (row.Disasm.Contains("qword"))
                             {
                                 bytes = BitConverter.GetBytes((ulong)access.Value);

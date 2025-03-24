@@ -349,6 +349,8 @@ namespace TraceViewer.Core
                                 newDataCounter++;
                             }
 
+                            // xmmwords and ymmwords are stored in 8 byte chunks
+
                             if (disasm.Contains("qword"))
                                 value &= 0xFFFFFFFFFFFFFFFF;
                             else if (disasm.Contains("dword"))
