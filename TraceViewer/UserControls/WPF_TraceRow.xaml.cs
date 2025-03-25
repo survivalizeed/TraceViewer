@@ -181,10 +181,10 @@ namespace TraceViewer
             Action<ulong, string> WriteLine = (address, data) => {
                 Run addressRun = new Run($"{HexPrefix}{address:X} : ");
                 addressRun.Foreground = System.Windows.Media.Brushes.DarkGoldenrod;
-                Run dataRun = new Run($"{HexPrefix}{data}");
-                dataRun.Foreground = System.Windows.Media.Brushes.White;
                 window.Stack.Inlines.Add(addressRun);
-                window.Stack.Inlines.Add(dataRun);
+                Run run = new Run($"{HexPrefix}{data}");
+                run.Foreground = System.Windows.Media.Brushes.White;
+                window.Stack.Inlines.Add(run);
                 if (address == stack_alignment_base)
                 {
                     Run baseMark = new Run($" (BASE)");
@@ -202,6 +202,10 @@ namespace TraceViewer
                 alignment_counter = 0;
                 rsp_index = 0;
             };
+
+            if(MemoryHandler.stacks.Count == 0)      
+                return;
+
 
             var stack = MemoryHandler.stacks[traceRow.Id - 1].ToList();
 
@@ -245,7 +249,13 @@ namespace TraceViewer
                     }
                 }
 
+                //if(entry.Value.Item2)
+                //    composed.Add(new Run($"{entry.Value.Item1:X2}") { Foreground = Brushes.Red });
+                //else
+                //    composed.Add(new Run($"{entry.Value.Item1:X2}") { Foreground = Brushes.White });
+
                 composed += $"{entry.Value:X2}";
+
                 alignment_counter++;
 
                 if (stack_alignment_base + (ulong)stack_alignment == entry.Key)
@@ -306,6 +316,10 @@ namespace TraceViewer
                 composed = "";
                 alignment_counter = 0;
             };
+
+            if (MemoryHandler.heaps.Count == 0)
+                return;
+
 
             var heap = MemoryHandler.heaps[traceRow.Id - 1].ToList();
 

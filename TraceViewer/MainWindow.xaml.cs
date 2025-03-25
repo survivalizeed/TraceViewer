@@ -547,6 +547,9 @@ namespace TraceViewer
         {
             ScrollControl(-TraceHandler.load_count);
             ScrollControl(TraceHandler.load_count);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect(); // Here needed. Otherwise the GC will wait too long to collect the data leading to a strong memory consumption increase
         }
 
         private void RemoveUselessAssignments_Click(object sender, RoutedEventArgs e)
