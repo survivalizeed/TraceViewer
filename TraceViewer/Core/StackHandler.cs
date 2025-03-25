@@ -42,13 +42,19 @@ namespace TraceViewer.Core
                         byte[] bytes = Array.Empty<byte>();
                         if (diff == 0)
                         {
-                            if (row.Disasm.Contains("xmmword"))
+                            // Is sliced into four qwords
+                            if (row.Disasm.Contains("ymmword"))
                             {
-                                //bytes = new byte[16];
-                                //Buffer.BlockCopy(access.Value, 0, bytes, 0, 16);
-                                //diff = 16;
+                                bytes = BitConverter.GetBytes((ulong)access.Value);
+                                diff = 8;
                             }
-                            if (row.Disasm.Contains("qword"))
+                            // Is sliced into two qwords
+                            else if (row.Disasm.Contains("xmmword"))
+                            {
+                                bytes = BitConverter.GetBytes((ulong)access.Value);
+                                diff = 8;
+                            }
+                            else if (row.Disasm.Contains("qword"))
                             {
                                 bytes = BitConverter.GetBytes((ulong)access.Value);
                                 diff = 8;
