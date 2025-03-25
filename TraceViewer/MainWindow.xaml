@@ -75,29 +75,29 @@
                     <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left">
                         <Grid x:Name="TitlesGrid" DockPanel.Dock="Left">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="40"  MinWidth="20" MaxWidth="80" Name="Cd0"/>
-                                <ColumnDefinition Width="100" MinWidth="20" MaxWidth="130" Name="Cd1"/>
-                                <ColumnDefinition Width="300" MinWidth="20" MaxWidth="450" Name="Cd2"/>
-                                <ColumnDefinition Width="300" MinWidth="20" MaxWidth="600" Name="Cd3"/>
-                                <ColumnDefinition Width="300" MinWidth="20" MaxWidth="500" Name="Cd4"/>
+                                <ColumnDefinition Width="40"  MinWidth="3" MaxWidth="80" Name="Cd0"/>
+                                <ColumnDefinition Width="100" MinWidth="3" MaxWidth="130" Name="Cd1"/>
+                                <ColumnDefinition Width="300" MinWidth="3" MaxWidth="450" Name="Cd2"/>
+                                <ColumnDefinition Width="300" MinWidth="3" MaxWidth="600" Name="Cd3"/>
+                                <ColumnDefinition Width="300" MinWidth="3" MaxWidth="500" Name="Cd4"/>
                                 <ColumnDefinition Width="*" Name="Cd5"/>
                             </Grid.ColumnDefinitions>
 
                             <Label x:Name="Id" Style="{StaticResource InstructionsViewTitles}" Content="#" Grid.Column="0" SizeChanged="TitleLabel_SizeChanged" />
-                            <GridSplitter Grid.Column="0" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+                            <GridSplitter Grid.Column="0" Width="5" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
                             <Label x:Name="Address" Style="{StaticResource InstructionsViewTitles}" Content="ADDRESS" Grid.Column="1" SizeChanged="TitleLabel_SizeChanged"/>
-                            <GridSplitter Grid.Column="1" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+                            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
                             <Label x:Name="Disasm" Style="{StaticResource InstructionsViewTitles}" Content="DISASM" Grid.Column="2" SizeChanged="TitleLabel_SizeChanged" />
-                            <GridSplitter Grid.Column="2" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+                            <GridSplitter Grid.Column="2" Width="5" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
                             <Label x:Name="Changes" Style="{StaticResource InstructionsViewTitles}" Content="CHANGES" Grid.Column="3" SizeChanged="TitleLabel_SizeChanged"/>
-                            <GridSplitter Grid.Column="3" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+                            <GridSplitter Grid.Column="3" Width="5" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
                             <Label x:Name="Comments" Style="{StaticResource InstructionsViewTitlesSelectable}" Content="COMMENTS" Grid.Column="4" SizeChanged="TitleLabel_SizeChanged"
                                    MouseDown="Comments_MouseDown"/>
-                            <GridSplitter Grid.Column="4" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
+                            <GridSplitter Grid.Column="4" Width="5" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
                         </Grid>
                     </DockPanel>

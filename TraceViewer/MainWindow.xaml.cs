@@ -26,8 +26,10 @@ namespace TraceViewer
     public partial class MainWindow : Window
     {
         private bool _toggleFpu = true;
+
         public bool _toggleMnemonic = true;
         public bool _toggleStack = true;
+
         private string _current_project_path = "";
         private string original_title = "survivalizeed's Trace Viewer";
         public ScrollViewer InstructionsScrollViewer { get; private set; }
