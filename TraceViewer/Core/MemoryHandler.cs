@@ -12,10 +12,9 @@ namespace TraceViewer.Core
     class MemoryHandler
     {
         // The range +- rsp in which a memory access is considered to be a stack access
-        public static readonly ulong region_size = 0x100;
+        public static readonly ulong region_size = 0x1000;
         public static List<Dictionary<ulong, ulong>> stacks = new List<Dictionary<ulong, ulong>>();
         public static List<Dictionary<ulong, ulong>> heaps = new List<Dictionary<ulong, ulong>>();
-
 
         public static void Clear()
         {

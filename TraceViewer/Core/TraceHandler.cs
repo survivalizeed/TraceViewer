@@ -11,7 +11,6 @@ namespace TraceViewer.Core
     class TraceHandler
     {
         public static TraceData? Trace { get; set; }
-
         public static MainWindow window { get; set; }
 
         private static Dictionary<string, object> root;

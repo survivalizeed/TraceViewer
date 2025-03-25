@@ -28,7 +28,10 @@ namespace TraceViewer
     public partial class MainWindow : Window
     {
         private bool _toggleFpu = true;
+
         public bool _toggleMnemonic = true;
+        public bool _toggleStack = true;
+
         private string _current_project_path = "";
         private string original_title = "survivalizeed's Trace Viewer";
         public ScrollViewer InstructionsScrollViewer { get; private set; }
@@ -615,6 +618,24 @@ namespace TraceViewer
                     MessageDialog messageDialog = new MessageDialog("Invalid input. Use a value between 1 and 16!");
                     messageDialog.ShowDialog();
                 }
+            }
+        }
+
+        private void StackHeapToggle_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
+            _toggleStack = !_toggleStack;
+            StackHeapToggle.Content = _toggleStack ? "  STACK  " : "  HEAP  ";
+
+            if (_toggleStack)
+            {
+                StackBorderParent.Visibility = Visibility.Visible;
+                HeapBorderParent.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                StackBorderParent.Visibility = Visibility.Collapsed;
+                HeapBorderParent.Visibility = Visibility.Visible;
             }
         }
     }

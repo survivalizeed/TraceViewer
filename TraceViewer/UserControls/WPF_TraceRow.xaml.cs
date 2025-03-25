@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -23,6 +24,9 @@ namespace TraceViewer
         public static ulong stack_alignment_base = 0; // By default should be the first address being in a strict 8 byte layout (aka. calls, pushes, etc.)
         public static int stack_alignment = 8;
 
+
+        public static ulong heap_alignment_base = 0;
+        public static int heap_alignment = 8;
 
         private bool hidden = false;
         private float hiddenOpacity = 0.2f;
@@ -152,25 +156,36 @@ namespace TraceViewer
                 registerIndex++;
             }
 
+            if(window._toggleStack)
+                UpdateStack();
+            else
+                UpdateHeap();
+
+        }
+
+        void UpdateStack()
+        {
             window.Stack.Text = "";
+            window.Stack.Inlines.Clear();
 
             if (traceRow.Id - 1 < 0)
                 return;
 
-            ulong updated_rsp = BitConverter.ToUInt64(TraceHandler.Trace.Trace[traceRow.Id].Regs[4], 0);
-
             int alignment_counter = 0;
             string composed = "";
+            ulong? blockStartAddress = null;
+            ulong? blockEndAddress = null;
+
             int rsp_index = 0;
 
-            Action<KeyValuePair<ulong, ulong>> WriteCurrent = entry => {
-                Run addressRun = new Run($"{HexPrefix}{entry.Key:X} : ");
+            Action<ulong, string> WriteLine = (address, data) => {
+                Run addressRun = new Run($"{HexPrefix}{address:X} : ");
                 addressRun.Foreground = System.Windows.Media.Brushes.DarkGoldenrod;
-                Run dataRun = new Run($"{HexPrefix}{composed}");
+                Run dataRun = new Run($"{HexPrefix}{data}");
                 dataRun.Foreground = System.Windows.Media.Brushes.White;
                 window.Stack.Inlines.Add(addressRun);
                 window.Stack.Inlines.Add(dataRun);
-                if (entry.Key == stack_alignment_base)
+                if (address == stack_alignment_base)
                 {
                     Run baseMark = new Run($" (BASE)");
                     baseMark.Foreground = System.Windows.Media.Brushes.Red;
@@ -178,33 +193,45 @@ namespace TraceViewer
                 }
                 if (rsp_index != 0)
                 {
-                    Run rspIndicatorRun = new Run($" <--- RSP (past {rsp_index}th byte)");
-                    rspIndicatorRun.Foreground = System.Windows.Media.Brushes.Coral;
-                    window.Stack.Inlines.Add(rspIndicatorRun);
+                    Run rspRun = new Run($"  <--- RSP (past {rsp_index}th byte)");
+                    rspRun.Foreground = System.Windows.Media.Brushes.Coral;
+                    window.Stack.Inlines.Add(rspRun);
                 }
                 window.Stack.Inlines.Add(new LineBreak());
-                alignment_counter = 0;
                 composed = "";
+                alignment_counter = 0;
                 rsp_index = 0;
             };
 
             var stack = MemoryHandler.stacks[traceRow.Id - 1].ToList();
 
+            if (traceRow.Id - 1 < 0)
+                return;
+
+            ulong updated_rsp = BitConverter.ToUInt64(TraceHandler.Trace.Trace[traceRow.Id].Regs[4], 0);
+
             for (int i = 0; i < stack.Count; i++)
             {
-                var entry = stack[i];    
+                var entry = stack[i];
+                blockEndAddress = entry.Key;
+
+                if (!blockStartAddress.HasValue)
+                {
+                    blockStartAddress = entry.Key;
+                }
 
                 if (i > 0)
                 {
                     var previous_entry = stack[i - 1];
-                    long difference = (long)previous_entry.Key - (long)entry.Key;
-                    if (difference > 1)
+                    if (previous_entry.Key - entry.Key > 1)
                     {
-                        if(alignment_counter > 0)
+                        if (!string.IsNullOrEmpty(composed) && blockEndAddress.HasValue)
                         {
-                            WriteCurrent(entry);
+                            WriteLine(previous_entry.Key, composed); // Display the end address of the previous block
                         }
-                        Run paddingDataRun = new Run($"PADDING      : (0x{difference - 1:X} bytes)");
+
+                        long difference = (long)previous_entry.Key - (long)entry.Key;
+                        Run paddingDataRun = new Run($"PADDING : 0x{difference - 1:X}");
                         paddingDataRun.Foreground = System.Windows.Media.Brushes.Gray;
                         window.Stack.Inlines.Add(paddingDataRun);
                         if (updated_rsp > entry.Key && updated_rsp < previous_entry.Key)
@@ -213,36 +240,133 @@ namespace TraceViewer
                             rspIndicatorRun.Foreground = System.Windows.Media.Brushes.Coral;
                             window.Stack.Inlines.Add(rspIndicatorRun);
                         }
-
                         window.Stack.Inlines.Add(new LineBreak());
+                        blockStartAddress = entry.Key;
                     }
                 }
-                alignment_counter++;
 
                 composed += $"{entry.Value:X2}";
+                alignment_counter++;
 
                 if (stack_alignment_base + (ulong)stack_alignment == entry.Key)
                 {
                     if (alignment_counter > 0)
                     {
-                        WriteCurrent(entry);
+                        WriteLine(blockEndAddress.Value, composed);
                     }
                 }
 
                 if (entry.Key == updated_rsp)
-                {
                     rsp_index = alignment_counter;
-                }
 
                 if (alignment_counter == stack_alignment)
                 {
-                    WriteCurrent(entry);
+                    if (blockEndAddress.HasValue && !string.IsNullOrEmpty(composed))
+                    {
+                        WriteLine(blockEndAddress.Value, composed); // Display the end address of the current line
+                    }
+                    blockStartAddress = i < stack.Count - 1 ? stack[i + 1].Key : (ulong?)null;
                 }
             }
-            // If there are remaining bytes after the loop
-            if (alignment_counter > 0)
+
+            // Handle remaining bytes
+            if (!string.IsNullOrEmpty(composed) && blockEndAddress.HasValue)
             {
-                WriteCurrent(stack.Last());
+                WriteLine(blockEndAddress.Value, composed); // Display the end address of the last line
+            }
+        }
+
+        void UpdateHeap()
+        {
+            window.Heap.Text = "";
+            window.Heap.Inlines.Clear();
+
+            if (traceRow.Id - 1 < 0)
+                return;
+
+            int alignment_counter = 0;
+            string composed = "";
+            ulong? blockStartAddress = null;
+            ulong? blockEndAddress = null;
+
+            Action<ulong, string> WriteLine = (address, data) => {
+                Run addressRun = new Run($"{HexPrefix}{address:X} : ");
+                addressRun.Foreground = System.Windows.Media.Brushes.DarkGoldenrod;
+                Run dataRun = new Run($"{HexPrefix}{data}");
+                dataRun.Foreground = System.Windows.Media.Brushes.White;
+                window.Heap.Inlines.Add(addressRun);
+                window.Heap.Inlines.Add(dataRun);
+                if (address == heap_alignment_base)
+                {
+                    Run baseMark = new Run($" (BASE)");
+                    baseMark.Foreground = System.Windows.Media.Brushes.Red;
+                    window.Heap.Inlines.Add(baseMark);
+                }
+                window.Heap.Inlines.Add(new LineBreak());
+                composed = "";
+                alignment_counter = 0;
+            };
+
+            var heap = MemoryHandler.heaps[traceRow.Id - 1].ToList();
+
+            if (traceRow.Id - 1 < 0)
+                return;
+
+
+            for (int i = 0; i < heap.Count; i++)
+            {
+                var entry = heap[i];
+                blockEndAddress = entry.Key;
+
+                if (!blockStartAddress.HasValue)
+                {
+                    blockStartAddress = entry.Key;
+                }
+
+                if (i > 0)
+                {
+                    var previous_entry = heap[i - 1];
+                    if (previous_entry.Key - entry.Key > 1)
+                    {
+                        if (!string.IsNullOrEmpty(composed) && blockEndAddress.HasValue)
+                        {
+                            WriteLine(previous_entry.Key, composed); // Display the end address of the previous block
+                        }
+
+                        long difference = (long)previous_entry.Key - (long)entry.Key;
+                        Run paddingDataRun = new Run($"PADDING : 0x{difference - 1:X}");
+                        paddingDataRun.Foreground = System.Windows.Media.Brushes.Gray;
+                        window.Heap.Inlines.Add(paddingDataRun);
+                        window.Heap.Inlines.Add(new LineBreak());
+                        blockStartAddress = entry.Key;
+                    }
+                }
+
+                composed += $"{entry.Value:X2}";
+                alignment_counter++;
+
+                if (heap_alignment_base + (ulong)heap_alignment == entry.Key)
+                {
+                    if (alignment_counter > 0)
+                    {
+                        WriteLine(blockEndAddress.Value, composed);
+                    }
+                }
+
+                if (alignment_counter == heap_alignment)
+                {
+                    if (blockEndAddress.HasValue && !string.IsNullOrEmpty(composed))
+                    {
+                        WriteLine(blockEndAddress.Value, composed); // Display the end address of the current line
+                    }
+                    blockStartAddress = i < heap.Count - 1 ? heap[i + 1].Key : (ulong?)null;
+                }
+            }
+
+            // Handle remaining bytes
+            if (!string.IsNullOrEmpty(composed) && blockEndAddress.HasValue)
+            {
+                WriteLine(blockEndAddress.Value, composed); // Display the end address of the last line
             }
         }
 
