@@ -6,23 +6,23 @@
         xmlns:local="clr-namespace:TraceViewer"
         mc:Ignorable="d"
         Title="survivalizeed's Trace Viewer"
-        Width="{x:Static SystemParameters.PrimaryScreenWidth}"  
+        Width="{x:Static SystemParameters.PrimaryScreenWidth}"
         Height="{x:Static SystemParameters.PrimaryScreenHeight}"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
         >
-    <Grid Name="window">
-        <Rectangle Fill="{StaticResource CustomBackground}"/>
-      
+    <Grid Name="Window">
+        <Rectangle Fill="{StaticResource PrimaryBackgroundBrush}"/>
+
         <ScrollViewer Name="MnemonicReaderScrollView" Visibility="Collapsed">
-            <Label Name="MnemonicReader" FontSize="15" FontFamily="Miriam Mono CLM" Foreground="White" Background="#50000000"
+            <Label Name="MnemonicReader" FontSize="15" FontFamily="Miriam Mono CLM" Foreground="{StaticResource PrimaryForegroundColor}" Background="{StaticResource SecondaryBackgroundColor}"
                    MouseDown="MnemonicReader_MouseDown"/>
         </ScrollViewer>
 
 
-        <Grid Name="DROPZONE" Visibility="Hidden" Background="#50000000">
+        <Grid Name="DropZone" Visibility="Hidden" Background="{StaticResource SecondaryBackgroundColor}">
             <DockPanel LastChildFill="True">
-                <Label Style="{StaticResource instructions_view_titles}" Padding="2,5,2,10" FontSize="50" Content="DROP HERE" BorderThickness="0" Grid.Row="0">
+                <Label Style="{StaticResource InstructionsViewTitles}" Padding="2,5,2,10" FontSize="50" Content="DROP HERE" BorderThickness="0" Grid.Row="0">
                     <Label.Effect>
                         <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
                     </Label.Effect>
@@ -56,17 +56,17 @@
                         </Menu>
                     </DockPanel>
                     <DockPanel Margin="0,30,0,0"  LastChildFill="False">
-                        <Border x:Name="DisasmViewButtonBorder" Style="{StaticResource view_titles_border}">
-                            <Label x:Name="DisasmViewButton" Content="DISASM" Foreground="White" Style="{StaticResource view_titles}" MouseDown="DisasmViewButton_MouseDown"/>
+                        <Border x:Name="DisasmViewButtonBorder" Style="{StaticResource ViewTitlesBorder}">
+                            <Label x:Name="DisasmViewButton" Content="DISASM" Foreground="{StaticResource PrimaryForegroundColor}" Style="{StaticResource ViewTitles}" MouseDown="DisasmViewButton_MouseDown"/>
                         </Border>
-                        <Border x:Name="NotesViewButtonBorder" Style="{StaticResource view_titles_border}">
-                            <Label x:Name="NotesViewButton" Content="NOTES" Foreground="White" Style="{StaticResource view_titles}" MouseDown="NotesViewButton_MouseDown"/>
+                        <Border x:Name="NotesViewButtonBorder" Style="{StaticResource ViewTitlesBorder}">
+                            <Label x:Name="NotesViewButton" Content="NOTES" Foreground="{StaticResource PrimaryForegroundColor}" Style="{StaticResource ViewTitles}" MouseDown="NotesViewButton_MouseDown"/>
                         </Border>
-                        <Border x:Name="BookmarksViewButtonBorder" Style="{StaticResource view_titles_border}">
-                            <Label x:Name="BookmarksViewButton" Content="BOOKMARKS" Foreground="White" Style="{StaticResource view_titles}" MouseDown="BookmarksViewButton_MouseDown"/>
+                        <Border x:Name="BookmarksViewButtonBorder" Style="{StaticResource ViewTitlesBorder}">
+                            <Label x:Name="BookmarksViewButton" Content="BOOKMARKS" Foreground="{StaticResource PrimaryForegroundColor}" Style="{StaticResource ViewTitles}" MouseDown="BookmarksViewButton_MouseDown"/>
                         </Border>
                     </DockPanel>
-                    <Line Margin="0,0,0,0" X1="0" Y1="0" X2="10000" Y2="0" Stroke="White" StrokeThickness="5"/>
+                    <Line Margin="0,0,0,0" X1="0" Y1="0" X2="10000" Y2="0" Stroke="{StaticResource PrimaryForegroundColor}" StrokeThickness="5"/>
                 </StackPanel>
             </Grid>
 
@@ -75,41 +75,41 @@
                     <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left">
                         <Grid x:Name="TitlesGrid" DockPanel.Dock="Left">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="40"  MinWidth="20" MaxWidth="80" Name="cd0"/>
-                                <ColumnDefinition Width="100" MinWidth="20" MaxWidth="130" Name="cd1"/>
-                                <ColumnDefinition Width="300" MinWidth="20" MaxWidth="450" Name="cd2"/>
-                                <ColumnDefinition Width="300" MinWidth="20" MaxWidth="600" Name="cd3"/>
-                                <ColumnDefinition Width="300" MinWidth="20" MaxWidth="500" Name="cd4"/>
-                                <ColumnDefinition Width="*" Name="cd5"/>
+                                <ColumnDefinition Width="40"  MinWidth="20" MaxWidth="80" Name="Cd0"/>
+                                <ColumnDefinition Width="100" MinWidth="20" MaxWidth="130" Name="Cd1"/>
+                                <ColumnDefinition Width="300" MinWidth="20" MaxWidth="450" Name="Cd2"/>
+                                <ColumnDefinition Width="300" MinWidth="20" MaxWidth="600" Name="Cd3"/>
+                                <ColumnDefinition Width="300" MinWidth="20" MaxWidth="500" Name="Cd4"/>
+                                <ColumnDefinition Width="*" Name="Cd5"/>
                             </Grid.ColumnDefinitions>
 
-                            <Label x:Name="id" Style="{StaticResource instructions_view_titles}" Content="#" Grid.Column="0" SizeChanged="TitleLabel_SizeChanged" />
+                            <Label x:Name="Id" Style="{StaticResource InstructionsViewTitles}" Content="#" Grid.Column="0" SizeChanged="TitleLabel_SizeChanged" />
                             <GridSplitter Grid.Column="0" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                            <Label x:Name="address" Style="{StaticResource instructions_view_titles}" Content="ADDRESS" Grid.Column="1" SizeChanged="TitleLabel_SizeChanged"/>
+                            <Label x:Name="Address" Style="{StaticResource InstructionsViewTitles}" Content="ADDRESS" Grid.Column="1" SizeChanged="TitleLabel_SizeChanged"/>
                             <GridSplitter Grid.Column="1" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                            <Label x:Name="disasm" Style="{StaticResource instructions_view_titles}" Content="DISASM" Grid.Column="2" SizeChanged="TitleLabel_SizeChanged" />
+                            <Label x:Name="Disasm" Style="{StaticResource InstructionsViewTitles}" Content="DISASM" Grid.Column="2" SizeChanged="TitleLabel_SizeChanged" />
                             <GridSplitter Grid.Column="2" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                            <Label x:Name="changes" Style="{StaticResource instructions_view_titles}" Content="CHANGES" Grid.Column="3" SizeChanged="TitleLabel_SizeChanged"/>
+                            <Label x:Name="Changes" Style="{StaticResource InstructionsViewTitles}" Content="CHANGES" Grid.Column="3" SizeChanged="TitleLabel_SizeChanged"/>
                             <GridSplitter Grid.Column="3" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                            <Label x:Name="comments" Style="{StaticResource instructions_view_titles_selectable}" Content="COMMENTS" Grid.Column="4" SizeChanged="TitleLabel_SizeChanged" 
-                               MouseDown="Comments_MouseDown"/>
+                            <Label x:Name="Comments" Style="{StaticResource InstructionsViewTitlesSelectable}" Content="COMMENTS" Grid.Column="4" SizeChanged="TitleLabel_SizeChanged"
+                                   MouseDown="Comments_MouseDown"/>
                             <GridSplitter Grid.Column="4" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
                         </Grid>
                     </DockPanel>
                     <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="29.2,0,0,0">
-                        <Label x:Name="fpu" Style="{StaticResource instructions_view_titles_selectable}" Content="   FPU   " MouseDown="Fpu_MouseDown"/>
+                        <Label x:Name="Fpu" Style="{StaticResource InstructionsViewTitlesSelectable}" Content="    FPU    " MouseDown="Fpu_MouseDown"/>
                     </DockPanel>
                 </DockPanel>
                 <DockPanel Margin="0,150,0,10" LastChildFill="True">
                     <Grid x:Name="InstructionsViewGrid" DockPanel.Dock="Left">
-                        <ItemsControl x:Name="InstructionsView" VirtualizingStackPanel.IsVirtualizing="True" 
-                                          VirtualizingStackPanel.VirtualizationMode="Recycling" 
-                                          ScrollViewer.CanContentScroll="False">
+                        <ItemsControl x:Name="InstructionsView" VirtualizingStackPanel.IsVirtualizing="True"
+                                      VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                      ScrollViewer.CanContentScroll="False">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <VirtualizingStackPanel />
@@ -117,7 +117,7 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.Template>
                                 <ControlTemplate TargetType="ItemsControl">
-                                    <ScrollViewer Name="instructions_view_scrollviewer" CanContentScroll="False"
+                                    <ScrollViewer Name="InstructionsViewScrollViewer" CanContentScroll="False"
                                                   VerticalScrollBarVisibility="Disabled"
                                                   PreviewMouseWheel="InstructionsScrollViewer_PreviewMouseWheel">
                                         <ItemsPresenter />
@@ -132,10 +132,10 @@
                             <RowDefinition Height="35"/>
                             <RowDefinition Height="325"/>
                         </Grid.RowDefinitions>
-                        <Border BorderThickness="0.5" BorderBrush="{StaticResource instructions_view_border}">
+                        <Border BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderColor}">
                             <Grid x:Name="RegistersViewGrid" Grid.Row="0" Margin="7,4,0,0">
                                 <ItemsControl x:Name="RegistersView" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True"
-                                          ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                              ScrollViewer.VerticalScrollBarVisibility="Auto">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <VirtualizingStackPanel />
@@ -151,20 +151,20 @@
                                 </ItemsControl>
                             </Grid>
                         </Border>
-                        <Label x:Name="StackHeapToggle" Grid.Row="1" Margin="0,5,0,5" HorizontalAlignment="Left" 
-                               Style="{StaticResource instructions_view_titles_selectable}" FontSize="12" Content="  STACK  " Width="Auto"
+                        <Label x:Name="StackHeapToggle" Grid.Row="1" Margin="0,5,0,5" HorizontalAlignment="Left"
+                               Style="{StaticResource InstructionsViewTitlesSelectable}" FontSize="12" Content="  STACK  " Width="Auto"
                                MouseDown="StackHeapToggle_MouseDown"/>
                         <Grid x:Name="MemoryViewGrid" Grid.Row="2" Margin="0,0,0,0">
-                            <Border Name="StackBorderParent" BorderThickness="0.5" BorderBrush="{StaticResource instructions_view_border}" Visibility="Visible">
+                            <Border Name="StackBorderParent" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderColor}" Visibility="Visible">
                                 <ScrollViewer Name="StackScroller" VerticalScrollBarVisibility="Auto">
-                                    <TextBlock Name="Stack" Style="{StaticResource disasm_text_block}" Text="" FontSize="13" TextWrapping="Wrap"
-                                        VerticalAlignment="Top" Background="Transparent" />
+                                    <TextBlock Name="Stack" Style="{StaticResource DisasmTextBlock}" Text="" FontSize="13" TextWrapping="Wrap"
+                                               VerticalAlignment="Top" Background="Transparent" />
                                 </ScrollViewer>
                             </Border>
-                            <Border Name="HeapBorderParent" BorderThickness="0.5" BorderBrush="{StaticResource instructions_view_border}" Visibility="Collapsed">
+                            <Border Name="HeapBorderParent" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderColor}" Visibility="Collapsed">
                                 <ScrollViewer Name="HeapScroller" VerticalScrollBarVisibility="Auto">
-                                    <TextBlock Name="Heap" Style="{StaticResource disasm_text_block}" Text="" FontSize="13" TextWrapping="Wrap"
-                                        VerticalAlignment="Top" Background="Transparent" />
+                                    <TextBlock Name="Heap" Style="{StaticResource DisasmTextBlock}" Text="" FontSize="13" TextWrapping="Wrap"
+                                               VerticalAlignment="Top" Background="Transparent" />
                                 </ScrollViewer>
                             </Border>
                         </Grid>
@@ -173,16 +173,16 @@
             </Grid>
 
             <Grid Name="NotesView">
-                <Border Margin="0,104,0,15" BorderThickness="0.5" BorderBrush="{StaticResource instructions_view_border}">
-                    <TextBox Name="NotesContent" Text="" Foreground="White" AcceptsReturn="True" TextWrapping="Wrap"
-                         Background="#50000000" FontSize="15" FontFamily="Consolas"
-                         BorderThickness="0"/>
+                <Border Margin="0,104,0,15" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderColor}">
+                    <TextBox Name="NotesContent" Text="" Foreground="{StaticResource PrimaryForegroundColor}" AcceptsReturn="True" TextWrapping="Wrap"
+                             Background="{StaticResource SecondaryBackgroundColor}" FontSize="15" FontFamily="Consolas"
+                             BorderThickness="0"/>
                 </Border>
             </Grid>
 
             <Grid Name="BookmarksView">
-                <Border Margin="0,104,0,15" BorderThickness="0.5" BorderBrush="{StaticResource instructions_view_border}">
-                    
+                <Border Margin="0,104,0,15" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderColor}">
+
                 </Border>
             </Grid>
         </Grid>

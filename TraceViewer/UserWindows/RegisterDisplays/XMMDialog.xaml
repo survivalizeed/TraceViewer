@@ -32,28 +32,28 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel Orientation="Horizontal" Grid.Column="0">
-                <Label Style="{StaticResource label_button}" x:Name="hexadecimal" Padding="10,5,10,5" Content="HEXADECIMAL" MouseDown="hexadecimal_MouseDown">
+                <Label Style="{StaticResource LabelButton}" x:Name="hexadecimal" Padding="10,5,10,5" Content="HEXADECIMAL" MouseDown="hexadecimal_MouseDown">
                     <Label.Effect>
                         <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
                     </Label.Effect>
                 </Label>
-                <Label Style="{StaticResource label_button}" x:Name="signed" Padding="10,5,10,5" Content="SIGNED" MouseDown="signed_MouseDown">
+                <Label Style="{StaticResource LabelButton}" x:Name="signed" Padding="10,5,10,5" Content="SIGNED" MouseDown="signed_MouseDown">
                     <Label.Effect>
                         <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
                     </Label.Effect>
                 </Label>
-                <Label Style="{StaticResource label_button}" x:Name="unsigned" Padding="10,5,10,5" Content="UNSIGNED" MouseDown="unsigned_MouseDown">
+                <Label Style="{StaticResource LabelButton}" x:Name="unsigned" Padding="10,5,10,5" Content="UNSIGNED" MouseDown="unsigned_MouseDown">
                     <Label.Effect>
                         <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
                     </Label.Effect>
                 </Label>
-                <Label Style="{StaticResource label_button}" x:Name="float" Padding="10,5,10,5" Content="FLOAT" MouseDown="float_MouseDown">
+                <Label Style="{StaticResource LabelButton}" x:Name="float" Padding="10,5,10,5" Content="FLOAT" MouseDown="float_MouseDown">
                     <Label.Effect>
                         <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
                     </Label.Effect>
                 </Label>
             </StackPanel>
-            <Label Style="{StaticResource label_button}" x:Name="ok" Padding="10,5,10,5" Content="OK" MouseDown="ok_MouseDown" Grid.Column="1">
+            <Label Style="{StaticResource LabelButton}" x:Name="ok" Padding="10,5,10,5" Content="OK" MouseDown="ok_MouseDown" Grid.Column="1">
                 <Label.Effect>
                     <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
                 </Label.Effect>

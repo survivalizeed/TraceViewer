@@ -105,20 +105,20 @@ namespace TraceViewer
 
             SetDisassemblyText(traceRow.Disasm);
 
-            id.Width = window.cd0.Width.Value;
-            id_border.Width = window.cd0.Width.Value;
+            id.Width = window.Cd0.Width.Value;
+            id_border.Width = window.Cd0.Width.Value;
 
-            address.Width = window.cd1.Width.Value;
-            address_border.Width = window.cd1.Width.Value;
+            address.Width = window.Cd1.Width.Value;
+            address_border.Width = window.Cd1.Width.Value;
 
-            disasm.Width = window.cd2.Width.Value;
-            disasm_border.Width = window.cd2.Width.Value;
+            disasm.Width = window.Cd2.Width.Value;
+            disasm_border.Width = window.Cd2.Width.Value;
 
-            changes.Width = window.cd3.Width.Value;
-            changes_border.Width = window.cd3.Width.Value;
+            changes.Width = window.Cd3.Width.Value;
+            changes_border.Width = window.Cd3.Width.Value;
 
-            comments.Width = window.cd4.Width.Value;
-            mnemonicBrief.Width = window.cd4.Width.Value;
+            comments.Width = window.Cd4.Width.Value;
+            mnemonicBrief.Width = window.Cd4.Width.Value;
 
             if(hiddenRows.Contains(traceRow.Id) || DeObfus.deObHiddenRows.Contains(traceRow.Id))
                 parent_panel.Opacity = hiddenOpacity;
@@ -248,11 +248,6 @@ namespace TraceViewer
                         blockStartAddress = entry.Key;
                     }
                 }
-
-                //if(entry.Value.Item2)
-                //    composed.Add(new Run($"{entry.Value.Item1:X2}") { Foreground = Brushes.Red });
-                //else
-                //    composed.Add(new Run($"{entry.Value.Item1:X2}") { Foreground = Brushes.White });
 
                 composed += $"{entry.Value:X2}";
 

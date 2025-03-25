@@ -89,13 +89,13 @@ namespace TraceViewer
         private void DragEnter(object sender, DragEventArgs e)
         {
             MainView.Opacity = 0; // Make MainView transparent during drag operation
-            DROPZONE.Visibility = Visibility.Visible; // Show drop zone indicator
+            DropZone.Visibility = Visibility.Visible; // Show drop zone indicator
         }
 
         private void DragLeave(object sender, DragEventArgs e)
         {
             MainView.Opacity = 1; // Restore MainView opacity after drag leave
-            DROPZONE.Visibility = Visibility.Hidden; // Hide drop zone indicator
+            DropZone.Visibility = Visibility.Hidden; // Hide drop zone indicator
         }
 
 
@@ -151,7 +151,7 @@ namespace TraceViewer
         {
             // Find the ScrollViewer within the InstructionsView template
             if (sender is ItemsControl itemsControl &&
-        itemsControl.Template.FindName("instructions_view_scrollviewer", itemsControl) is ScrollViewer scrollViewer)
+                itemsControl.Template.FindName("InstructionsViewScrollViewer", itemsControl) is ScrollViewer scrollViewer)
             {
                 InstructionsScrollViewer = scrollViewer;
             }
@@ -180,23 +180,24 @@ namespace TraceViewer
                     // Update column widths based on label name
                     switch (columnName)
                     {
-                        case "id":
+                        
+                        case "Id":
                             item.id.Width = newWidth;
                             item.id_border.Width = newWidth;
                             break;
-                        case "address":
+                        case "Address":
                             item.address.Width = newWidth;
                             item.address_border.Width = newWidth;
                             break;
-                        case "disasm":
+                        case "Disasm":
                             item.disasm.Width = newWidth;
                             item.disasm_border.Width = newWidth;
                             break;
-                        case "changes":
+                        case "Changes":
                             item.changes.Width = newWidth;
                             item.changes_border.Width = newWidth;
                             break;
-                        case "comments":
+                        case "Comments":
                             item.comments.Width = newWidth;
                             item.mnemonicBrief.Width = newWidth; // Assuming comments and mnemonicBrief share column width
                             break;
@@ -214,7 +215,7 @@ namespace TraceViewer
         private void SetInstructionsViewWidth()
         {
             // Calculate and set the minimum and maximum width of InstructionsView based on column widths
-            double totalWidth = cd0.Width.Value + cd1.Width.Value + cd2.Width.Value + cd3.Width.Value + cd4.Width.Value + cd5.Width.Value + 8; // Add a small buffer
+            double totalWidth = Cd0.Width.Value + Cd1.Width.Value + Cd2.Width.Value + Cd3.Width.Value + Cd4.Width.Value + Cd5.Width.Value + 8; // Add a small buffer
             if (totalWidth > 0)
             {
                 InstructionsView.MinWidth = totalWidth;
@@ -227,7 +228,7 @@ namespace TraceViewer
             if (e.LeftButton != MouseButtonState.Pressed) return;
             // Toggle FPU registers visibility
             _toggleFpu = !_toggleFpu;
-            fpu.Foreground = _toggleFpu ? Brushes.White : Brushes.Gray;
+            Fpu.Foreground = _toggleFpu ? Brushes.White : Brushes.Gray;
 
             Visibility fpuVisibility = _toggleFpu ? Visibility.Visible : Visibility.Collapsed;
 
@@ -251,7 +252,7 @@ namespace TraceViewer
                 item.display_mnemonic_brief(!_toggleMnemonic); // Call display toggle on each item
             }
             InstructionsView.EndInit();
-            comments.Content = !_toggleMnemonic ? "MNEMONIC" : "COMMENTS"; // Update button content
+            Comments.Content = !_toggleMnemonic ? "MNEMONIC" : "COMMENTS"; // Update button content
         }
 
         private void MnemonicReader_MouseDown(object sender, MouseButtonEventArgs e)

@@ -20,14 +20,14 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Label Style="{StaticResource instructions_view_titles}" x:Name="Prompt" HorizontalContentAlignment="Left" Padding="2,5,2,10" FontSize="15" Content="PROMPT" BorderThickness="0" Grid.Row="0">
+            <Label Style="{StaticResource InstructionsViewTitles}" x:Name="Prompt" HorizontalContentAlignment="Left" Padding="2,5,2,10" FontSize="15" Content="PROMPT" BorderThickness="0" Grid.Row="0">
                 <Label.Effect>
                     <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
                 </Label.Effect>
             </Label>
 
             <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,0">
-                <Label Style="{StaticResource label_button}" x:Name="Ok" Padding="10,5,10,5" Content="OK" Grid.Row="0" MouseDown="Ok_MouseDown">
+                <Label Style="{StaticResource LabelButton}" x:Name="Ok" Padding="10,5,10,5" Content="OK" Grid.Row="0" MouseDown="Ok_MouseDown">
                     <Label.Effect>
                         <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
                     </Label.Effect>

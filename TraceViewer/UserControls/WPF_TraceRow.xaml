@@ -8,7 +8,7 @@
              d:DesignHeight="450" d:DesignWidth="800"
              >
     <UserControl.Resources>
-        <ContextMenu x:Key="ContextMenu" Style="{StaticResource disasm_context_menu}" Opened="ContextMenu_Opened" Closed="ContextMenu_Closed" StaysOpen="False">
+        <ContextMenu x:Key="ContextMenu" Style="{StaticResource DisasmContextMenu}" Opened="ContextMenu_Opened" Closed="ContextMenu_Closed" StaysOpen="False">
             <MenuItem Name="ShowOrRemove" Header="Show/Remove" PreviewMouseDown="ShowOrRemove_PreviewMouseDown"/>
             <MenuItem Name="Copy" Header="Copy" PreviewMouseDown="Copy_PreviewMouseDown"/>
             <MenuItem Name="CopyRow" Header="Copy Row" PreviewMouseDown="CopyRow_PreviewMouseDown"/>
@@ -17,21 +17,21 @@
     </UserControl.Resources>
     <Grid Margin="0,0,0,0" >
          <DockPanel x:Name="parent_panel" LastChildFill="False">
-             <Border x:Name="id_border" Style="{StaticResource disasm_text_block_border}" Width="50" DockPanel.Dock="Left">
-                <TextBlock x:Name="id" Width="50" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover" ContextMenu="{StaticResource ContextMenu}"/>
+             <Border x:Name="id_border" Style="{StaticResource DisasmTextBlockBorder}" Width="50" DockPanel.Dock="Left">
+                <TextBlock x:Name="id" Width="50" Style="{StaticResource DisasmTextBlock}" DockPanel.Dock="Left" MouseEnter="OnHover" ContextMenu="{StaticResource ContextMenu}"/>
              </Border>
-            <Border x:Name="address_border" Style="{StaticResource disasm_text_block_border}" Width="100" DockPanel.Dock="Left">
-                <TextBlock x:Name="address" Width="100" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover" ContextMenu="{StaticResource ContextMenu}"/>
+            <Border x:Name="address_border" Style="{StaticResource DisasmTextBlockBorder}" Width="100" DockPanel.Dock="Left">
+                <TextBlock x:Name="address" Width="100" Style="{StaticResource DisasmTextBlock}" DockPanel.Dock="Left" MouseEnter="OnHover" ContextMenu="{StaticResource ContextMenu}"/>
              </Border>
-            <Border x:Name="disasm_border" Style="{StaticResource disasm_text_block_border}" Width="300" DockPanel.Dock="Left">
-                <TextBlock x:Name="disasm" Width="300" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover" MouseDown="disasm_MouseDown" ContextMenu="{StaticResource ContextMenu}"/>
+            <Border x:Name="disasm_border" Style="{StaticResource DisasmTextBlockBorder}" Width="300" DockPanel.Dock="Left">
+                <TextBlock x:Name="disasm" Width="300" Style="{StaticResource DisasmTextBlock}" DockPanel.Dock="Left" MouseEnter="OnHover" MouseDown="disasm_MouseDown" ContextMenu="{StaticResource ContextMenu}"/>
             </Border>
-            <Border x:Name="changes_border" Style="{StaticResource disasm_text_block_border}" Width="300" DockPanel.Dock="Left">
-                <TextBlock x:Name="changes" Width="300" Style="{StaticResource disasm_text_block}" DockPanel.Dock="Left" MouseEnter="OnHover" ContextMenu="{StaticResource ContextMenu}"/>
+            <Border x:Name="changes_border" Style="{StaticResource DisasmTextBlockBorder}" Width="300" DockPanel.Dock="Left">
+                <TextBlock x:Name="changes" Width="300" Style="{StaticResource DisasmTextBlock}" DockPanel.Dock="Left" MouseEnter="OnHover" ContextMenu="{StaticResource ContextMenu}"/>
             </Border>
-            <TextBox Visibility="Collapsed" Style="{StaticResource comments_text_box}" x:Name="mnemonicBrief" HorizontalContentAlignment="Center" Width="300" DockPanel.Dock="Left" MouseEnter="OnHover" IsReadOnly="True"
+            <TextBox Visibility="Collapsed" Style="{StaticResource CommentsTextBox}" x:Name="mnemonicBrief" HorizontalContentAlignment="Center" Width="300" DockPanel.Dock="Left" MouseEnter="OnHover" IsReadOnly="True"
                      MouseDoubleClick="OnDoubleClickMnemonic" KeyDown="OnKeyPressMnemonic"/>
-            <TextBox Style="{StaticResource comments_text_box}" x:Name="comments" HorizontalContentAlignment="Center" Width="300" DockPanel.Dock="Left" MouseEnter="OnHover" 
+            <TextBox Style="{StaticResource CommentsTextBox}" x:Name="comments" HorizontalContentAlignment="Center" Width="300" DockPanel.Dock="Left" MouseEnter="OnHover" 
                      PreviewKeyDown="PreviewOnKeyPressComments" TextChanged="TextChangedComments"/>
              
          </DockPanel>

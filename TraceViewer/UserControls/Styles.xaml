@@ -1,38 +1,49 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <SolidColorBrush x:Key="ViewBorderColor" Color="#171717"/>
+    <SolidColorBrush x:Key="ViewBorderColorBrighter" Color="#606060"/>
+    <SolidColorBrush x:Key="ViewBorderHoverColor" Color="Gray"/>
 
-            
-    <SolidColorBrush x:Key="instructions_view_border" Color="#202020"/>
-    <SolidColorBrush x:Key="instructions_view_border_hover" Color="Gray"/>
-    
-    <SolidColorBrush x:Key="instructions_view_background" Color="Transparent"/>
-    <SolidColorBrush x:Key="instructions_view_background_hover" Color="#303030"/>
-    
-    <SolidColorBrush x:Key="comments_focused" Color="#404040"/>
+    <SolidColorBrush x:Key="ViewBackgroundColor" Color="Transparent"/>
+    <SolidColorBrush x:Key="ViewBackgroundHoverColor" Color="#303030"/>
 
-    <SolidColorBrush x:Key="ymm" Color="Orange"/>
-    <SolidColorBrush x:Key="xmm" Color="PaleVioletRed"/>
-    <SolidColorBrush x:Key="qword" Color="Coral"/>
-    <SolidColorBrush x:Key="dword" Color="IndianRed"/>
-    <SolidColorBrush x:Key="word" Color="DarkGoldenrod"/>
-    <SolidColorBrush x:Key="byte" Color="HotPink"/>
+    <SolidColorBrush x:Key="CommentsFocusedColor" Color="#404040"/>
 
-    <LinearGradientBrush x:Key="CustomBackground" StartPoint="0,0" EndPoint="1,1">
+    <SolidColorBrush x:Key="DataTypeYmmColor" Color="Orange"/>
+    <SolidColorBrush x:Key="DataTypeXmmColor" Color="PaleVioletRed"/>
+    <SolidColorBrush x:Key="DataTypeQwordColor" Color="Coral"/>
+    <SolidColorBrush x:Key="DataTypeDwordColor" Color="IndianRed"/>
+    <SolidColorBrush x:Key="DataTypeWordColor" Color="DarkGoldenrod"/>
+    <SolidColorBrush x:Key="DataTypeByteColor" Color="HotPink"/>
+
+    <LinearGradientBrush x:Key="PrimaryBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#151515" Offset="0.0"/>
         <GradientStop Color="#0D0D0D" Offset="0.6"/>
         <GradientStop Color="#070707" Offset="1.0"/>
     </LinearGradientBrush>
 
+    <SolidColorBrush x:Key="MenuBackgroundColor" Color="Transparent"/>
+    <SolidColorBrush x:Key="MenuForegroundColor" Color="White"/>
+    <SolidColorBrush x:Key="MenuItemBackgroundColor" Color="Transparent"/>
+    <SolidColorBrush x:Key="MenuItemForegroundColor" Color="White"/>
+    <SolidColorBrush x:Key="MenuItemHoverBackgroundColor" Color="#303030"/>
+
+    <SolidColorBrush x:Key="ScrollBarBackgroundColor" Color="#202020"/>
+    <SolidColorBrush x:Key="ScrollBarThumbColor" Color="White"/>
+
+    <SolidColorBrush x:Key="PrimaryForegroundColor" Color="White"/>
+    <SolidColorBrush x:Key="SecondaryBackgroundColor" Color="#50000000"/>
+
     <Style TargetType="Menu">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Background" Value="{StaticResource MenuBackgroundColor}"/>
+        <Setter Property="Foreground" Value="{StaticResource MenuForegroundColor}"/>
         <Setter Property="Padding" Value="1"/>
     </Style>
 
     <Style TargetType="MenuItem">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Background" Value="{StaticResource MenuItemBackgroundColor}"/>
+        <Setter Property="Foreground" Value="{StaticResource MenuItemForegroundColor}"/>
         <Setter Property="Padding" Value="5"/>
         <Setter Property="FontSize" Value="15"/>
         <Setter Property="FontFamily" Value="Consolas"/>
@@ -47,15 +58,15 @@
                         <Grid>
                             <StackPanel Orientation="Horizontal" Background="Transparent">
                                 <TextBlock x:Name="menuHeaderText"
-                                       Text="{TemplateBinding Header}"
-                                       Foreground="{TemplateBinding Foreground}"
-                                       Padding="10,5,5,5"
-                                       Background="Transparent"
-                                       Margin="5,5,5,5"/>
+                                           Text="{TemplateBinding Header}"
+                                           Foreground="{TemplateBinding Foreground}"
+                                           Padding="10,5,5,5"
+                                           Background="Transparent"
+                                           Margin="5,5,5,5"/>
                                 <ContentPresenter ContentSource="Icon" Margin="30,0,0,0"/>
                             </StackPanel>
                             <Popup IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
-                               Placement="Bottom" StaysOpen="False">
+                                   Placement="Bottom" StaysOpen="False">
                                 <Border Background="#151515">
                                     <StackPanel Background="Transparent">
                                         <ItemsPresenter/>
@@ -70,9 +81,9 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <ThicknessAnimation Storyboard.TargetName="menuHeaderText"
-                                                        Storyboard.TargetProperty="Margin"
-                                                        Duration="0:0:0.2"
-                                                        To="30,5,5,5">
+                                                            Storyboard.TargetProperty="Margin"
+                                                            Duration="0:0:0.2"
+                                                            To="30,5,5,5">
                                             <ThicknessAnimation.EasingFunction>
                                                 <SineEase EasingMode="EaseOut"/>
                                             </ThicknessAnimation.EasingFunction>
@@ -84,9 +95,9 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <ThicknessAnimation Storyboard.TargetName="menuHeaderText"
-                                                        Storyboard.TargetProperty="Margin"
-                                                        Duration="0:0:0.2"
-                                                        To="5,5,5,5">
+                                                            Storyboard.TargetProperty="Margin"
+                                                            Duration="0:0:0.2"
+                                                            To="5,5,5,5">
                                             <ThicknessAnimation.EasingFunction>
                                                 <SineEase EasingMode="EaseOut"/>
                                             </ThicknessAnimation.EasingFunction>
@@ -94,7 +105,7 @@
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
-                            <Setter Property="Background" Value="{StaticResource instructions_view_background_hover}"/>
+                            <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverColor}"/>
                             <Setter Property="Effect">
                                 <Setter.Value>
                                     <DropShadowEffect Color="White" BlurRadius="15" ShadowDepth="0" Opacity="0.8"/>
@@ -107,7 +118,7 @@
         </Setter>
     </Style>
 
-    <Style TargetType="{x:Type ContextMenu}" x:Key="disasm_context_menu">
+    <Style TargetType="{x:Type ContextMenu}" x:Key="DisasmContextMenu">
         <Setter Property="Background" Value="#151515"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -123,8 +134,8 @@
         <Setter Property="ItemContainerStyle">
             <Setter.Value>
                 <Style TargetType="MenuItem">
-                    <Setter Property="Background" Value="Transparent"/>
-                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="{StaticResource MenuItemBackgroundColor}"/>
+                    <Setter Property="Foreground" Value="{StaticResource MenuItemForegroundColor}"/>
                     <Setter Property="FontSize" Value="12"/>
                     <Setter Property="FontFamily" Value="Consolas"/>
                     <Setter Property="FontWeight" Value="Bold"/>
@@ -138,15 +149,15 @@
                                     <Grid>
                                         <StackPanel Orientation="Horizontal" Background="Transparent">
                                             <TextBlock x:Name="menuHeaderText"
-                                                   Text="{TemplateBinding Header}"
-                                                   Foreground="{TemplateBinding Foreground}"
-                                                   Padding="10,5,5,5"
-                                                   Background="Transparent"
-                                                   Margin="5,5,100,5"/>
+                                                       Text="{TemplateBinding Header}"
+                                                       Foreground="{TemplateBinding Foreground}"
+                                                       Padding="10,5,5,5"
+                                                       Background="Transparent"
+                                                       Margin="5,5,100,5"/>
                                             <ContentPresenter ContentSource="Icon" Margin="30,0,0,0"/>
                                         </StackPanel>
                                         <Popup IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
-                                           Placement="Bottom" StaysOpen="False">
+                                               Placement="Bottom" StaysOpen="False">
                                             <Border Background="#151515">
                                                 <StackPanel Background="Transparent">
                                                     <ItemsPresenter/>
@@ -161,9 +172,9 @@
                                             <BeginStoryboard>
                                                 <Storyboard>
                                                     <ThicknessAnimation Storyboard.TargetName="menuHeaderText"
-                                                                    Storyboard.TargetProperty="Margin"
-                                                                    Duration="0:0:0.2"
-                                                                    To="30,5,100,5">
+                                                                        Storyboard.TargetProperty="Margin"
+                                                                        Duration="0:0:0.2"
+                                                                        To="30,5,100,5">
                                                         <ThicknessAnimation.EasingFunction>
                                                             <SineEase EasingMode="EaseOut"/>
                                                         </ThicknessAnimation.EasingFunction>
@@ -175,9 +186,9 @@
                                             <BeginStoryboard>
                                                 <Storyboard>
                                                     <ThicknessAnimation Storyboard.TargetName="menuHeaderText"
-                                                                    Storyboard.TargetProperty="Margin"
-                                                                    Duration="0:0:0.2"
-                                                                    To="5,5,100,5">
+                                                                        Storyboard.TargetProperty="Margin"
+                                                                        Duration="0:0:0.2"
+                                                                        To="5,5,100,5">
                                                         <ThicknessAnimation.EasingFunction>
                                                             <SineEase EasingMode="EaseOut"/>
                                                         </ThicknessAnimation.EasingFunction>
@@ -185,7 +196,7 @@
                                                 </Storyboard>
                                             </BeginStoryboard>
                                         </Trigger.ExitActions>
-                                        <Setter Property="Background" Value="{StaticResource instructions_view_background_hover}"/>
+                                        <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverColor}"/>
                                         <Setter Property="Effect">
                                             <Setter.Value>
                                                 <DropShadowEffect Color="White" BlurRadius="15" ShadowDepth="0" Opacity="0.8"/>
@@ -203,7 +214,7 @@
 
 
     <Style TargetType="ScrollBar">
-        <Setter Property="Background" Value="#202020" />
+        <Setter Property="Background" Value="{StaticResource ScrollBarBackgroundColor}" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="MinWidth" Value="8" />
         <Setter Property="Width" Value="8" />
@@ -213,29 +224,29 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ScrollBar">
                     <Grid>
-                        <Border 
-                     CornerRadius="0" 
-                     Background="{TemplateBinding Background}"
-                     Margin="0" />
-                        <Track 
-                     x:Name="PART_Track"
-                     IsDirectionReversed="True">
+                        <Border
+                            CornerRadius="0"
+                            Background="{TemplateBinding Background}"
+                            Margin="0" />
+                        <Track
+                            x:Name="PART_Track"
+                            IsDirectionReversed="True">
                             <Track.Thumb>
                                 <Thumb>
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
-                                            <Rectangle 
-                                         Fill="White"
-                                         RadiusX="0" 
-                                         RadiusY="0"
-                                         Margin="0"
-                                         >
+                                            <Rectangle
+                                                Fill="{StaticResource ScrollBarThumbColor}"
+                                                RadiusX="0"
+                                                RadiusY="0"
+                                                Margin="0"
+                                                >
                                                 <Rectangle.Effect>
-                                                    <DropShadowEffect 
-                                                 Color="White"
-                                                 BlurRadius="15"
-                                                 ShadowDepth="0"
-                                                 Opacity="0.8" />
+                                                    <DropShadowEffect
+                                                        Color="White"
+                                                        BlurRadius="15"
+                                                        ShadowDepth="0"
+                                                        Opacity="0.8" />
                                                 </Rectangle.Effect>
                                             </Rectangle>
                                         </ControlTemplate>
@@ -257,25 +268,25 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
-    <Style x:Key="instructions_view_titles" TargetType="Label">
+
+    <Style x:Key="InstructionsViewTitles" TargetType="Label">
         <Setter Property="DockPanel.Dock" Value="Left"/>
-        <Setter Property="BorderBrush" Value="Gray"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderColorBrighter}"/>
         <Setter Property="BorderThickness" Value="0.5"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundColor}"/>
         <Setter Property="FontSize" Value="20"/>
         <Setter Property="FontWeight" Value="Bold"/>
-		<Setter Property="FontFamily" Value="Consolas"/>
-	    <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="FontFamily" Value="Consolas"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
     </Style>
 
 
-    <Style x:Key="instructions_view_titles_selectable" TargetType="Label">
+    <Style x:Key="InstructionsViewTitlesSelectable" TargetType="Label">
         <Setter Property="DockPanel.Dock" Value="Left"/>
-        <Setter Property="BorderBrush" Value="Gray"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderColorBrighter}"/>
         <Setter Property="BorderThickness" Value="0.5"/>
-        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundColor}"/>
         <Setter Property="FontSize" Value="20"/>
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="FontFamily" Value="Consolas"/>
@@ -292,111 +303,111 @@
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="view_titles" TargetType="Label">
-		<Setter Property="DockPanel.Dock" Value="Left"/>
-		<Setter Property="Foreground" Value="White"/>
-		<Setter Property="FontSize" Value="15"/>
-		<Setter Property="FontFamily" Value="Consolas"/>
-		<Setter Property="VerticalContentAlignment" Value="Center"/>
-		<Setter Property="HorizontalContentAlignment" Value="Center"/>
-	</Style>
-
-	<Style x:Key="view_titles_border" TargetType="Border">
-		<Setter Property="CornerRadius" Value="5,5,0,0"/>
-		<Setter Property="BorderThickness" Value="0.5"/>
-		<Setter Property="BorderBrush" Value="Gray"/>
-		<Style.Triggers>
-			<Trigger Property="IsMouseOver" Value="True">
-				<Setter Property="BorderBrush" Value="White"/>
-				<Setter Property="Background" Value="{StaticResource instructions_view_background_hover}"/>
-			</Trigger>
-		</Style.Triggers>
-	</Style>
-
-	<Style x:Key="memory_view_label" TargetType="Label">
-        <Setter Property="Foreground" Value="White"/>
+    <Style x:Key="ViewTitles" TargetType="Label">
+        <Setter Property="DockPanel.Dock" Value="Left"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundColor}"/>
         <Setter Property="FontSize" Value="15"/>
         <Setter Property="FontFamily" Value="Consolas"/>
-		<Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
     </Style>
 
-    <Style x:Key="comments_text_box" TargetType="TextBox">
-        <Setter Property="Background" Value="{StaticResource instructions_view_background}"/>
-        <Setter Property="Foreground" Value="White"/>
+    <Style x:Key="ViewTitlesBorder" TargetType="Border">
+        <Setter Property="CornerRadius" Value="5,5,0,0"/>
+        <Setter Property="BorderThickness" Value="0.5"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderColorBrighter}"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource PrimaryForegroundColor}"/>
+                <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverColor}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="MemoryViewLabel" TargetType="Label">
+        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundColor}"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontFamily" Value="Consolas"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="CommentsTextBox" TargetType="TextBox">
+        <Setter Property="Background" Value="{StaticResource ViewBackgroundColor}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundColor}"/>
         <Setter Property="FontFamily" Value="Lucida Console"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderColor}"/>
         <Setter Property="BorderThickness" Value="0.5"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
                     <Border x:Name="Border"
-                 Background="{TemplateBinding Background}"
-                 BorderBrush="{TemplateBinding BorderBrush}"
-                 BorderThickness="{TemplateBinding BorderThickness}"
-                 Padding="{TemplateBinding Padding}">
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}">
                         <ScrollViewer x:Name="PART_ContentHost"
-                          Background="{TemplateBinding Background}"/>
+                                      Background="{TemplateBinding Background}"/>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border_hover}"/>
-                <Setter Property="Background" Value="{StaticResource instructions_view_background_hover}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverColor}"/>
+                <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverColor}"/>
             </Trigger>
             <Trigger Property="IsFocused" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border_hover}"/>
-                <Setter Property="Background" Value="{StaticResource comments_focused}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverColor}"/>
+                <Setter Property="Background" Value="{StaticResource CommentsFocusedColor}"/>
             </Trigger>
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="label_button" TargetType="Label">
-        <Setter Property="Background" Value="{StaticResource instructions_view_background}"/>
-        <Setter Property="Foreground" Value="White"/>
+    <Style x:Key="LabelButton" TargetType="Label">
+        <Setter Property="Background" Value="{StaticResource ViewBackgroundColor}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundColor}"/>
         <Setter Property="FontFamily" Value="Consolas"/>
         <Setter Property="FontSize" Value="15"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderColor}"/>
         <Setter Property="BorderThickness" Value="0.5"/>
         <Setter Property="FontWeight" Value="Bold"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border_hover}"/>
-                <Setter Property="Background" Value="{StaticResource instructions_view_background_hover}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverColor}"/>
+                <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverColor}"/>
             </Trigger>
             <Trigger Property="IsFocused" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border_hover}"/>
-                <Setter Property="Background" Value="{StaticResource comments_focused}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverColor}"/>
+                <Setter Property="Background" Value="{StaticResource CommentsFocusedColor}"/>
             </Trigger>
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="disasm_text_block" TargetType="TextBlock">
-        <Setter Property="Foreground" Value="White"/>
+    <Style x:Key="DisasmTextBlock" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundColor}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Padding" Value="4"/>
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="FontSize" Value="10"/>
         <Setter Property="FontFamily" Value="Lucida Console"/>
-        <Setter Property="Background" Value="{StaticResource instructions_view_background}"/>
+        <Setter Property="Background" Value="{StaticResource ViewBackgroundColor}"/>
     </Style>
 
-    <Style x:Key="disasm_text_block_border" TargetType="Border">
-        <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border}"/>
+    <Style x:Key="DisasmTextBlockBorder" TargetType="Border">
+        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderColor}"/>
         <Setter Property="BorderThickness" Value="0.5"/>
-        <Setter Property="Background" Value="{StaticResource instructions_view_background}"/>
+        <Setter Property="Background" Value="{StaticResource ViewBackgroundColor}"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border_hover}"/>
-                <Setter Property="Background" Value="{StaticResource instructions_view_background_hover}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverColor}"/>
+                <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverColor}"/>
             </Trigger>
             <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource instructions_view_border_hover}"/>
-                <Setter Property="Background" Value="{StaticResource instructions_view_background_hover}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverColor}"/>
+                <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverColor}"/>
             </Trigger>
         </Style.Triggers>
     </Style>

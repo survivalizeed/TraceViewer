@@ -68,7 +68,7 @@ namespace TraceViewer.UserWindows
             Label rowHeaderLabel = new Label
             {
                 Content = rowLabel,
-                Style = (Style)FindResource("memory_view_label"),
+                Style = (Style)FindResource("MemoryViewLabel"),
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(0, 5, 0, 0)
@@ -81,15 +81,15 @@ namespace TraceViewer.UserWindows
             {
                 Brush color = Brushes.White;
                 if (labelNames[i].StartsWith("xmm"))
-                    color = (SolidColorBrush)FindResource("xmm");
+                    color = (SolidColorBrush)FindResource("DataTypeXMMColor");
                 if (labelNames[i].StartsWith("qword"))
-                    color = (SolidColorBrush)FindResource("qword");
+                    color = (SolidColorBrush)FindResource("DataTypeQwordColor");
                 if (labelNames[i].StartsWith("dword"))
-                    color = (SolidColorBrush)FindResource("dword");
+                    color = (SolidColorBrush)FindResource("DataTypeDwordColor");
                 if (labelNames[i].StartsWith("word"))
-                    color = (SolidColorBrush)FindResource("word");
+                    color = (SolidColorBrush)FindResource("DataTypeWordColor");
                 if (labelNames[i].StartsWith("byte"))
-                    color = (SolidColorBrush)FindResource("byte");
+                    color = (SolidColorBrush)FindResource("DataTypeByteColor");
 
                 Label label = new Label
                 {
@@ -97,7 +97,7 @@ namespace TraceViewer.UserWindows
                     Content = labelNames[i].Substring(0, labelNames[i].Length - (i.ToString().Length)),
                     BorderBrush = color,
                     BorderThickness = new Thickness(0.5),
-                    Style = (Style)FindResource("memory_view_label"),
+                    Style = (Style)FindResource("MemoryViewLabel"),
                     Foreground = color,
                     Margin = new Thickness(0, 5, 0, 0),
                     VerticalAlignment = VerticalAlignment.Center,
