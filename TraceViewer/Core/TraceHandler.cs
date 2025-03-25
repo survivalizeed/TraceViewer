@@ -94,7 +94,7 @@ namespace TraceViewer.Core
                 window.RegisterViewItems.Add(wpfRow);
             }
 
-            StackHandler.ComposeStack(Trace);
+            MemoryHandler.ComposeMemory(Trace);
 
             LoadRange(0, load_count, false);
         }

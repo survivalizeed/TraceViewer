@@ -266,11 +266,33 @@
         <Setter Property="FontSize" Value="20"/>
         <Setter Property="FontWeight" Value="Bold"/>
 		<Setter Property="FontFamily" Value="Consolas"/>
-		 <Setter Property="VerticalContentAlignment" Value="Center"/>
+	    <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="HorizontalContentAlignment" Value="Center"/>
     </Style>
 
-	<Style x:Key="view_titles" TargetType="Label">
+
+    <Style x:Key="instructions_view_titles_selectable" TargetType="Label">
+        <Setter Property="DockPanel.Dock" Value="Left"/>
+        <Setter Property="BorderBrush" Value="Gray"/>
+        <Setter Property="BorderThickness" Value="0.5"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontSize" Value="20"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontFamily" Value="Consolas"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Effect">
+                    <Setter.Value>
+                        <DropShadowEffect Color="White" BlurRadius="15" ShadowDepth="0" Opacity="0.8"/>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="view_titles" TargetType="Label">
 		<Setter Property="DockPanel.Dock" Value="Left"/>
 		<Setter Property="Foreground" Value="White"/>
 		<Setter Property="FontSize" Value="15"/>

@@ -329,14 +329,12 @@ namespace TraceViewer
             InstructionViewItems.Clear();
             RegisterViewItems.Clear();
             NotesContent.Text = "";
+            Stack.Inlines.Clear();
             _current_project_path = "";
             SetTitle("survivalizeed's Trace Viewer", false);
             WPF_TraceRow.hiddenRows.Clear();
             DeObfus.deObHiddenRows.Clear();
-            StackHandler.stacks.Clear();
-            //memory1.Visibility = Visibility.Collapsed;
-            //memory2.Visibility = Visibility.Collapsed;
-            //memory3.Visibility = Visibility.Collapsed;
+            MemoryHandler.Clear();
         }
 
 
@@ -567,7 +565,7 @@ namespace TraceViewer
                 {
                     ulong base_address = Convert.ToUInt64(res, 16);
                     bool found = false;
-                    foreach (var stack in StackHandler.stacks)
+                    foreach (var stack in MemoryHandler.stacks)
                     {
                         if (stack.ContainsKey(base_address))
                         {

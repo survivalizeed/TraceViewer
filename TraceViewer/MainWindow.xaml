@@ -93,14 +93,14 @@
                             <Label x:Name="changes" Style="{StaticResource instructions_view_titles}" Content="CHANGES" Grid.Column="3" SizeChanged="TitleLabel_SizeChanged"/>
                             <GridSplitter Grid.Column="3" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
-                            <Label x:Name="comments" Style="{StaticResource instructions_view_titles}" Content="COMMENTS" Grid.Column="4" SizeChanged="TitleLabel_SizeChanged" 
+                            <Label x:Name="comments" Style="{StaticResource instructions_view_titles_selectable}" Content="COMMENTS" Grid.Column="4" SizeChanged="TitleLabel_SizeChanged" 
                                MouseDown="Comments_MouseDown"/>
                             <GridSplitter Grid.Column="4" Width="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Background="Transparent" />
 
                         </Grid>
                     </DockPanel>
-                    <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="29,0,0,0">
-                        <Label x:Name="fpu" Style="{StaticResource instructions_view_titles}" Content="   FPU   " MouseDown="Fpu_MouseDown"/>
+                    <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="29.2,0,0,0">
+                        <Label x:Name="fpu" Style="{StaticResource instructions_view_titles_selectable}" Content="   FPU   " MouseDown="Fpu_MouseDown"/>
                     </DockPanel>
                 </DockPanel>
                 <DockPanel Margin="0,150,0,10" LastChildFill="True">
@@ -126,8 +126,9 @@
                     </Grid>
                     <Grid Margin="20,0,0,0">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="400" />
-                            <RowDefinition Height="360"/>
+                            <RowDefinition Height="400"/>
+                            <RowDefinition Height="35"/>
+                            <RowDefinition Height="325"/>
                         </Grid.RowDefinitions>
                         <Border BorderThickness="0.5" BorderBrush="{StaticResource instructions_view_border}">
                             <Grid x:Name="RegistersViewGrid" Grid.Row="0" Margin="7,4,0,0">
@@ -148,8 +149,9 @@
                                 </ItemsControl>
                             </Grid>
                         </Border>
-
-                        <Grid x:Name="MemoryViewGrid" Grid.Row="1" Margin="0,20,0,0">
+                        <Label x:Name="StackHeapToggle" Grid.Row="1" Margin="0,5,0,5" HorizontalAlignment="Left" 
+                               Style="{StaticResource instructions_view_titles_selectable}" FontSize="12" Content="  STACK  " Width="Auto"/>
+                        <Grid x:Name="MemoryViewGrid" Grid.Row="2" Margin="0,0,0,0">
                             <Border BorderThickness="0.5" BorderBrush="{StaticResource instructions_view_border}">
                                 <ScrollViewer Name="StackScroller" VerticalScrollBarVisibility="Auto">
                                     <TextBlock Name="Stack" Style="{StaticResource disasm_text_block}" Text="" FontSize="13" TextWrapping="Wrap"

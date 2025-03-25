@@ -188,7 +188,7 @@ namespace TraceViewer
                 rsp_index = 0;
             };
 
-            var stack = StackHandler.stacks[traceRow.Id - 1].ToList();
+            var stack = MemoryHandler.stacks[traceRow.Id - 1].ToList();
 
             for (int i = 0; i < stack.Count; i++)
             {

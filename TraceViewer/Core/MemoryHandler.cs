@@ -9,19 +9,26 @@ using System.Threading.Tasks;
 namespace TraceViewer.Core
 {
 
-    class StackHandler
+    class MemoryHandler
     {
-
-        private static readonly string[] four_byte_regs = new string[]
-        { "eax", "ebx", "ecx", "edx", "esp", "ebp", "esi", "edi", "r8d", "r9d", "r10d", "r11d", "r12d", "r13d", "r14d", "r15d", "eip" };
-
         // The range +- rsp in which a memory access is considered to be a stack access
         public static readonly ulong region_size = 0x100;
         public static List<Dictionary<ulong, ulong>> stacks = new List<Dictionary<ulong, ulong>>();
+        public static List<Dictionary<ulong, ulong>> heaps = new List<Dictionary<ulong, ulong>>();
 
-        public static void ComposeStack(TraceData traceData)
+
+        public static void Clear()
         {
+            stacks.Clear();
+            heaps.Clear();
+        }
+
+        public static void ComposeMemory(TraceData traceData)
+        {
+            // Both will be snapshoted each iteration and stored in stacks/heaps
             Dictionary<ulong, ulong> stack = new Dictionary<ulong, ulong>();
+            Dictionary<ulong, ulong> heap = new Dictionary<ulong, ulong>();
+
             ulong init_rsp = BitConverter.ToUInt64(traceData.Trace[0].Regs[4], 0);
             for (int i = 0; i < traceData.Trace.Count; i++)
             {          
@@ -43,18 +50,7 @@ namespace TraceViewer.Core
                         if (diff == 0)
                         {
                             // Is sliced into four qwords
-                            if (row.Disasm.Contains("ymmword"))
-                            {
-                                bytes = BitConverter.GetBytes((ulong)access.Value);
-                                diff = 8;
-                            }
-                            // Is sliced into two qwords
-                            else if (row.Disasm.Contains("xmmword"))
-                            {
-                                bytes = BitConverter.GetBytes((ulong)access.Value);
-                                diff = 8;
-                            }
-                            else if (row.Disasm.Contains("qword"))
+                            if (row.Disasm.Contains("qword") || row.Disasm.Contains("xmmword") || row.Disasm.Contains("ymmword"))
                             {
                                 bytes = BitConverter.GetBytes((ulong)access.Value);
                                 diff = 8;
@@ -91,13 +87,46 @@ namespace TraceViewer.Core
                         }
                         
                     }
+                    else
+                    {
+                        int diff = 0;
+                        byte[] bytes = Array.Empty<byte>();
+                        if (row.Disasm.Contains("qword") || row.Disasm.Contains("xmmword") || row.Disasm.Contains("ymmword"))
+                        {
+                            bytes = BitConverter.GetBytes((ulong)access.Value);
+                            diff = 8;
+                        }
+                        else if (row.Disasm.Contains("dword"))
+                        {
+                            bytes = BitConverter.GetBytes((uint)access.Value);
+                            diff = 4;
+                        }
+                        else if (row.Disasm.Contains("word"))
+                        {
+                            bytes = BitConverter.GetBytes((ushort)access.Value);
+                            diff = 2;
+                        }
+                        else if (row.Disasm.Contains("byte"))
+                        {
+                            bytes = new byte[1] { (byte)access.Value };
+                            diff = 1;
+                        }
+
+                        for (int h = 0; h < diff; h++)
+                        {
+                            heap[access.Addr + (ulong)h] = bytes[h];
+                        }
+                    }
                 }
                 
                 // Sort in case there is a read which is not in the correct alignment of the previous sets
                 stack = stack.OrderByDescending(pair => pair.Key).ToDictionary();
-
                 stacks.Add(new Dictionary<ulong, ulong>(stack));
+
+                heap = heap.OrderByDescending(pair => pair.Key).ToDictionary();
+                heaps.Add(new Dictionary<ulong, ulong>(heap));
             }
         }
+
     }
 }
