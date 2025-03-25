@@ -13,8 +13,8 @@ namespace TraceViewer.Core
     {
         // The range +- rsp in which a memory access is considered to be a stack access
         public static readonly ulong region_size = 0x1000;
-        public static List<Dictionary<ulong, ulong>> stacks = new List<Dictionary<ulong, ulong>>();
-        public static List<Dictionary<ulong, ulong>> heaps = new List<Dictionary<ulong, ulong>>();
+        public static List<Dictionary<ulong, byte>> stacks = new List<Dictionary<ulong, byte>>();
+        public static List<Dictionary<ulong, byte>> heaps = new List<Dictionary<ulong, byte>>();
 
         public static void Clear()
         {
@@ -25,8 +25,8 @@ namespace TraceViewer.Core
         public static void ComposeMemory(TraceData traceData)
         {
             // Both will be snapshoted each iteration and stored in stacks/heaps
-            Dictionary<ulong, ulong> stack = new Dictionary<ulong, ulong>();
-            Dictionary<ulong, ulong> heap = new Dictionary<ulong, ulong>();
+            Dictionary<ulong, byte> stack = new Dictionary<ulong, byte>();
+            Dictionary<ulong, byte> heap = new Dictionary<ulong, byte>();
 
             ulong init_rsp = BitConverter.ToUInt64(traceData.Trace[0].Regs[4], 0);
             for (int i = 0; i < traceData.Trace.Count; i++)
@@ -120,10 +120,10 @@ namespace TraceViewer.Core
                 
                 // Sort in case there is a read which is not in the correct alignment of the previous sets
                 stack = stack.OrderByDescending(pair => pair.Key).ToDictionary();
-                stacks.Add(new Dictionary<ulong, ulong>(stack));
+                stacks.Add(new Dictionary<ulong, byte>(stack));
 
                 heap = heap.OrderByDescending(pair => pair.Key).ToDictionary();
-                heaps.Add(new Dictionary<ulong, ulong>(heap));
+                heaps.Add(new Dictionary<ulong, byte>(heap));
             }
         }
 
