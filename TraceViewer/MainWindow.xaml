@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:nodify="https://miroiu.github.io/nodify"
         xmlns:local="clr-namespace:TraceViewer"
         mc:Ignorable="d"
         Title="survivalizeed's Trace Viewer"
@@ -32,37 +31,7 @@
         </Grid>
         <Canvas x:Name="DimmingOverlay" Background="Black" Opacity="0.3" Visibility="Collapsed" Panel.ZIndex="1000"/>
 
-        <nodify:NodifyEditor ItemsSource="{Binding Nodes}" Connections="{Binding Connections}" x:Name="CyclesView" Visibility="Visible">
-            <nodify:NodifyEditor.ItemTemplate>
-                <DataTemplate DataType="{x:Type local:NodeViewModel}">
-                    <nodify:Node Header="{Binding Title}" Input="{Binding Input}" Output="{Binding Output}">
-                        <nodify:Node.InputConnectorTemplate>
-                            <DataTemplate DataType="{x:Type local:ConnectorViewModel}">
-                                <nodify:NodeInput Header="{Binding Title}"
-                                    IsConnected="True"
-                                    Anchor="{Binding Anchor, Mode=OneWayToSource}" />
-                            </DataTemplate>
-                        </nodify:Node.InputConnectorTemplate>
-
-                        <nodify:Node.OutputConnectorTemplate>
-                            <DataTemplate DataType="{x:Type local:ConnectorViewModel}">
-                                <nodify:NodeOutput Header="{Binding Title}"
-                                    IsConnected="True"
-                                    Anchor="{Binding Anchor, Mode=OneWayToSource}"  />
-                            </DataTemplate>
-                        </nodify:Node.OutputConnectorTemplate>
-                    </nodify:Node>
-                </DataTemplate>
-            </nodify:NodifyEditor.ItemTemplate>
-            <nodify:NodifyEditor.ConnectionTemplate>
-                <DataTemplate DataType="{x:Type local:ConnectionViewModel}">
-                    <nodify:LineConnection Source="{Binding Source.Anchor}"
-                                   Target="{Binding Target.Anchor}" />
-                </DataTemplate>
-            </nodify:NodifyEditor.ConnectionTemplate>
-        </nodify:NodifyEditor>
-
-        <Grid Name="MainView" Visibility="Collapsed">
+        <Grid Name="MainView" Visibility="Visible">
             <Grid Name="MenuView">
                 <StackPanel>
                     <DockPanel LastChildFill="False">
