@@ -39,7 +39,7 @@ namespace TraceViewer
         public MainWindow()
         {
             InitializeComponent();
-            InstructionsView.Loaded += InstructionsView_Loaded;
+            //InstructionsView.Loaded += InstructionsView_Loaded;
             InstructionsView.ItemsSource = InstructionViewItems;
             RegistersView.ItemsSource = RegisterViewItems;
             PreviewKeyDown += MainWindow_PreviewKeyDown;
@@ -49,6 +49,10 @@ namespace TraceViewer
             InstructionsView.DragEnter += DragEnter;
             InstructionsView.DragLeave += DragLeave;
             InstructionsView.Drop += Drop;
+
+            DataContext = this;
+
+            Gen();
 
             DisasmViewButton_MouseDown(null, null); // Set Disassembler View as default
         }
