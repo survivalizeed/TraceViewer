@@ -16,12 +16,12 @@
         <Rectangle Fill="{StaticResource PrimaryBackgroundBrush}"/>
 
         <ScrollViewer Name="MnemonicReaderScrollView" Visibility="Collapsed">
-            <Label Name="MnemonicReader" FontSize="15" FontFamily="Miriam Mono CLM" Foreground="{StaticResource PrimaryForegroundColor}" Background="{StaticResource SecondaryBackgroundColor}"
+            <Label Name="MnemonicReader" FontSize="15" FontFamily="Miriam Mono CLM" Foreground="{StaticResource PrimaryForegroundBrush}" Background="{StaticResource DimmedBackgroundBrush}"
                    MouseDown="MnemonicReader_MouseDown"/>
         </ScrollViewer>
 
 
-        <Grid Name="DropZone" Visibility="Hidden" Background="{StaticResource SecondaryBackgroundColor}">
+        <Grid Name="DropZone" Visibility="Hidden" Background="{StaticResource DimmedBackgroundBrush}">
             <DockPanel LastChildFill="True">
                 <Label Style="{StaticResource InstructionsViewTitles}" Padding="2,5,2,10" FontSize="50" Content="DROP HERE" BorderThickness="0" Grid.Row="0">
                     <Label.Effect>
@@ -32,7 +32,37 @@
         </Grid>
         <Canvas x:Name="DimmingOverlay" Background="Black" Opacity="0.3" Visibility="Collapsed" Panel.ZIndex="1000"/>
 
-        <Grid Name="MainView" Visibility="Visible">
+        <nodify:NodifyEditor ItemsSource="{Binding Nodes}" Connections="{Binding Connections}" x:Name="CyclesView" Visibility="Visible">
+            <nodify:NodifyEditor.ItemTemplate>
+                <DataTemplate DataType="{x:Type local:NodeViewModel}">
+                    <nodify:Node Header="{Binding Title}" Input="{Binding Input}" Output="{Binding Output}">
+                        <nodify:Node.InputConnectorTemplate>
+                            <DataTemplate DataType="{x:Type local:ConnectorViewModel}">
+                                <nodify:NodeInput Header="{Binding Title}"
+                                    IsConnected="True"
+                                    Anchor="{Binding Anchor, Mode=OneWayToSource}" />
+                            </DataTemplate>
+                        </nodify:Node.InputConnectorTemplate>
+
+                        <nodify:Node.OutputConnectorTemplate>
+                            <DataTemplate DataType="{x:Type local:ConnectorViewModel}">
+                                <nodify:NodeOutput Header="{Binding Title}"
+                                    IsConnected="True"
+                                    Anchor="{Binding Anchor, Mode=OneWayToSource}"  />
+                            </DataTemplate>
+                        </nodify:Node.OutputConnectorTemplate>
+                    </nodify:Node>
+                </DataTemplate>
+            </nodify:NodifyEditor.ItemTemplate>
+            <nodify:NodifyEditor.ConnectionTemplate>
+                <DataTemplate DataType="{x:Type local:ConnectionViewModel}">
+                    <nodify:LineConnection Source="{Binding Source.Anchor}"
+                                   Target="{Binding Target.Anchor}" />
+                </DataTemplate>
+            </nodify:NodifyEditor.ConnectionTemplate>
+        </nodify:NodifyEditor>
+
+        <Grid Name="MainView" Visibility="Collapsed">
             <Grid Name="MenuView">
                 <StackPanel>
                     <DockPanel LastChildFill="False">
@@ -58,16 +88,16 @@
                     </DockPanel>
                     <DockPanel Margin="0,30,0,0"  LastChildFill="False">
                         <Border x:Name="DisasmViewButtonBorder" Style="{StaticResource ViewTitlesBorder}">
-                            <Label x:Name="DisasmViewButton" Content="DISASM" Foreground="{StaticResource PrimaryForegroundColor}" Style="{StaticResource ViewTitles}" MouseDown="DisasmViewButton_MouseDown"/>
+                            <Label x:Name="DisasmViewButton" Content="DISASM" Foreground="{StaticResource PrimaryForegroundBrush}" Style="{StaticResource ViewTitles}" MouseDown="DisasmViewButton_MouseDown"/>
                         </Border>
                         <Border x:Name="NotesViewButtonBorder" Style="{StaticResource ViewTitlesBorder}">
-                            <Label x:Name="NotesViewButton" Content="NOTES" Foreground="{StaticResource PrimaryForegroundColor}" Style="{StaticResource ViewTitles}" MouseDown="NotesViewButton_MouseDown"/>
+                            <Label x:Name="NotesViewButton" Content="NOTES" Foreground="{StaticResource PrimaryForegroundBrush}" Style="{StaticResource ViewTitles}" MouseDown="NotesViewButton_MouseDown"/>
                         </Border>
                         <Border x:Name="BookmarksViewButtonBorder" Style="{StaticResource ViewTitlesBorder}">
-                            <Label x:Name="BookmarksViewButton" Content="BOOKMARKS" Foreground="{StaticResource PrimaryForegroundColor}" Style="{StaticResource ViewTitles}" MouseDown="BookmarksViewButton_MouseDown"/>
+                            <Label x:Name="BookmarksViewButton" Content="BOOKMARKS" Foreground="{StaticResource PrimaryForegroundBrush}" Style="{StaticResource ViewTitles}" MouseDown="BookmarksViewButton_MouseDown"/>
                         </Border>
                     </DockPanel>
-                    <Line Margin="0,0,0,0" X1="0" Y1="0" X2="10000" Y2="0" Stroke="{StaticResource PrimaryForegroundColor}" StrokeThickness="5"/>
+                    <Line Margin="0,0,0,0" X1="0" Y1="0" X2="10000" Y2="0" Stroke="{StaticResource PrimaryForegroundBrush}" StrokeThickness="5"/>
                 </StackPanel>
             </Grid>
 
@@ -133,7 +163,7 @@
                             <RowDefinition Height="35"/>
                             <RowDefinition Height="325"/>
                         </Grid.RowDefinitions>
-                        <Border BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderColor}">
+                        <Border BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrush}">
                             <Grid x:Name="RegistersViewGrid" Grid.Row="0" Margin="7,4,0,0">
                                 <ItemsControl x:Name="RegistersView" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True"
                                               ScrollViewer.VerticalScrollBarVisibility="Auto">
@@ -156,13 +186,13 @@
                                Style="{StaticResource InstructionsViewTitlesSelectable}" FontSize="12" Content="  STACK  " Width="Auto"
                                MouseDown="StackHeapToggle_MouseDown"/>
                         <Grid x:Name="MemoryViewGrid" Grid.Row="2" Margin="0,0,0,0">
-                            <Border Name="StackBorderParent" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderColor}" Visibility="Visible">
+                            <Border Name="StackBorderParent" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrush}" Visibility="Visible">
                                 <ScrollViewer Name="StackScroller" VerticalScrollBarVisibility="Auto">
                                     <TextBlock Name="Stack" Style="{StaticResource DisasmTextBlock}" Text="" FontSize="13" TextWrapping="Wrap"
                                                VerticalAlignment="Top" Background="Transparent" />
                                 </ScrollViewer>
                             </Border>
-                            <Border Name="HeapBorderParent" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderColor}" Visibility="Collapsed">
+                            <Border Name="HeapBorderParent" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrush}" Visibility="Collapsed">
                                 <ScrollViewer Name="HeapScroller" VerticalScrollBarVisibility="Auto">
                                     <TextBlock Name="Heap" Style="{StaticResource DisasmTextBlock}" Text="" FontSize="13" TextWrapping="Wrap"
                                                VerticalAlignment="Top" Background="Transparent" />
@@ -174,15 +204,15 @@
             </Grid>
 
             <Grid Name="NotesView">
-                <Border Margin="0,104,0,15" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderColor}">
-                    <TextBox Name="NotesContent" Text="" Foreground="{StaticResource PrimaryForegroundColor}" AcceptsReturn="True" TextWrapping="Wrap"
-                             Background="{StaticResource SecondaryBackgroundColor}" FontSize="15" FontFamily="Consolas"
+                <Border Margin="0,104,0,15" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrush}">
+                    <TextBox Name="NotesContent" Text="" Foreground="{StaticResource PrimaryForegroundBrush}" AcceptsReturn="True" TextWrapping="Wrap"
+                             Background="{StaticResource DimmedBackgroundBrush}" FontSize="15" FontFamily="Consolas"
                              BorderThickness="0"/>
                 </Border>
             </Grid>
 
             <Grid Name="BookmarksView">
-                <Border Margin="0,104,0,15" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderColor}">
+                <Border Margin="0,104,0,15" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrush}">
 
                 </Border>
             </Grid>

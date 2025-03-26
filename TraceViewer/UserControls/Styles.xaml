@@ -1,14 +1,24 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:nodify="https://miroiu.github.io/nodify">
 
-    <SolidColorBrush x:Key="ViewBorderColor" Color="#171717"/>
-    <SolidColorBrush x:Key="ViewBorderColorBrighter" Color="#606060"/>
-    <SolidColorBrush x:Key="ViewBorderHoverColor" Color="Gray"/>
+    <Color x:Key="ViewBorderColor">#171717</Color>
+    <SolidColorBrush x:Key="ViewBorderBrush" Color="{StaticResource ViewBorderColor}"/>
 
-    <SolidColorBrush x:Key="ViewBackgroundColor" Color="Transparent"/>
-    <SolidColorBrush x:Key="ViewBackgroundHoverColor" Color="#303030"/>
+    <Color x:Key="ViewBorderBrighterColor">#606060</Color>
+    <SolidColorBrush x:Key="ViewBorderBrighterBrush" Color="{StaticResource ViewBorderBrighterColor}"/>
 
-    <SolidColorBrush x:Key="CommentsFocusedColor" Color="#404040"/>
+    <Color x:Key="ViewBorderHoverColor">Gray</Color>
+    <SolidColorBrush x:Key="ViewBorderHoverBrush" Color="{StaticResource ViewBorderHoverColor}"/>
+
+    <Color x:Key="ViewBackgroundColor">Transparent</Color>
+    <SolidColorBrush x:Key="ViewBackgroundBrush" Color="{StaticResource ViewBackgroundColor}"/>
+
+    <Color x:Key="ViewBackgroundHoverColor">#303030</Color>
+    <SolidColorBrush x:Key="ViewBackgroundHoverBrush" Color="{StaticResource ViewBackgroundHoverColor}"/>
+
+    <Color x:Key="CommentsFocusedColor">#404040</Color>
+    <SolidColorBrush x:Key="CommentsFocusedBrush" Color="{StaticResource CommentsFocusedColor}"/>
 
     <SolidColorBrush x:Key="DataTypeYmmColor" Color="Orange"/>
     <SolidColorBrush x:Key="DataTypeXmmColor" Color="PaleVioletRed"/>
@@ -17,33 +27,58 @@
     <SolidColorBrush x:Key="DataTypeWordColor" Color="DarkGoldenrod"/>
     <SolidColorBrush x:Key="DataTypeByteColor" Color="HotPink"/>
 
+    <Color x:Key="PrimaryBackgroundBrush_Color1">#151515</Color>
+    <Color x:Key="PrimaryBackgroundBrush_Color2">#0D0D0D</Color>
+    <Color x:Key="PrimaryBackgroundBrush_Color3">#070707</Color>
+
     <LinearGradientBrush x:Key="PrimaryBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#151515" Offset="0.0"/>
-        <GradientStop Color="#0D0D0D" Offset="0.6"/>
-        <GradientStop Color="#070707" Offset="1.0"/>
+        <GradientStop Color="{StaticResource PrimaryBackgroundBrush_Color1}" Offset="0.0"/>
+        <GradientStop Color="{StaticResource PrimaryBackgroundBrush_Color2}" Offset="0.6"/>
+        <GradientStop Color="{StaticResource PrimaryBackgroundBrush_Color3}" Offset="1.0"/>
     </LinearGradientBrush>
+    
+    <Color x:Key="MenuBackgroundColor">Transparent</Color>
+    <SolidColorBrush x:Key="MenuBackgroundBrush" Color="{StaticResource MenuBackgroundColor}"/>
 
-    <SolidColorBrush x:Key="MenuBackgroundColor" Color="Transparent"/>
-    <SolidColorBrush x:Key="MenuForegroundColor" Color="White"/>
-    <SolidColorBrush x:Key="MenuItemBackgroundColor" Color="Transparent"/>
-    <SolidColorBrush x:Key="MenuItemForegroundColor" Color="White"/>
-    <SolidColorBrush x:Key="MenuItemHoverBackgroundColor" Color="#303030"/>
+    <Color x:Key="MenuForegroundColor">White</Color>
+    <SolidColorBrush x:Key="MenuForegroundBrush" Color="{StaticResource MenuForegroundColor}"/>
 
-    <SolidColorBrush x:Key="ScrollBarBackgroundColor" Color="#202020"/>
-    <SolidColorBrush x:Key="ScrollBarThumbColor" Color="White"/>
+    <Color x:Key="MenuItemBackgroundColor">Transparent</Color>
+    <SolidColorBrush x:Key="MenuItemBackgroundBrush" Color="{StaticResource MenuItemBackgroundColor}"/>
 
-    <SolidColorBrush x:Key="PrimaryForegroundColor" Color="White"/>
-    <SolidColorBrush x:Key="SecondaryBackgroundColor" Color="#50000000"/>
+    <Color x:Key="MenuItemForegroundColor">White</Color>
+    <SolidColorBrush x:Key="MenuItemForegroundBrush" Color="{StaticResource MenuItemForegroundColor}"/>
+
+    <Color x:Key="MenuItemHoverBackgroundColor">#303030</Color>
+    <SolidColorBrush x:Key="MenuItemHoverBackgroundBrush" Color="{StaticResource MenuItemHoverBackgroundColor}"/>
+
+    <Color x:Key="ScrollBarBackgroundColor">#202020</Color>
+    <SolidColorBrush x:Key="ScrollBarBackgroundBrush" Color="{StaticResource ScrollBarBackgroundColor}"/>
+
+    <Color x:Key="ScrollBarThumbColor">White</Color>
+    <SolidColorBrush x:Key="ScrollBarThumbBrush" Color="{StaticResource ScrollBarThumbColor}"/>
+
+    <Color x:Key="PrimaryForegroundColor">White</Color>
+    <SolidColorBrush x:Key="PrimaryForegroundBrush" Color="{StaticResource PrimaryForegroundColor}"/>
+
+    <Color x:Key="LightDimmedBackgroundColor">#30000000</Color>
+    <SolidColorBrush x:Key="LightDimmedBackgroundBrush" Color="{StaticResource LightDimmedBackgroundColor}"/>
+
+    <Color x:Key="DimmedBackgroundColor">#50000000</Color>
+    <SolidColorBrush x:Key="DimmedBackgroundBrush" Color="{StaticResource DimmedBackgroundColor}"/>
+
+
+
 
     <Style TargetType="Menu">
-        <Setter Property="Background" Value="{StaticResource MenuBackgroundColor}"/>
-        <Setter Property="Foreground" Value="{StaticResource MenuForegroundColor}"/>
+        <Setter Property="Background" Value="{StaticResource MenuBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource MenuForegroundBrush}"/>
         <Setter Property="Padding" Value="1"/>
     </Style>
 
     <Style TargetType="MenuItem">
-        <Setter Property="Background" Value="{StaticResource MenuItemBackgroundColor}"/>
-        <Setter Property="Foreground" Value="{StaticResource MenuItemForegroundColor}"/>
+        <Setter Property="Background" Value="{StaticResource MenuItemBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource MenuItemForegroundBrush}"/>
         <Setter Property="Padding" Value="5"/>
         <Setter Property="FontSize" Value="15"/>
         <Setter Property="FontFamily" Value="Consolas"/>
@@ -105,7 +140,7 @@
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.ExitActions>
-                            <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverColor}"/>
+                            <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverBrush}"/>
                             <Setter Property="Effect">
                                 <Setter.Value>
                                     <DropShadowEffect Color="White" BlurRadius="15" ShadowDepth="0" Opacity="0.8"/>
@@ -134,8 +169,8 @@
         <Setter Property="ItemContainerStyle">
             <Setter.Value>
                 <Style TargetType="MenuItem">
-                    <Setter Property="Background" Value="{StaticResource MenuItemBackgroundColor}"/>
-                    <Setter Property="Foreground" Value="{StaticResource MenuItemForegroundColor}"/>
+                    <Setter Property="Background" Value="{StaticResource MenuItemBackgroundBrush}"/>
+                    <Setter Property="Foreground" Value="{StaticResource MenuItemForegroundBrush}"/>
                     <Setter Property="FontSize" Value="12"/>
                     <Setter Property="FontFamily" Value="Consolas"/>
                     <Setter Property="FontWeight" Value="Bold"/>
@@ -196,7 +231,7 @@
                                                 </Storyboard>
                                             </BeginStoryboard>
                                         </Trigger.ExitActions>
-                                        <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverColor}"/>
+                                        <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverBrush}"/>
                                         <Setter Property="Effect">
                                             <Setter.Value>
                                                 <DropShadowEffect Color="White" BlurRadius="15" ShadowDepth="0" Opacity="0.8"/>
@@ -214,7 +249,7 @@
 
 
     <Style TargetType="ScrollBar">
-        <Setter Property="Background" Value="{StaticResource ScrollBarBackgroundColor}" />
+        <Setter Property="Background" Value="{StaticResource ScrollBarBackgroundBrush}" />
         <Setter Property="BorderBrush" Value="Transparent" />
         <Setter Property="MinWidth" Value="8" />
         <Setter Property="Width" Value="8" />
@@ -236,7 +271,7 @@
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
                                             <Rectangle
-                                                Fill="{StaticResource ScrollBarThumbColor}"
+                                                Fill="{StaticResource ScrollBarThumbBrush}"
                                                 RadiusX="0"
                                                 RadiusY="0"
                                                 Margin="0"
@@ -271,9 +306,9 @@
 
     <Style x:Key="InstructionsViewTitles" TargetType="Label">
         <Setter Property="DockPanel.Dock" Value="Left"/>
-        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderColorBrighter}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderBrighterBrush}"/>
         <Setter Property="BorderThickness" Value="0.5"/>
-        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundColor}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundBrush}"/>
         <Setter Property="FontSize" Value="20"/>
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="FontFamily" Value="Consolas"/>
@@ -284,9 +319,9 @@
 
     <Style x:Key="InstructionsViewTitlesSelectable" TargetType="Label">
         <Setter Property="DockPanel.Dock" Value="Left"/>
-        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderColorBrighter}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderBrighterBrush}"/>
         <Setter Property="BorderThickness" Value="0.5"/>
-        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundColor}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundBrush}"/>
         <Setter Property="FontSize" Value="20"/>
         <Setter Property="FontWeight" Value="Bold"/>
         <Setter Property="FontFamily" Value="Consolas"/>
@@ -305,7 +340,7 @@
 
     <Style x:Key="ViewTitles" TargetType="Label">
         <Setter Property="DockPanel.Dock" Value="Left"/>
-        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundColor}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundBrush}"/>
         <Setter Property="FontSize" Value="15"/>
         <Setter Property="FontFamily" Value="Consolas"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -315,17 +350,17 @@
     <Style x:Key="ViewTitlesBorder" TargetType="Border">
         <Setter Property="CornerRadius" Value="5,5,0,0"/>
         <Setter Property="BorderThickness" Value="0.5"/>
-        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderColorBrighter}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderBrighterBrush}"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource PrimaryForegroundColor}"/>
-                <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverColor}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource PrimaryForegroundBrush}"/>
+                <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverBrush}"/>
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <Style x:Key="MemoryViewLabel" TargetType="Label">
-        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundColor}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundBrush}"/>
         <Setter Property="FontSize" Value="15"/>
         <Setter Property="FontFamily" Value="Consolas"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -333,11 +368,11 @@
     </Style>
 
     <Style x:Key="CommentsTextBox" TargetType="TextBox">
-        <Setter Property="Background" Value="{StaticResource ViewBackgroundColor}"/>
-        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundColor}"/>
+        <Setter Property="Background" Value="{StaticResource ViewBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundBrush}"/>
         <Setter Property="FontFamily" Value="Lucida Console"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderColor}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderBrush}"/>
         <Setter Property="BorderThickness" Value="0.5"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -355,59 +390,59 @@
         </Setter>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverColor}"/>
-                <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverColor}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverBrush}"/>
+                <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverBrush}"/>
             </Trigger>
             <Trigger Property="IsFocused" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverColor}"/>
-                <Setter Property="Background" Value="{StaticResource CommentsFocusedColor}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverBrush}"/>
+                <Setter Property="Background" Value="{StaticResource CommentsFocusedBrush}"/>
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <Style x:Key="LabelButton" TargetType="Label">
-        <Setter Property="Background" Value="{StaticResource ViewBackgroundColor}"/>
-        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundColor}"/>
+        <Setter Property="Background" Value="{StaticResource ViewBackgroundBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundBrush}"/>
         <Setter Property="FontFamily" Value="Consolas"/>
         <Setter Property="FontSize" Value="15"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderColor}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderBrush}"/>
         <Setter Property="BorderThickness" Value="0.5"/>
         <Setter Property="FontWeight" Value="Bold"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverColor}"/>
-                <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverColor}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverBrush}"/>
+                <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverBrush}"/>
             </Trigger>
             <Trigger Property="IsFocused" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverColor}"/>
-                <Setter Property="Background" Value="{StaticResource CommentsFocusedColor}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverBrush}"/>
+                <Setter Property="Background" Value="{StaticResource CommentsFocusedBrush}"/>
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <Style x:Key="DisasmTextBlock" TargetType="TextBlock">
-        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundColor}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundBrush}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Padding" Value="4"/>
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="FontSize" Value="10"/>
         <Setter Property="FontFamily" Value="Lucida Console"/>
-        <Setter Property="Background" Value="{StaticResource ViewBackgroundColor}"/>
+        <Setter Property="Background" Value="{StaticResource ViewBackgroundBrush}"/>
     </Style>
 
     <Style x:Key="DisasmTextBlockBorder" TargetType="Border">
-        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderColor}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderBrush}"/>
         <Setter Property="BorderThickness" Value="0.5"/>
-        <Setter Property="Background" Value="{StaticResource ViewBackgroundColor}"/>
+        <Setter Property="Background" Value="{StaticResource ViewBackgroundBrush}"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverColor}"/>
-                <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverColor}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverBrush}"/>
+                <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverBrush}"/>
             </Trigger>
             <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverColor}"/>
-                <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverColor}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource ViewBorderHoverBrush}"/>
+                <Setter Property="Background" Value="{StaticResource ViewBackgroundHoverBrush}"/>
             </Trigger>
         </Style.Triggers>
     </Style>
