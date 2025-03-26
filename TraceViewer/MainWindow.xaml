@@ -29,6 +29,7 @@
                 </Label>
             </DockPanel>
         </Grid>
+
         <Canvas x:Name="DimmingOverlay" Background="Black" Opacity="0.3" Visibility="Collapsed" Panel.ZIndex="1000"/>
 
         <Grid Name="MainView" Visibility="Visible">
@@ -64,6 +65,9 @@
                         </Border>
                         <Border x:Name="BookmarksViewButtonBorder" Style="{StaticResource ViewTitlesBorder}">
                             <Label x:Name="BookmarksViewButton" Content="BOOKMARKS" Foreground="{StaticResource PrimaryForegroundBrush}" Style="{StaticResource ViewTitles}" MouseDown="BookmarksViewButton_MouseDown"/>
+                        </Border>
+                        <Border x:Name="GraphViewButtonBorder" Style="{StaticResource ViewTitlesBorder}">
+                            <Label x:Name="GraphViewButton" Content="GRAPH" Foreground="{StaticResource PrimaryForegroundBrush}" Style="{StaticResource ViewTitles}" MouseDown="GraphViewButton_MouseDown"/>
                         </Border>
                     </DockPanel>
                     <Line Margin="0,0,0,0" X1="0" Y1="0" X2="10000" Y2="0" Stroke="{StaticResource PrimaryForegroundBrush}" StrokeThickness="5"/>
@@ -185,6 +189,13 @@
 
                 </Border>
             </Grid>
+            
+            <Grid Name="GraphView">
+                <Border Margin="0,104,0,15" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrush}">
+                    <Canvas x:Name="GraphViewCanvas" Background="{StaticResource LightDimmedBackgroundBrush}" ClipToBounds="True"/>
+                </Border>
+            </Grid>
+            
         </Grid>
     </Grid>
 </Window>

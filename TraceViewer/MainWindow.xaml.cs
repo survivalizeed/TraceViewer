@@ -16,12 +16,6 @@ using TraceViewer.UserWindows;
 
 namespace TraceViewer
 {
-    public enum UIState
-    {
-        DisassemblerView,
-        NotesView,
-        BookmarksView
-    }
 
     public partial class MainWindow : Window
     {
@@ -50,9 +44,15 @@ namespace TraceViewer
             InstructionsView.DragLeave += DragLeave;
             InstructionsView.Drop += Drop;
 
-            DataContext = this;
+            var node = AddNode("Test1", new Point(100, 100), null);
+            AddNode("Test2", new Point(200, 200), node);
+            AddNode("Test3", new Point(300, 300), node);
+            AddNode("Test4", new Point(400, 400), node);
+            var node2 = AddNode("Test5", new Point(500, 500), node);
 
-            DisasmViewButton_MouseDown(null, null); // Set Disassembler View as default
+            AddNode("Test6", new Point(600, 600), node2);
+
+            DisasmViewButton_MouseDown(null, null);
         }
 
         private void SetTitle(string text, bool append)
