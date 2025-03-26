@@ -68,8 +68,6 @@
     <SolidColorBrush x:Key="DimmedBackgroundBrush" Color="{StaticResource DimmedBackgroundColor}"/>
 
 
-
-
     <Style TargetType="Menu">
         <Setter Property="Background" Value="{StaticResource MenuBackgroundBrush}"/>
         <Setter Property="Foreground" Value="{StaticResource MenuForegroundBrush}"/>
