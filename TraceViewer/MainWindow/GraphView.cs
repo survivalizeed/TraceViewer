@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using System.Xml.Linq;
-using TraceViewer.Core;
-using TraceViewer.UserControls;
-using TraceViewer.UserWindows;
-using System.Windows.Data;
 
 namespace TraceViewer
 {
@@ -71,16 +69,35 @@ namespace TraceViewer
         public List<Node> Connections { get; set; } = new List<Node>();
     }
 
+    public class OffsetConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is double baseValue && parameter is string offsetStr && double.TryParse(offsetStr, out double offset))
+            {
+                return baseValue + offset;
+            }
+            return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public partial class MainWindow : Window
     {
         private List<Node> nodes = new List<Node>();
         private Node currentlyDraggingNode = null;
         private Point dragStartPoint;
 
+        // Annahme: GraphViewCanvas ist im XAML als Canvas definiert.
 
-        public Node AddNode(string Text, Point position, Node? connect)
+
+        public Node AddNode(string text, Point position, Node connect)
         {
-            var node = new Node { X = position.X, Y = position.Y, Text = Text };
+            var node = new Node { X = position.X, Y = position.Y, Text = text };
             nodes.Add(node);
             AddNodeToCanvas(node);
             if (connect != null)
@@ -118,16 +135,16 @@ namespace TraceViewer
             textBlock.Height = node.Height;
             textBlock.IsHitTestVisible = false;
 
-            // Eigenschaften binden
-            System.Windows.Data.Binding leftBinding = new System.Windows.Data.Binding("Left") { Mode = System.Windows.Data.BindingMode.OneWay };
+            // Bindings
+            var leftBinding = new Binding("Left") { Mode = BindingMode.OneWay };
             rectangle.SetBinding(Canvas.LeftProperty, leftBinding);
             textBlock.SetBinding(Canvas.LeftProperty, leftBinding);
 
-            System.Windows.Data.Binding topBinding = new System.Windows.Data.Binding("Top") { Mode = System.Windows.Data.BindingMode.OneWay };
+            var topBinding = new Binding("Top") { Mode = BindingMode.OneWay };
             rectangle.SetBinding(Canvas.TopProperty, topBinding);
             textBlock.SetBinding(Canvas.TopProperty, topBinding);
 
-            System.Windows.Data.Binding textBinding = new System.Windows.Data.Binding("Text") { Mode = System.Windows.Data.BindingMode.OneWay };
+            var textBinding = new Binding("Text") { Mode = BindingMode.OneWay };
             textBlock.SetBinding(TextBlock.TextProperty, textBinding);
 
             GraphViewCanvas.Children.Add(rectangle);
@@ -165,14 +182,34 @@ namespace TraceViewer
             {
                 (sender as Rectangle).ReleaseMouseCapture();
                 currentlyDraggingNode = null;
-                // Redraw connections for the moved node
-                foreach (var connection in nodes.Where(n => n.Connections.Contains(currentlyDraggingNode)))
+                // Statt nur die Verbindungen des verschobenen Knotens neu zu zeichnen,
+                // werden hier alle Verbindungen neu berechnet.
+                RecalculateAllConnections();
+            }
+        }
+
+        private void RecalculateAllConnections()
+        {
+            // Entferne alle Linien aus dem Canvas, deren DataContext ein Tuple<Node, Node> ist.
+            var linesToRemove = GraphViewCanvas.Children.OfType<Line>()
+                .Where(line => line.DataContext is Tuple<Node, Node>)
+                .ToList();
+
+            foreach (var line in linesToRemove)
+            {
+                GraphViewCanvas.Children.Remove(line);
+            }
+
+            // Zeichne alle Verbindungen neu. Damit nicht doppelt gezeichnet wird,
+            // wird nur für eine Richtung (z. B. wenn der Index des aktuellen Knotens kleiner ist als der des verbundenen Knotens) gezeichnet.
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                foreach (var connectedNode in nodes[i].Connections)
                 {
-                    RedrawConnections(connection);
-                }
-                if (currentlyDraggingNode != null && currentlyDraggingNode.Connections.Any())
-                {
-                    RedrawConnections(currentlyDraggingNode);
+                    if (nodes.IndexOf(connectedNode) > i)
+                    {
+                        DrawConnection(nodes[i], connectedNode);
+                    }
                 }
             }
         }
@@ -180,9 +217,8 @@ namespace TraceViewer
         private void RedrawConnections(Node node)
         {
             var linesToRemove = GraphViewCanvas.Children.OfType<Line>()
-                .Where(line => line.DataContext is Tuple<Node, Node> &&
-                               (line.DataContext as Tuple<Node, Node>).Item1 == node ||
-                               (line.DataContext as Tuple<Node, Node>).Item2 == node)
+                .Where(line => line.DataContext is Tuple<Node, Node> tuple &&
+                               (tuple.Item1 == node || tuple.Item2 == node))
                 .ToList();
 
             foreach (var line in linesToRemove)
@@ -214,39 +250,230 @@ namespace TraceViewer
             Point startPoint = node1.CenterPoint;
             Point endPoint = node2.CenterPoint;
 
-            var line1 = new Line { Stroke = Brushes.White, StrokeThickness = 2, DataContext = Tuple.Create(node1, node2) };
-            var line2 = new Line { Stroke = Brushes.White, StrokeThickness = 2, DataContext = Tuple.Create(node1, node2) };
+            bool horizontalFirst = Math.Abs(startPoint.X - endPoint.X) > Math.Abs(startPoint.Y - endPoint.Y);
+            double offset = 100; 
 
-            
-            if (Math.Abs(startPoint.X - endPoint.X) > Math.Abs(startPoint.Y - endPoint.Y))
+            if (horizontalFirst)
             {
-                line1.SetBinding(Line.X1Property, new Binding("CenterPoint.X") { Source = node1 });
-                line1.SetBinding(Line.Y1Property, new Binding("CenterPoint.Y") { Source = node1 });
-                line1.SetBinding(Line.X2Property, new Binding("CenterPoint.X") { Source = node2 });
-                line1.SetBinding(Line.Y2Property, new Binding("CenterPoint.Y") { Source = node1 });
+                bool collision = CheckHorizontalCollision(startPoint.Y, startPoint.X, endPoint.X, node1, node2) ||
+                                 CheckVerticalCollision(endPoint.X, startPoint.Y, endPoint.Y, node1, node2);
 
-                line2.SetBinding(Line.X1Property, new Binding("CenterPoint.X") { Source = node2 });
-                line2.SetBinding(Line.Y1Property, new Binding("CenterPoint.Y") { Source = node1 });
-                line2.SetBinding(Line.X2Property, new Binding("CenterPoint.X") { Source = node2 });
-                line2.SetBinding(Line.Y2Property, new Binding("CenterPoint.Y") { Source = node2 });
+                double midY = collision ? FindAdjustedY(startPoint, endPoint, node1, node2, offset) : startPoint.Y;
+                CreateHorizontalVerticalPath(node1, node2, startPoint, endPoint, midY);
             }
             else
             {
-                line1.SetBinding(Line.X1Property, new Binding("CenterPoint.X") { Source = node1 });
-                line1.SetBinding(Line.Y1Property, new Binding("CenterPoint.Y") { Source = node1 });
-                line1.SetBinding(Line.X2Property, new Binding("CenterPoint.X") { Source = node1 });
-                line1.SetBinding(Line.Y2Property, new Binding("CenterPoint.Y") { Source = node2 });
+                bool collision = CheckVerticalCollision(startPoint.X, startPoint.Y, endPoint.Y, node1, node2) ||
+                                 CheckHorizontalCollision(endPoint.Y, startPoint.X, endPoint.X, node1, node2);
 
-                line2.SetBinding(Line.X1Property, new Binding("CenterPoint.X") { Source = node1 });
-                line2.SetBinding(Line.Y1Property, new Binding("CenterPoint.Y") { Source = node2 });
-                line2.SetBinding(Line.X2Property, new Binding("CenterPoint.X") { Source = node2 });
-                line2.SetBinding(Line.Y2Property, new Binding("CenterPoint.Y") { Source = node2 });
+                double midX = collision ? FindAdjustedX(startPoint, endPoint, node1, node2, offset) : startPoint.X;
+                CreateVerticalHorizontalPath(node1, node2, startPoint, endPoint, midX);
             }
+        }
+
+        private bool CheckHorizontalCollision(double y, double x1, double x2, Node exclude1, Node exclude2)
+        {
+            foreach (var node in nodes)
+            {
+                if (node == exclude1 || node == exclude2) continue;
+
+                double nodeTop = node.Y;
+                double nodeBottom = node.Y + node.Height;
+                double nodeLeft = node.X;
+                double nodeRight = node.X + node.Width;
+
+                if (y >= nodeTop && y <= nodeBottom)
+                {
+                    if (Math.Max(x1, x2) >= nodeLeft && Math.Min(x1, x2) <= nodeRight)
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        private bool CheckVerticalCollision(double x, double y1, double y2, Node exclude1, Node exclude2)
+        {
+            foreach (var node in nodes)
+            {
+                if (node == exclude1 || node == exclude2) continue;
+
+                double nodeLeft = node.X;
+                double nodeRight = node.X + node.Width;
+                double nodeTop = node.Y;
+                double nodeBottom = node.Y + node.Height;
+
+                if (x >= nodeLeft && x <= nodeRight)
+                {
+                    if (Math.Max(y1, y2) >= nodeTop && Math.Min(y1, y2) <= nodeBottom)
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        private double FindAdjustedY(Point start, Point end, Node node1, Node node2, double offset)
+        {
+            double adjustedY = start.Y + offset;
+            if (!CheckHorizontalCollision(adjustedY, start.X, end.X, node1, node2) &&
+                !CheckVerticalCollision(end.X, adjustedY, end.Y, node1, node2))
+                return adjustedY;
+
+            adjustedY = start.Y - offset;
+            if (!CheckHorizontalCollision(adjustedY, start.X, end.X, node1, node2) &&
+                !CheckVerticalCollision(end.X, adjustedY, end.Y, node1, node2))
+                return adjustedY;
+
+            return start.Y;
+        }
+
+        private double FindAdjustedX(Point start, Point end, Node node1, Node node2, double offset)
+        {
+            double adjustedX = start.X + offset;
+            if (!CheckVerticalCollision(adjustedX, start.Y, end.Y, node1, node2) &&
+                !CheckHorizontalCollision(end.Y, adjustedX, end.X, node1, node2))
+                return adjustedX;
+
+            adjustedX = start.X - offset;
+            if (!CheckVerticalCollision(adjustedX, start.Y, end.Y, node1, node2) &&
+                !CheckHorizontalCollision(end.Y, adjustedX, end.X, node1, node2))
+                return adjustedX;
+
+            return start.X;
+        }
+
+        private void CreateHorizontalVerticalPath(Node node1, Node node2, Point start, Point end, double midY)
+        {
+            var line1 = new Line
+            {
+                Stroke = Brushes.White,
+                StrokeThickness = 2,
+                DataContext = Tuple.Create(node1, node2)
+            };
+            line1.SetBinding(Line.X1Property, new Binding("Item1.CenterPoint.X"));
+            line1.SetBinding(Line.Y1Property, new Binding("Item1.CenterPoint.Y"));
+            line1.SetBinding(Line.X2Property, new Binding("Item1.CenterPoint.X"));
+            line1.SetBinding(Line.Y2Property, new Binding("Item1.CenterPoint.Y")
+            {
+                Converter = new OffsetConverter(),
+                ConverterParameter = (midY - start.Y).ToString()
+            });
+
+            var line2 = new Line
+            {
+                Stroke = Brushes.White,
+                StrokeThickness = 2,
+                DataContext = Tuple.Create(node1, node2)
+            };
+            line2.SetBinding(Line.X1Property, new Binding("Item1.CenterPoint.X"));
+            line2.SetBinding(Line.Y1Property, new Binding("Item1.CenterPoint.Y")
+            {
+                Converter = new OffsetConverter(),
+                ConverterParameter = (midY - start.Y).ToString()
+            });
+            line2.SetBinding(Line.X2Property, new Binding("Item2.CenterPoint.X"));
+            line2.SetBinding(Line.Y2Property, new Binding("Item1.CenterPoint.Y")
+            {
+                Converter = new OffsetConverter(),
+                ConverterParameter = (midY - start.Y).ToString()
+            });
+
+            var line3 = new Line
+            {
+                Stroke = Brushes.White,
+                StrokeThickness = 2,
+                DataContext = Tuple.Create(node1, node2)
+            };
+            line3.SetBinding(Line.X1Property, new Binding("Item2.CenterPoint.X"));
+            line3.SetBinding(Line.Y1Property, new Binding("Item1.CenterPoint.Y")
+            {
+                Converter = new OffsetConverter(),
+                ConverterParameter = (midY - start.Y).ToString()
+            });
+            line3.SetBinding(Line.X2Property, new Binding("Item2.CenterPoint.X"));
+            line3.SetBinding(Line.Y2Property, new Binding("Item2.CenterPoint.Y"));
 
             GraphViewCanvas.Children.Add(line1);
             GraphViewCanvas.Children.Add(line2);
+            GraphViewCanvas.Children.Add(line3);
             Panel.SetZIndex(line1, -1);
             Panel.SetZIndex(line2, -1);
+            Panel.SetZIndex(line3, -1);
+        }
+
+        private void CreateVerticalHorizontalPath(Node node1, Node node2, Point start, Point end, double midX)
+        {
+            var line1 = new Line
+            {
+                Stroke = Brushes.White,
+                StrokeThickness = 2,
+                DataContext = Tuple.Create(node1, node2)
+            };
+            line1.SetBinding(Line.X1Property, new Binding("Item1.CenterPoint.X"));
+            line1.SetBinding(Line.Y1Property, new Binding("Item1.CenterPoint.Y"));
+            line1.SetBinding(Line.X2Property, new Binding("Item1.CenterPoint.X"));
+            line1.SetBinding(Line.Y2Property, new Binding("Item2.CenterPoint.Y"));
+
+            var line2 = new Line
+            {
+                Stroke = Brushes.White,
+                StrokeThickness = 2,
+                DataContext = Tuple.Create(node1, node2)
+            };
+            line2.SetBinding(Line.X1Property, new Binding("Item1.CenterPoint.X"));
+            line2.SetBinding(Line.Y1Property, new Binding("Item2.CenterPoint.Y"));
+            line2.SetBinding(Line.X2Property, new Binding("Item2.CenterPoint.X"));
+            line2.SetBinding(Line.Y2Property, new Binding("Item2.CenterPoint.Y"));
+
+            if (Math.Abs(midX - start.X) > 1)
+            {
+                var line0 = new Line
+                {
+                    Stroke = Brushes.White,
+                    StrokeThickness = 2,
+                    DataContext = Tuple.Create(node1, node2)
+                };
+                line0.SetBinding(Line.X1Property, new Binding("Item1.CenterPoint.X"));
+                line0.SetBinding(Line.Y1Property, new Binding("Item1.CenterPoint.Y"));
+                line0.SetBinding(Line.X2Property, new Binding("Item1.CenterPoint.X")
+                {
+                    Converter = new OffsetConverter(),
+                    ConverterParameter = (midX - start.X).ToString()
+                });
+                line0.SetBinding(Line.Y2Property, new Binding("Item1.CenterPoint.Y"));
+
+                var line1a = new Line
+                {
+                    Stroke = Brushes.White,
+                    StrokeThickness = 2,
+                    DataContext = Tuple.Create(node1, node2)
+                };
+                line1a.SetBinding(Line.X1Property, new Binding("Item1.CenterPoint.X")
+                {
+                    Converter = new OffsetConverter(),
+                    ConverterParameter = (midX - start.X).ToString()
+                });
+                line1a.SetBinding(Line.Y1Property, new Binding("Item1.CenterPoint.Y"));
+                line1a.SetBinding(Line.X2Property, new Binding("Item1.CenterPoint.X")
+                {
+                    Converter = new OffsetConverter(),
+                    ConverterParameter = (midX - start.X).ToString()
+                });
+                line1a.SetBinding(Line.Y2Property, new Binding("Item2.CenterPoint.Y"));
+
+                GraphViewCanvas.Children.Add(line0);
+                GraphViewCanvas.Children.Add(line1a);
+                GraphViewCanvas.Children.Add(line2);
+                Panel.SetZIndex(line0, -1);
+                Panel.SetZIndex(line1a, -1);
+                Panel.SetZIndex(line2, -1);
+            }
+            else
+            {
+                GraphViewCanvas.Children.Add(line1);
+                GraphViewCanvas.Children.Add(line2);
+                Panel.SetZIndex(line1, -1);
+                Panel.SetZIndex(line2, -1);
+            }
         }
     }
 }
