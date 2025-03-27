@@ -5,6 +5,7 @@ using System.Windows;
 using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using TraceViewer.Core.Analysis;
 
 namespace TraceViewer.Core
 {

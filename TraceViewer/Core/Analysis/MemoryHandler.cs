@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TraceViewer.Core
+namespace TraceViewer.Core.Analysis
 {
 
     class MemoryHandler
@@ -30,13 +30,13 @@ namespace TraceViewer.Core
 
             ulong init_rsp = BitConverter.ToUInt64(traceData.Trace[0].Regs[4], 0);
             for (int i = 0; i < traceData.Trace.Count; i++)
-            {          
+            {
                 var row = traceData.Trace[i];
                 var next_row = i + 1 < traceData.Trace.Count ? traceData.Trace[i + 1] : null;
-                
+
                 if (next_row == null)
                     continue;
-                
+
                 ulong current_rsp = BitConverter.ToUInt64(row.Regs[4], 0);
                 ulong updated_rsp = BitConverter.ToUInt64(next_row.Regs[4], 0);
 
@@ -44,14 +44,14 @@ namespace TraceViewer.Core
                 {
                     if (Math.Abs((long)(access.Addr - init_rsp)) < (long)region_size || Math.Abs((long)(access.Addr - updated_rsp)) < (long)region_size)
                     {
-                        int diff = (int)Math.Abs((long)((current_rsp - updated_rsp)));
+                        int diff = (int)Math.Abs((long)(current_rsp - updated_rsp));
                         byte[] bytes = Array.Empty<byte>();
                         if (diff == 0)
                         {
                             // Is sliced into four qwords
                             if (row.Disasm.Contains("qword") || row.Disasm.Contains("xmmword") || row.Disasm.Contains("ymmword"))
                             {
-                                bytes = BitConverter.GetBytes((ulong)access.Value);
+                                bytes = BitConverter.GetBytes(access.Value);
                                 diff = 8;
                             }
                             else if (row.Disasm.Contains("dword"))
@@ -77,14 +77,14 @@ namespace TraceViewer.Core
                         else if (diff == 4)
                             bytes = BitConverter.GetBytes((uint)access.Value);
                         else if (diff == 8)
-                            bytes = BitConverter.GetBytes((ulong)access.Value);
+                            bytes = BitConverter.GetBytes(access.Value);
 
 
                         for (int s = 0; s < diff; s++)
                         {
                             stack[access.Addr + (ulong)s] = bytes[s];
                         }
-                        
+
                     }
                     else
                     {
@@ -92,7 +92,7 @@ namespace TraceViewer.Core
                         byte[] bytes = Array.Empty<byte>();
                         if (row.Disasm.Contains("qword") || row.Disasm.Contains("xmmword") || row.Disasm.Contains("ymmword"))
                         {
-                            bytes = BitConverter.GetBytes((ulong)access.Value);
+                            bytes = BitConverter.GetBytes(access.Value);
                             diff = 8;
                         }
                         else if (row.Disasm.Contains("dword"))
@@ -117,7 +117,7 @@ namespace TraceViewer.Core
                         }
                     }
                 }
-                
+
                 // Sort in case there is a read which is not in the correct alignment of the previous sets
                 stack = stack.OrderByDescending(pair => pair.Key).ToDictionary();
                 stacks.Add(new Dictionary<ulong, byte>(stack));

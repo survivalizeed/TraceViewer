@@ -9,6 +9,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Xml.Serialization;
 
 namespace TraceViewer
 {
@@ -92,17 +93,22 @@ namespace TraceViewer
         private Node currentlyDraggingNode = null;
         private Point dragStartPoint;
 
-        // Annahme: GraphViewCanvas ist im XAML als Canvas definiert.
 
 
-        public Node AddNode(string text, Point position, Node connect)
+        public Node AddNode(string text, Point position, Point size, Node connect)
         {
-            var node = new Node { X = position.X, Y = position.Y, Text = text };
+            var node = new Node { X = position.X, Y = position.Y, Width = size.X, Height = size.Y, Text = text };
             nodes.Add(node);
             AddNodeToCanvas(node);
             if (connect != null)
                 ConnectNodes(node, connect);
             return node;
+        }
+
+        public void Clear()
+        {
+            nodes.Clear();
+            GraphViewCanvas.Children.Clear();
         }
 
         private void AddNodeToCanvas(Node node)
@@ -111,8 +117,8 @@ namespace TraceViewer
             {
                 Width = node.Width,
                 Height = node.Height,
-                Fill = Brushes.White,
-                Stroke = Brushes.Black,
+                Fill = (SolidColorBrush)FindResource("ViewBorderBrush"),
+                Stroke = (SolidColorBrush)FindResource("ViewBorderHoverBrush"),
                 StrokeThickness = 1
             };
             Canvas.SetLeft(rectangle, node.X);
@@ -122,33 +128,31 @@ namespace TraceViewer
             rectangle.MouseMove += Rectangle_MouseMove;
             rectangle.MouseUp += Rectangle_MouseUp;
 
-            var textBlock = new TextBlock
+            var label = new Label
             {
-                Text = node.Text,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            textBlock.DataContext = node;
-            Canvas.SetLeft(textBlock, node.X);
-            Canvas.SetTop(textBlock, node.Y);
-            textBlock.Width = node.Width;
-            textBlock.Height = node.Height;
-            textBlock.IsHitTestVisible = false;
+                Content = node.Text,
+                Style = (Style)FindResource("ViewTitles"),
 
-            // Bindings
+            };
+            label.DataContext = node;
+            Canvas.SetLeft(label, node.X);
+            Canvas.SetTop(label, node.Y);
+            label.Width = node.Width;
+            label.Height = node.Height;
+
             var leftBinding = new Binding("Left") { Mode = BindingMode.OneWay };
             rectangle.SetBinding(Canvas.LeftProperty, leftBinding);
-            textBlock.SetBinding(Canvas.LeftProperty, leftBinding);
+            label.SetBinding(Canvas.LeftProperty, leftBinding);
 
             var topBinding = new Binding("Top") { Mode = BindingMode.OneWay };
             rectangle.SetBinding(Canvas.TopProperty, topBinding);
-            textBlock.SetBinding(Canvas.TopProperty, topBinding);
+            label.SetBinding(Canvas.TopProperty, topBinding);
 
             var textBinding = new Binding("Text") { Mode = BindingMode.OneWay };
-            textBlock.SetBinding(TextBlock.TextProperty, textBinding);
+            label.SetBinding(TextBlock.TextProperty, textBinding);
 
             GraphViewCanvas.Children.Add(rectangle);
-            GraphViewCanvas.Children.Add(textBlock);
+            GraphViewCanvas.Children.Add(label);
         }
 
         private void Rectangle_MouseDown(object sender, MouseButtonEventArgs e)
@@ -182,15 +186,12 @@ namespace TraceViewer
             {
                 (sender as Rectangle).ReleaseMouseCapture();
                 currentlyDraggingNode = null;
-                // Statt nur die Verbindungen des verschobenen Knotens neu zu zeichnen,
-                // werden hier alle Verbindungen neu berechnet.
                 RecalculateAllConnections();
             }
         }
 
         private void RecalculateAllConnections()
         {
-            // Entferne alle Linien aus dem Canvas, deren DataContext ein Tuple<Node, Node> ist.
             var linesToRemove = GraphViewCanvas.Children.OfType<Line>()
                 .Where(line => line.DataContext is Tuple<Node, Node>)
                 .ToList();
@@ -200,8 +201,6 @@ namespace TraceViewer
                 GraphViewCanvas.Children.Remove(line);
             }
 
-            // Zeichne alle Verbindungen neu. Damit nicht doppelt gezeichnet wird,
-            // wird nur für eine Richtung (z. B. wenn der Index des aktuellen Knotens kleiner ist als der des verbundenen Knotens) gezeichnet.
             for (int i = 0; i < nodes.Count; i++)
             {
                 foreach (var connectedNode in nodes[i].Connections)
@@ -211,24 +210,6 @@ namespace TraceViewer
                         DrawConnection(nodes[i], connectedNode);
                     }
                 }
-            }
-        }
-
-        private void RedrawConnections(Node node)
-        {
-            var linesToRemove = GraphViewCanvas.Children.OfType<Line>()
-                .Where(line => line.DataContext is Tuple<Node, Node> tuple &&
-                               (tuple.Item1 == node || tuple.Item2 == node))
-                .ToList();
-
-            foreach (var line in linesToRemove)
-            {
-                GraphViewCanvas.Children.Remove(line);
-            }
-
-            foreach (var connectedNode in node.Connections)
-            {
-                DrawConnection(node, connectedNode);
             }
         }
 
@@ -251,7 +232,7 @@ namespace TraceViewer
             Point endPoint = node2.CenterPoint;
 
             bool horizontalFirst = Math.Abs(startPoint.X - endPoint.X) > Math.Abs(startPoint.Y - endPoint.Y);
-            double offset = 100; 
+            double offset = 70; 
 
             if (horizontalFirst)
             {
