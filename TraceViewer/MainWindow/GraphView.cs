@@ -94,15 +94,12 @@ namespace TraceViewer
         private Point dragStartPoint;
 
 
-
-        public Node AddNode(string text, Point position, Point size, Node connect)
+        public void AddNode(Node node, Node connect = null)
         {
-            var node = new Node { X = position.X, Y = position.Y, Width = size.X, Height = size.Y, Text = text };
             nodes.Add(node);
             AddNodeToCanvas(node);
             if (connect != null)
                 ConnectNodes(node, connect);
-            return node;
         }
 
         public void Clear()
@@ -127,6 +124,7 @@ namespace TraceViewer
             rectangle.MouseDown += Rectangle_MouseDown;
             rectangle.MouseMove += Rectangle_MouseMove;
             rectangle.MouseUp += Rectangle_MouseUp;
+            rectangle.IsHitTestVisible = true;
 
             var label = new Label
             {
@@ -139,6 +137,7 @@ namespace TraceViewer
             Canvas.SetTop(label, node.Y);
             label.Width = node.Width;
             label.Height = node.Height;
+            label.IsHitTestVisible = false;
 
             var leftBinding = new Binding("Left") { Mode = BindingMode.OneWay };
             rectangle.SetBinding(Canvas.LeftProperty, leftBinding);
@@ -213,7 +212,7 @@ namespace TraceViewer
             }
         }
 
-        private void ConnectNodes(Node node1, Node node2)
+        public void ConnectNodes(Node node1, Node node2)
         {
             if (!node1.Connections.Contains(node2))
             {
