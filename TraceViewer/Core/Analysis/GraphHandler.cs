@@ -13,69 +13,6 @@ namespace TraceViewer.Core.Analysis
 
     internal class GraphHandler
     {
-        public class BasicBlock
-        {
-            public int BlockId { get; } // Eindeutige ID für diesen Block
-            public int StartTraceId { get; } // ID der ersten TraceRow in diesem Block
-            public int EndTraceId { get; }   // ID der letzten TraceRow in diesem Block
-            public ulong StartIp { get; }    // IP der ersten TraceRow
-
-            // Optional: Liste der TraceRows im Block (kann Speicherintensiv sein)
-            // public List<TraceRow> Rows { get; } = new List<TraceRow>();
-
-            public BasicBlock(int blockId, int startTraceId, int endTraceId, ulong startIp)
-            {
-                BlockId = blockId;
-                StartTraceId = startTraceId;
-                EndTraceId = endTraceId;
-                StartIp = startIp;
-            }
-
-            public override string ToString()
-            {
-                return $"Block {BlockId} [TraceID: {StartTraceId}-{EndTraceId}, StartIP: 0x{StartIp:X}]";
-            }
-        }
-
-        // Repräsentiert eine Verbindung (Kante) zwischen zwei Blöcken
-        public class BlockConnection
-        {
-            public int FromBlockId { get; }
-            public int ToBlockId { get; }
-
-            public BlockConnection(int fromBlockId, int toBlockId)
-            {
-                FromBlockId = fromBlockId;
-                ToBlockId = toBlockId;
-            }
-
-            public override string ToString()
-            {
-                return $"Connection: Block {FromBlockId} -> Block {ToBlockId}";
-            }
-
-            // Für Verwendung in HashSet etc.
-            public override bool Equals(object? obj)
-            {
-                return obj is BlockConnection connection &&
-                       FromBlockId == connection.FromBlockId &&
-                       ToBlockId == connection.ToBlockId;
-            }
-
-            public override int GetHashCode()
-            {
-                return HashCode.Combine(FromBlockId, ToBlockId);
-            }
-        }
-
-        // Ergebnis der Analyse
-        public class GraphResult
-        {
-            public List<BasicBlock> Blocks { get; } = new List<BasicBlock>();
-            public HashSet<BlockConnection> Connections { get; } = new HashSet<BlockConnection>();
-            public Dictionary<int, int> TraceIdToBlockIdMap { get; } = new Dictionary<int, int>();
-        }
-
 
         public static void GenerateGraph()
         {
@@ -85,7 +22,6 @@ namespace TraceViewer.Core.Analysis
             }
 
             var traceRows = TraceHandler.Trace.Trace;
-            var result = new GraphResult();
 
             var ipOccurrences = new Dictionary<ulong, List<int>>(); 
 
