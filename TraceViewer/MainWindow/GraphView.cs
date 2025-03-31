@@ -96,6 +96,8 @@ namespace TraceViewer
 
         public void AddNode(Node node, Node connect = null)
         {
+            if(node.Y + node.Height > GraphViewCanvas.Height)
+                GraphViewCanvas.Height = node.Y + node.Height;
             nodes.Add(node);
             AddNodeToCanvas(node);
             if (connect != null)

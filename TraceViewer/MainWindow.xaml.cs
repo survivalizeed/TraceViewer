@@ -45,6 +45,7 @@ namespace TraceViewer
             InstructionsView.Drop += Drop;
 
             DisasmViewButton_MouseDown(null, null);
+
         }
 
         private void SetTitle(string text, bool append)

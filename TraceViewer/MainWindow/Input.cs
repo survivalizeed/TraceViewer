@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Input;
 using TraceViewer.Core;
+using TraceViewer.Core.Analysis;
 using TraceViewer.UserControls;
 using TraceViewer.UserWindows;
 
@@ -30,6 +31,10 @@ namespace TraceViewer
                         messageDialog.ShowDialog();
                     }
                 }
+            }
+            if(e.Key == Key.T)
+            {
+                GraphHandler.GenerateGraph();
             }
         }
     }

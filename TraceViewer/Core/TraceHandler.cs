@@ -9,6 +9,13 @@ using TraceViewer.Core.Analysis;
 
 namespace TraceViewer.Core
 {
+    public class MnemObject
+    {
+        public string Mnem { get; set; }
+
+        public string Description { get; set; }
+    }
+
     class TraceHandler
     {
         public static TraceData? Trace { get; set; }

@@ -192,7 +192,9 @@
             
             <Grid Name="GraphView">
                 <Border Margin="0,104,0,15" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrush}">
-                    <Canvas x:Name="GraphViewCanvas" Background="{StaticResource LightDimmedBackgroundBrush}" ClipToBounds="True"/>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Canvas x:Name="GraphViewCanvas" Background="{StaticResource LightDimmedBackgroundBrush}" ClipToBounds="True"/>
+                    </ScrollViewer>
                 </Border>
             </Grid>
             
