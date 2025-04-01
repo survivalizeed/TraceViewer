@@ -60,7 +60,7 @@
     <Color x:Key="PrimaryForegroundColor">White</Color>
     <SolidColorBrush x:Key="PrimaryForegroundBrush" Color="{StaticResource PrimaryForegroundColor}"/>
 
-    <Color x:Key="LightDimmedBackgroundColor">#30000000</Color>
+    <Color x:Key="LightDimmedBackgroundColor">#20000000</Color>
     <SolidColorBrush x:Key="LightDimmedBackgroundBrush" Color="{StaticResource LightDimmedBackgroundColor}"/>
 
     <Color x:Key="DimmedBackgroundColor">#50000000</Color>

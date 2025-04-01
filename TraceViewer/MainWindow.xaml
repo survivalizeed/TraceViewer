@@ -177,27 +177,38 @@
             </Grid>
 
             <Grid Name="NotesView">
-                <Border Margin="0,104,0,15" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrush}">
+                <Border Margin="0,104,0,20" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrighterBrush}">
                     <TextBox Name="NotesContent" Text="" Foreground="{StaticResource PrimaryForegroundBrush}" AcceptsReturn="True" TextWrapping="Wrap"
-                             Background="{StaticResource DimmedBackgroundBrush}" FontSize="15" FontFamily="Consolas"
+                             Background="{StaticResource DimmedBackgroundBrush}" FontSize="15" FontFamily="Consolas" Padding="3"
                              BorderThickness="0"/>
                 </Border>
             </Grid>
 
             <Grid Name="BookmarksView">
-                <Border Margin="0,104,0,15" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrush}">
+                <Border Margin="0,104,0,20" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrush}">
 
                 </Border>
             </Grid>
-            
-            <Grid Name="GraphView">
-                <Border Margin="0,104,0,15" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrush}">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <Canvas x:Name="GraphViewCanvas" Background="{StaticResource LightDimmedBackgroundBrush}" ClipToBounds="True"/>
+
+            <Grid Name="GraphView" Margin="0,104,0,20" Background="{StaticResource LightDimmedBackgroundBrush}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <DockPanel Grid.Row="0" LastChildFill="False" Height="Auto">
+                    <Label x:Name="test" HorizontalAlignment="Left"
+               Style="{StaticResource InstructionsViewTitlesSelectable}"
+               Content="Back" Width="Auto" Height="41"/>
+                </DockPanel>
+
+                <Border Grid.Row="1" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrighterBrush}" Margin="0,3,0,0">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                        <Canvas x:Name="GraphViewCanvas" Height="1000" ClipToBounds="True"/>
                     </ScrollViewer>
                 </Border>
             </Grid>
-            
+
         </Grid>
     </Grid>
 </Window>
