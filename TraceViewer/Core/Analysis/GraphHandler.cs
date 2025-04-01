@@ -143,8 +143,8 @@ namespace TraceViewer.Core.Analysis
             int y = 0;
             int x = 0;
             const int horizontalThreshold = 1500;
-            const int nodeHeight = 30;
-            const int nodeWidth = 80;
+            const int nodeHeight = 50;
+            const int nodeWidth = 120;
             const int horizontalSpacing = 150;
             const int verticalSpacing = 200;
 
@@ -163,7 +163,7 @@ namespace TraceViewer.Core.Analysis
 
                 var node = new Node
                 {
-                    Text = $"Block {i}",
+                    Text = $"Block {i}\r\n{block.endIndex - block.startIndex} instructions",
                     Height = nodeHeight,
                     Width = nodeWidth,
                     X = x,

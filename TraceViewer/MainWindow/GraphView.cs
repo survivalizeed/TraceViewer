@@ -265,6 +265,23 @@ namespace TraceViewer
             Panel.SetZIndex(container, 1);
         }
 
+        private void StepLeftTimeline_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
+            if (Timeline.Value > 0)
+            {
+                Timeline.Value -= 1;
+            }
+        }
+
+        private void StepRightTimeline_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
+            if (Timeline.Value < Timeline.Maximum)
+            {
+                Timeline.Value += 1;
+            }
+        }
         private void NodeElement_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement element && element.DataContext is Node node)
