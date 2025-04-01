@@ -9,7 +9,6 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using System.Xml.Serialization;
 
 namespace TraceViewer
 {
@@ -18,12 +17,17 @@ namespace TraceViewer
         private double _x;
         private double _y;
         private string _text;
+        private double _width = 100;
+        private double _height = 50;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            if (propertyName == nameof(CenterPoint))
+            {
+            }
         }
 
         public double X
@@ -31,10 +35,13 @@ namespace TraceViewer
             get { return _x; }
             set
             {
-                _x = value;
-                OnPropertyChanged(nameof(X));
-                OnPropertyChanged(nameof(Left));
-                OnPropertyChanged(nameof(CenterPoint));
+                if (_x != value)
+                {
+                    _x = value;
+                    OnPropertyChanged(nameof(X));
+                    OnPropertyChanged(nameof(Left));
+                    OnPropertyChanged(nameof(CenterPoint));
+                }
             }
         }
 
@@ -43,10 +50,13 @@ namespace TraceViewer
             get { return _y; }
             set
             {
-                _y = value;
-                OnPropertyChanged(nameof(Y));
-                OnPropertyChanged(nameof(Top));
-                OnPropertyChanged(nameof(CenterPoint));
+                if (_y != value)
+                {
+                    _y = value;
+                    OnPropertyChanged(nameof(Y));
+                    OnPropertyChanged(nameof(Top));
+                    OnPropertyChanged(nameof(CenterPoint));
+                }
             }
         }
 
@@ -55,13 +65,40 @@ namespace TraceViewer
             get { return _text; }
             set
             {
-                _text = value;
-                OnPropertyChanged(nameof(Text));
+                if (_text != value)
+                {
+                    _text = value;
+                    OnPropertyChanged(nameof(Text));
+                }
             }
         }
 
-        public double Width { get; set; } = 100;
-        public double Height { get; set; } = 50;
+        public double Width
+        {
+            get { return _width; }
+            set
+            {
+                if (_width != value)
+                {
+                    _width = value;
+                    OnPropertyChanged(nameof(Width));
+                    OnPropertyChanged(nameof(CenterPoint));
+                }
+            }
+        }
+        public double Height
+        {
+            get { return _height; }
+            set
+            {
+                if (_height != value)
+                {
+                    _height = value;
+                    OnPropertyChanged(nameof(Height));
+                    OnPropertyChanged(nameof(CenterPoint));
+                }
+            }
+        }
 
         public double Left => X;
         public double Top => Y;
@@ -74,7 +111,7 @@ namespace TraceViewer
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is double baseValue && parameter is string offsetStr && double.TryParse(offsetStr, out double offset))
+            if (value is double baseValue && parameter is string offsetStr && double.TryParse(offsetStr, NumberStyles.Any, CultureInfo.InvariantCulture, out double offset))
             {
                 return baseValue + offset;
             }
@@ -87,374 +124,537 @@ namespace TraceViewer
         }
     }
 
+    public class ConnectionInfo
+    {
+        public Node StartNode { get; }
+        public Node EndNode { get; }
+
+        public ConnectionInfo(Node start, Node end)
+        {
+            StartNode = start;
+            EndNode = end;
+        }
+
+        public override bool Equals(object obj) => obj is ConnectionInfo other && StartNode == other.StartNode && EndNode == other.EndNode;
+        public override int GetHashCode() => HashCode.Combine(StartNode, EndNode);
+    }
+
+
     public partial class MainWindow : Window
     {
         private List<Node> nodes = new List<Node>();
         private Node currentlyDraggingNode = null;
         private Point dragStartPoint;
+        private Point initialNodePosition;
+        private Node selectedNode = null;
+        private Brush defaultLineBrush = Brushes.White;
+        private Brush defaultArrowFillBrush = Brushes.Coral;
+        private Brush defaultArrowStrokeBrush = Brushes.Coral;
+        private Brush highlightBrush = Brushes.Coral;
+        private const double ConnectionOffset = 3.0;
 
+        public IReadOnlyList<Node> Nodes => nodes.AsReadOnly();
 
-        public void AddNode(Node node, Node connect = null)
+        public void AddNode(Node node, Node connectTo = null)
         {
-            if(node.Y + node.Height > GraphViewCanvas.Height)
-                GraphViewCanvas.Height = node.Y + node.Height;
+            if (node == null) return;
+
+            if (nodes.Contains(node)) return;
+
+            if (GraphViewCanvas != null)
+            {
+                double requiredHeight = node.Y + node.Height + 20;
+                if (requiredHeight > GraphViewCanvas.Height)
+                {
+                    GraphViewCanvas.Height = requiredHeight;
+                }
+                double requiredWidth = node.X + node.Width + 20;
+                if (requiredWidth > GraphViewCanvas.Width)
+                {
+                    GraphViewCanvas.Width = requiredWidth;
+                }
+            }
+
             nodes.Add(node);
             AddNodeToCanvas(node);
-            if (connect != null)
-                ConnectNodes(node, connect);
+
+            if (connectTo != null && nodes.Contains(connectTo))
+            {
+                ConnectNodes(connectTo, node);
+            }
         }
 
         public void Clear()
         {
             nodes.Clear();
-            GraphViewCanvas.Children.Clear();
+            if (GraphViewCanvas != null)
+            {
+                GraphViewCanvas.Children.Clear();
+            }
         }
 
         private void AddNodeToCanvas(Node node)
         {
-            var rectangle = new Rectangle
+            if (GraphViewCanvas == null) return;
+
+            var container = new Grid
             {
                 Width = node.Width,
                 Height = node.Height,
+                DataContext = node,
+                Tag = node
+            };
+
+            var rectangle = new Rectangle
+            {
                 Fill = (SolidColorBrush)FindResource("ViewBorderBrush"),
                 Stroke = (SolidColorBrush)FindResource("ViewBorderHoverBrush"),
-                StrokeThickness = 1
+                StrokeThickness = 1,
+                Tag = "NodeBorder"
             };
-            Canvas.SetLeft(rectangle, node.X);
-            Canvas.SetTop(rectangle, node.Y);
-            rectangle.DataContext = node;
-            rectangle.MouseDown += Rectangle_MouseDown;
-            rectangle.MouseMove += Rectangle_MouseMove;
-            rectangle.MouseUp += Rectangle_MouseUp;
-            rectangle.IsHitTestVisible = true;
+
+            container.MouseDown += NodeElement_MouseDown;
+            container.MouseMove += NodeElement_MouseMove;
+            container.MouseUp += NodeElement_MouseUp;
+            container.IsHitTestVisible = true;
 
             var label = new Label
             {
-                Content = node.Text,
                 Style = (Style)FindResource("ViewTitles"),
-
+                FontSize = 12,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                IsHitTestVisible = false,
             };
-            label.DataContext = node;
-            Canvas.SetLeft(label, node.X);
-            Canvas.SetTop(label, node.Y);
-            label.Width = node.Width;
-            label.Height = node.Height;
-            label.IsHitTestVisible = false;
+            label.SetBinding(ContentControl.ContentProperty, new Binding("Text") { Mode = BindingMode.OneWay });
 
-            var leftBinding = new Binding("Left") { Mode = BindingMode.OneWay };
-            rectangle.SetBinding(Canvas.LeftProperty, leftBinding);
-            label.SetBinding(Canvas.LeftProperty, leftBinding);
+            container.Children.Add(rectangle);
+            container.Children.Add(label);
 
-            var topBinding = new Binding("Top") { Mode = BindingMode.OneWay };
-            rectangle.SetBinding(Canvas.TopProperty, topBinding);
-            label.SetBinding(Canvas.TopProperty, topBinding);
+            container.SetBinding(Canvas.LeftProperty, new Binding("Left") { Mode = BindingMode.OneWay });
+            container.SetBinding(Canvas.TopProperty, new Binding("Top") { Mode = BindingMode.OneWay });
 
-            var textBinding = new Binding("Text") { Mode = BindingMode.OneWay };
-            label.SetBinding(TextBlock.TextProperty, textBinding);
-
-            GraphViewCanvas.Children.Add(rectangle);
-            GraphViewCanvas.Children.Add(label);
+            GraphViewCanvas.Children.Add(container);
+            Panel.SetZIndex(container, 1);
         }
 
-        private void Rectangle_MouseDown(object sender, MouseButtonEventArgs e)
+        private void NodeElement_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed)
+            if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement element && element.DataContext is Node node)
             {
-                currentlyDraggingNode = (sender as FrameworkElement).DataContext as Node;
+                if (selectedNode != null)
+                {
+                    ResetNodeAndConnectionStyles(selectedNode);
+                }
+                selectedNode = node;
+                ChangeNodeAndConnectionStyles(selectedNode, element);
+
+                currentlyDraggingNode = node;
                 dragStartPoint = e.GetPosition(GraphViewCanvas);
-                (sender as Rectangle).CaptureMouse();
+                initialNodePosition = new Point(currentlyDraggingNode.X, currentlyDraggingNode.Y);
+                element.CaptureMouse();
+                Panel.SetZIndex(element, 10);
+                e.Handled = true;
             }
         }
 
-        private void Rectangle_MouseMove(object sender, MouseEventArgs e)
+        private void ResetNodeAndConnectionStyles(Node node)
         {
-            if (currentlyDraggingNode != null && e.LeftButton == MouseButtonState.Pressed)
+            if (GraphViewCanvas == null || node == null) return;
+
+            // Reset node border
+            foreach (var child in GraphViewCanvas.Children.OfType<Grid>().Where(g => g.Tag == node))
+            {
+                if (child is Grid nodeGrid)
+                {
+                    var border = nodeGrid.Children.OfType<Rectangle>().FirstOrDefault(r => r.Tag == "NodeBorder");
+                    if (border != null)
+                    {
+                        border.Stroke = (SolidColorBrush)FindResource("ViewBorderHoverBrush");
+                    }
+                }
+            }
+
+            // Reset outgoing connection lines
+            foreach (var line in GraphViewCanvas.Children.OfType<Line>())
+            {
+                if (line.DataContext is ConnectionInfo ci && ci.StartNode == node)
+                {
+                    line.Stroke = defaultLineBrush;
+                }
+            }
+            foreach (var arrow in GraphViewCanvas.Children.OfType<Polygon>())
+            {
+                if (arrow.DataContext is ConnectionInfo ci && ci.StartNode == node)
+                {
+                    arrow.Fill = defaultArrowFillBrush;
+                    arrow.Stroke = defaultArrowStrokeBrush;
+                }
+            }
+        }
+
+        private void ChangeNodeAndConnectionStyles(Node node, FrameworkElement nodeElement)
+        {
+            if (GraphViewCanvas == null || node == null) return;
+
+            if (nodeElement is Grid nodeGrid)
+            {
+                // Change node border to coral
+                var border = nodeGrid.Children.OfType<Rectangle>().FirstOrDefault(r => r.Tag == "NodeBorder");
+                if (border != null)
+                {
+                    border.Stroke = highlightBrush;
+                }
+            }
+
+            // Change outgoing connection lines to yellow
+            foreach (var line in GraphViewCanvas.Children.OfType<Line>())
+            {
+                if (line.DataContext is ConnectionInfo ci && ci.StartNode == node)
+                {
+                    line.Stroke = highlightBrush;
+                    Panel.SetZIndex(line, -1);
+                }
+            }
+            foreach (var arrow in GraphViewCanvas.Children.OfType<Polygon>())
+            {
+                if (arrow.DataContext is ConnectionInfo ci && ci.StartNode == node)
+                {
+                    arrow.Fill = Brushes.Red;
+                    arrow.Stroke = highlightBrush;
+                    Panel.SetZIndex(arrow, -1);
+                }
+            }
+        }
+
+        private void NodeElement_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (currentlyDraggingNode != null && e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement element)
             {
                 Point currentPosition = e.GetPosition(GraphViewCanvas);
                 double deltaX = currentPosition.X - dragStartPoint.X;
                 double deltaY = currentPosition.Y - dragStartPoint.Y;
 
-                currentlyDraggingNode.X += deltaX;
-                currentlyDraggingNode.Y += deltaY;
+                double newX = initialNodePosition.X + deltaX;
+                double newY = initialNodePosition.Y + deltaY;
 
-                dragStartPoint = currentPosition;
+                newX = Math.Max(0, newX);
+                newY = Math.Max(0, newY);
+                if (GraphViewCanvas != null && GraphViewCanvas.ActualWidth > 0 && GraphViewCanvas.ActualHeight > 0)
+                {
+                    newX = Math.Min(GraphViewCanvas.ActualWidth - currentlyDraggingNode.Width, newX);
+                    newY = Math.Min(GraphViewCanvas.ActualHeight - currentlyDraggingNode.Height, newY);
+                }
+
+                currentlyDraggingNode.X = newX;
+                currentlyDraggingNode.Y = newY;
+
+                RecalculateConnectionsForNode(currentlyDraggingNode);
+
+                e.Handled = true;
             }
         }
 
-        private void Rectangle_MouseUp(object sender, MouseButtonEventArgs e)
+        private void NodeElement_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (currentlyDraggingNode != null)
+            if (currentlyDraggingNode != null && sender is FrameworkElement element)
             {
-                (sender as Rectangle).ReleaseMouseCapture();
+                element.ReleaseMouseCapture();
+                int currentZIndex = Panel.GetZIndex(element);
+                if (currentZIndex > 1)
+                {
+                    Panel.SetZIndex(element, 1);
+                }
                 currentlyDraggingNode = null;
                 RecalculateAllConnections();
+                e.Handled = true;
             }
         }
 
         private void RecalculateAllConnections()
         {
-            var linesToRemove = GraphViewCanvas.Children.OfType<Line>()
-                .Where(line => line.DataContext is Tuple<Node, Node>)
+            if (GraphViewCanvas == null) return;
+
+            var shapesToRemove = GraphViewCanvas.Children.OfType<Shape>()
+                .Where(shape => shape.DataContext is ConnectionInfo)
                 .ToList();
 
-            foreach (var line in linesToRemove)
+            foreach (var shape in shapesToRemove)
             {
-                GraphViewCanvas.Children.Remove(line);
+                GraphViewCanvas.Children.Remove(shape);
             }
 
-            for (int i = 0; i < nodes.Count; i++)
+            var drawnConnections = new HashSet<ConnectionInfo>();
+
+            foreach (var node1 in nodes)
             {
-                foreach (var connectedNode in nodes[i].Connections)
+                foreach (var node2 in node1.Connections)
                 {
-                    if (nodes.IndexOf(connectedNode) > i)
+                    if (nodes.Contains(node2))
                     {
-                        DrawConnection(nodes[i], connectedNode);
+                        var connectionInfo = new ConnectionInfo(node1, node2);
+                        if (drawnConnections.Add(connectionInfo))
+                        {
+                            DrawConnection(node1, node2);
+                        }
                     }
                 }
             }
+            if (selectedNode != null)
+            {
+                foreach (var child in GraphViewCanvas.Children.OfType<Grid>().Where(g => g.Tag == selectedNode))
+                {
+                    ChangeNodeAndConnectionStyles(selectedNode, child);
+                    break;
+                }
+            }
         }
+
+        private void RecalculateConnectionsForNode(Node node)
+        {
+            if (GraphViewCanvas == null || node == null) return;
+
+            var connectionsToRedraw = new HashSet<ConnectionInfo>();
+
+            // Identify all ConnectionInfos involving the moved node
+            foreach (var shape in GraphViewCanvas.Children.OfType<Shape>().Where(s => s.DataContext is ConnectionInfo))
+            {
+                var ci = (ConnectionInfo)shape.DataContext;
+                if (ci.StartNode == node || ci.EndNode == node)
+                {
+                    connectionsToRedraw.Add(ci);
+                }
+            }
+
+            // Remove the shapes for these connections
+            foreach (var ciToRemove in connectionsToRedraw.ToList()) // Iterate over a copy to allow removal
+            {
+                foreach (var shape in GraphViewCanvas.Children.OfType<Shape>().Where(s => s.DataContext is ConnectionInfo && ((ConnectionInfo)s.DataContext).Equals(ciToRemove)).ToList())
+                {
+                    GraphViewCanvas.Children.Remove(shape);
+                }
+            }
+
+            // Redraw the connections based on the Connections list of the relevant nodes
+            foreach (var n in nodes)
+            {
+                if (n == node)
+                {
+                    foreach (var connectedNode in n.Connections)
+                    {
+                        if (nodes.Contains(connectedNode))
+                        {
+                            DrawConnection(n, connectedNode);
+                        }
+                    }
+                }
+                else if (n.Connections.Contains(node))
+                {
+                    DrawConnection(n, node);
+                }
+            }
+
+            if (selectedNode != null)
+            {
+                foreach (var child in GraphViewCanvas.Children.OfType<Grid>().Where(g => g.Tag == selectedNode))
+                {
+                    ChangeNodeAndConnectionStyles(selectedNode, child);
+                    break;
+                }
+            }
+        }
+
 
         public void ConnectNodes(Node node1, Node node2)
         {
+            if (node1 == null || node2 == null || node1 == node2) return;
+            if (!nodes.Contains(node1) || !nodes.Contains(node2)) return;
+
+            bool connectionAdded = false;
             if (!node1.Connections.Contains(node2))
             {
                 node1.Connections.Add(node2);
+                connectionAdded = true;
+            }
+
+            if (connectionAdded)
+            {
                 DrawConnection(node1, node2);
             }
-            if (!node2.Connections.Contains(node1))
-            {
-                node2.Connections.Add(node1);
-            }
         }
+
+        private const double Epsilon = 0.1;
+        private const double ArrowSpacing = 120.0f;
 
         private void DrawConnection(Node node1, Node node2)
         {
+            if (GraphViewCanvas == null) return;
+
             Point startPoint = node1.CenterPoint;
             Point endPoint = node2.CenterPoint;
+            ConnectionInfo connectionInfo = new ConnectionInfo(node1, node2);
 
-            bool horizontalFirst = Math.Abs(startPoint.X - endPoint.X) > Math.Abs(startPoint.Y - endPoint.Y);
-            double offset = 70; 
+            Vector direction = endPoint - startPoint;
+            Vector normal = new Vector(-direction.Y, direction.X);
+            normal.Normalize();
 
-            if (horizontalFirst)
+            Point adjustedStartPoint = startPoint;
+            Point adjustedEndPoint = endPoint;
+
+            if (node1.GetHashCode() > node2.GetHashCode() && node1.Connections.Contains(node2))
             {
-                bool collision = CheckHorizontalCollision(startPoint.Y, startPoint.X, endPoint.X, node1, node2) ||
-                                 CheckVerticalCollision(endPoint.X, startPoint.Y, endPoint.Y, node1, node2);
-
-                double midY = collision ? FindAdjustedY(startPoint, endPoint, node1, node2, offset) : startPoint.Y;
-                CreateHorizontalVerticalPath(node1, node2, startPoint, endPoint, midY);
+                adjustedStartPoint += normal * ConnectionOffset;
+                adjustedEndPoint += normal * ConnectionOffset;
             }
-            else
+            else if (node2.GetHashCode() > node1.GetHashCode() && node2.Connections.Contains(node1))
             {
-                bool collision = CheckVerticalCollision(startPoint.X, startPoint.Y, endPoint.Y, node1, node2) ||
-                                 CheckHorizontalCollision(endPoint.Y, startPoint.X, endPoint.X, node1, node2);
-
-                double midX = collision ? FindAdjustedX(startPoint, endPoint, node1, node2, offset) : startPoint.X;
-                CreateVerticalHorizontalPath(node1, node2, startPoint, endPoint, midX);
+                adjustedStartPoint -= normal * ConnectionOffset;
+                adjustedEndPoint -= normal * ConnectionOffset;
             }
-        }
 
-        private bool CheckHorizontalCollision(double y, double x1, double x2, Node exclude1, Node exclude2)
-        {
-            foreach (var node in nodes)
+            Line line = new Line
             {
-                if (node == exclude1 || node == exclude2) continue;
+                Stroke = defaultLineBrush,
+                StrokeThickness = 2,
+                DataContext = connectionInfo,
+                X1 = adjustedStartPoint.X,
+                Y1 = adjustedStartPoint.Y,
+                X2 = adjustedEndPoint.X,
+                Y2 = adjustedEndPoint.Y
+            };
+            GraphViewCanvas.Children.Add(line);
+            Panel.SetZIndex(line, -1);
 
-                double nodeTop = node.Y;
-                double nodeBottom = node.Y + node.Height;
-                double nodeLeft = node.X;
-                double nodeRight = node.X + node.Width;
-
-                if (y >= nodeTop && y <= nodeBottom)
+            double lineLength = direction.Length;
+            if (lineLength > Epsilon)
+            {
+                direction.Normalize();
+                int arrowCount = (int)(lineLength / ArrowSpacing);
+                for (int i = 1; i <= arrowCount; i++)
                 {
-                    if (Math.Max(x1, x2) >= nodeLeft && Math.Min(x1, x2) <= nodeRight)
-                        return true;
+                    double distanceAlongLine = i * ArrowSpacing;
+                    if (distanceAlongLine < lineLength)
+                    {
+                        Point arrowTip = adjustedStartPoint + direction * distanceAlongLine;
+                        Point arrowSource = arrowTip - direction * 5; // Pfeilrichtung
+                        Polygon arrow = CreateArrowhead(arrowTip, arrowSource, connectionInfo);
+                        GraphViewCanvas.Children.Add(arrow);
+                        Panel.SetZIndex(arrow, 0);
+                    }
+                }
+                // Add one last arrow at the end if needed
+                if (arrowCount == 0 || lineLength % ArrowSpacing > ArrowSpacing / 2)
+                {
+                    Point arrowTip = adjustedEndPoint;
+                    Point arrowSource = adjustedEndPoint - direction * 5;
+                    Polygon arrow = CreateArrowhead(arrowTip, arrowSource, connectionInfo);
+                    GraphViewCanvas.Children.Add(arrow);
+                    Panel.SetZIndex(arrow, 0);
                 }
             }
-            return false;
         }
 
-        private bool CheckVerticalCollision(double x, double y1, double y2, Node exclude1, Node exclude2)
+        private Polygon CreateArrowhead(Point tipPoint, Point lineSourcePoint, ConnectionInfo connectionInfo)
         {
-            foreach (var node in nodes)
+            double arrowLength = 10;
+            double arrowAngle = 25;
+
+            Vector vector = tipPoint - lineSourcePoint;
+            if (vector.Length < Epsilon)
             {
-                if (node == exclude1 || node == exclude2) continue;
+                vector = new Vector(1, 0);
+            }
+            vector.Normalize();
 
-                double nodeLeft = node.X;
-                double nodeRight = node.X + node.Width;
-                double nodeTop = node.Y;
-                double nodeBottom = node.Y + node.Height;
+            Point p1 = tipPoint;
+            Point basePoint = tipPoint - vector * arrowLength;
+            Vector perpendicular = new Vector(-vector.Y, vector.X);
 
-                if (x >= nodeLeft && x <= nodeRight)
+            double arrowWidth = arrowLength * Math.Tan(arrowAngle * Math.PI / 180.0);
+
+            Point p2 = basePoint + perpendicular * arrowWidth;
+            Point p3 = basePoint - perpendicular * arrowWidth;
+
+            var arrowPolygon = new Polygon
+            {
+                Points = new PointCollection { p1, p2, p3 },
+                Fill = defaultArrowFillBrush,
+                Stroke = defaultArrowStrokeBrush,
+                StrokeThickness = 1,
+                DataContext = connectionInfo
+            };
+
+            return arrowPolygon;
+        }
+
+        public void HighlightConnection(Node startNode, Node endNode)
+        {
+            if (GraphViewCanvas == null || startNode == null || endNode == null) return;
+
+            // Highlight the connection
+            foreach (var child in GraphViewCanvas.Children)
+            {
+                if (child is Line line && line.DataContext is ConnectionInfo connectionInfo)
                 {
-                    if (Math.Max(y1, y2) >= nodeTop && Math.Min(y1, y2) <= nodeBottom)
-                        return true;
+                    if ((connectionInfo.StartNode == startNode && connectionInfo.EndNode == endNode) ||
+                        (connectionInfo.StartNode == endNode && connectionInfo.EndNode == startNode))
+                    {
+                        line.Stroke = highlightBrush;
+                    }
+                }
+                else if (child is Polygon arrow && arrow.DataContext is ConnectionInfo arrowConnectionInfo)
+                {
+                    if ((arrowConnectionInfo.StartNode == startNode && arrowConnectionInfo.EndNode == endNode) ||
+                        (arrowConnectionInfo.StartNode == endNode && arrowConnectionInfo.EndNode == startNode))
+                    {
+                        arrow.Fill = Brushes.Red;
+                        arrow.Stroke = highlightBrush;
+                    }
                 }
             }
-            return false;
-        }
 
-        private double FindAdjustedY(Point start, Point end, Node node1, Node node2, double offset)
-        {
-            double adjustedY = start.Y + offset;
-            if (!CheckHorizontalCollision(adjustedY, start.X, end.X, node1, node2) &&
-                !CheckVerticalCollision(end.X, adjustedY, end.Y, node1, node2))
-                return adjustedY;
-
-            adjustedY = start.Y - offset;
-            if (!CheckHorizontalCollision(adjustedY, start.X, end.X, node1, node2) &&
-                !CheckVerticalCollision(end.X, adjustedY, end.Y, node1, node2))
-                return adjustedY;
-
-            return start.Y;
-        }
-
-        private double FindAdjustedX(Point start, Point end, Node node1, Node node2, double offset)
-        {
-            double adjustedX = start.X + offset;
-            if (!CheckVerticalCollision(adjustedX, start.Y, end.Y, node1, node2) &&
-                !CheckHorizontalCollision(end.Y, adjustedX, end.X, node1, node2))
-                return adjustedX;
-
-            adjustedX = start.X - offset;
-            if (!CheckVerticalCollision(adjustedX, start.Y, end.Y, node1, node2) &&
-                !CheckHorizontalCollision(end.Y, adjustedX, end.X, node1, node2))
-                return adjustedX;
-
-            return start.X;
-        }
-
-        private void CreateHorizontalVerticalPath(Node node1, Node node2, Point start, Point end, double midY)
-        {
-            var line1 = new Line
+            foreach (var child in GraphViewCanvas.Children.OfType<Grid>().Where(g => g.Tag == startNode))
             {
-                Stroke = Brushes.White,
-                StrokeThickness = 2,
-                DataContext = Tuple.Create(node1, node2)
-            };
-            line1.SetBinding(Line.X1Property, new Binding("Item1.CenterPoint.X"));
-            line1.SetBinding(Line.Y1Property, new Binding("Item1.CenterPoint.Y"));
-            line1.SetBinding(Line.X2Property, new Binding("Item1.CenterPoint.X"));
-            line1.SetBinding(Line.Y2Property, new Binding("Item1.CenterPoint.Y")
-            {
-                Converter = new OffsetConverter(),
-                ConverterParameter = (midY - start.Y).ToString()
-            });
-
-            var line2 = new Line
-            {
-                Stroke = Brushes.White,
-                StrokeThickness = 2,
-                DataContext = Tuple.Create(node1, node2)
-            };
-            line2.SetBinding(Line.X1Property, new Binding("Item1.CenterPoint.X"));
-            line2.SetBinding(Line.Y1Property, new Binding("Item1.CenterPoint.Y")
-            {
-                Converter = new OffsetConverter(),
-                ConverterParameter = (midY - start.Y).ToString()
-            });
-            line2.SetBinding(Line.X2Property, new Binding("Item2.CenterPoint.X"));
-            line2.SetBinding(Line.Y2Property, new Binding("Item1.CenterPoint.Y")
-            {
-                Converter = new OffsetConverter(),
-                ConverterParameter = (midY - start.Y).ToString()
-            });
-
-            var line3 = new Line
-            {
-                Stroke = Brushes.White,
-                StrokeThickness = 2,
-                DataContext = Tuple.Create(node1, node2)
-            };
-            line3.SetBinding(Line.X1Property, new Binding("Item2.CenterPoint.X"));
-            line3.SetBinding(Line.Y1Property, new Binding("Item1.CenterPoint.Y")
-            {
-                Converter = new OffsetConverter(),
-                ConverterParameter = (midY - start.Y).ToString()
-            });
-            line3.SetBinding(Line.X2Property, new Binding("Item2.CenterPoint.X"));
-            line3.SetBinding(Line.Y2Property, new Binding("Item2.CenterPoint.Y"));
-
-            GraphViewCanvas.Children.Add(line1);
-            GraphViewCanvas.Children.Add(line2);
-            GraphViewCanvas.Children.Add(line3);
-            Panel.SetZIndex(line1, -1);
-            Panel.SetZIndex(line2, -1);
-            Panel.SetZIndex(line3, -1);
-        }
-
-        private void CreateVerticalHorizontalPath(Node node1, Node node2, Point start, Point end, double midX)
-        {
-            var line1 = new Line
-            {
-                Stroke = Brushes.White,
-                StrokeThickness = 2,
-                DataContext = Tuple.Create(node1, node2)
-            };
-            line1.SetBinding(Line.X1Property, new Binding("Item1.CenterPoint.X"));
-            line1.SetBinding(Line.Y1Property, new Binding("Item1.CenterPoint.Y"));
-            line1.SetBinding(Line.X2Property, new Binding("Item1.CenterPoint.X"));
-            line1.SetBinding(Line.Y2Property, new Binding("Item2.CenterPoint.Y"));
-
-            var line2 = new Line
-            {
-                Stroke = Brushes.White,
-                StrokeThickness = 2,
-                DataContext = Tuple.Create(node1, node2)
-            };
-            line2.SetBinding(Line.X1Property, new Binding("Item1.CenterPoint.X"));
-            line2.SetBinding(Line.Y1Property, new Binding("Item2.CenterPoint.Y"));
-            line2.SetBinding(Line.X2Property, new Binding("Item2.CenterPoint.X"));
-            line2.SetBinding(Line.Y2Property, new Binding("Item2.CenterPoint.Y"));
-
-            if (Math.Abs(midX - start.X) > 1)
-            {
-                var line0 = new Line
+                if (child is Grid nodeGrid)
                 {
-                    Stroke = Brushes.White,
-                    StrokeThickness = 2,
-                    DataContext = Tuple.Create(node1, node2)
-                };
-                line0.SetBinding(Line.X1Property, new Binding("Item1.CenterPoint.X"));
-                line0.SetBinding(Line.Y1Property, new Binding("Item1.CenterPoint.Y"));
-                line0.SetBinding(Line.X2Property, new Binding("Item1.CenterPoint.X")
-                {
-                    Converter = new OffsetConverter(),
-                    ConverterParameter = (midX - start.X).ToString()
-                });
-                line0.SetBinding(Line.Y2Property, new Binding("Item1.CenterPoint.Y"));
-
-                var line1a = new Line
-                {
-                    Stroke = Brushes.White,
-                    StrokeThickness = 2,
-                    DataContext = Tuple.Create(node1, node2)
-                };
-                line1a.SetBinding(Line.X1Property, new Binding("Item1.CenterPoint.X")
-                {
-                    Converter = new OffsetConverter(),
-                    ConverterParameter = (midX - start.X).ToString()
-                });
-                line1a.SetBinding(Line.Y1Property, new Binding("Item1.CenterPoint.Y"));
-                line1a.SetBinding(Line.X2Property, new Binding("Item1.CenterPoint.X")
-                {
-                    Converter = new OffsetConverter(),
-                    ConverterParameter = (midX - start.X).ToString()
-                });
-                line1a.SetBinding(Line.Y2Property, new Binding("Item2.CenterPoint.Y"));
-
-                GraphViewCanvas.Children.Add(line0);
-                GraphViewCanvas.Children.Add(line1a);
-                GraphViewCanvas.Children.Add(line2);
-                Panel.SetZIndex(line0, -1);
-                Panel.SetZIndex(line1a, -1);
-                Panel.SetZIndex(line2, -1);
+                    var border = nodeGrid.Children.OfType<Rectangle>().FirstOrDefault(r => r.Tag == "NodeBorder");
+                    if (border != null)
+                    {
+                        border.Stroke = highlightBrush;
+                    }
+                }
+                break;
             }
-            else
+        }
+
+        public void UnhighlightAllConnections()
+        {
+            if (GraphViewCanvas == null) return;
+
+            foreach (var child in GraphViewCanvas.Children)
             {
-                GraphViewCanvas.Children.Add(line1);
-                GraphViewCanvas.Children.Add(line2);
-                Panel.SetZIndex(line1, -1);
-                Panel.SetZIndex(line2, -1);
+                if (child is Line line && line.DataContext is ConnectionInfo connectionInfo)
+                {
+                    line.Stroke = defaultLineBrush;
+                }
+                else if (child is Polygon arrow && arrow.DataContext is ConnectionInfo arrowConnectionInfo)
+                {
+                    arrow.Fill = defaultArrowFillBrush;
+                    arrow.Stroke = defaultArrowStrokeBrush;
+                }
+            }
+
+            // Unhighlight all nodes (reset their border color)
+            foreach (var child in GraphViewCanvas.Children.OfType<Grid>())
+            {
+                if (child.Tag is Node node)
+                {
+                    var border = child.Children.OfType<Rectangle>().FirstOrDefault(r => r.Tag == "NodeBorder");
+                    if (border != null)
+                    {
+                        border.Stroke = (SolidColorBrush)FindResource("ViewBorderHoverBrush");
+                    }
+                }
             }
         }
     }
