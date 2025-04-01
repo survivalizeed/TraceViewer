@@ -9,6 +9,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using TraceViewer.Core.Analysis;
 
 namespace TraceViewer
 {
@@ -153,6 +154,10 @@ namespace TraceViewer
         private Brush highlightBrush = Brushes.Coral;
         private const double ConnectionOffset = 3.0;
 
+
+        private List<(int, int)> connections;
+
+
         public IReadOnlyList<Node> Nodes => nodes.AsReadOnly();
 
         public void AddNode(Node node, Node connectTo = null)
@@ -183,6 +188,28 @@ namespace TraceViewer
                 ConnectNodes(connectTo, node);
             }
         }
+
+        private void Timeline_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            UnhighlightAllConnections();
+            if (connections != null && connections.Count > (int)e.NewValue)
+                HighlightConnection(nodes[connections[(int)e.NewValue].Item1], nodes[connections[(int)e.NewValue].Item2]);
+        }
+
+        public void InitializeTimeline(List<(int, int)> connections)
+        {
+            this.connections = connections;
+
+            Timeline.Maximum = connections.Count;
+            Timeline.Minimum = 0;
+            Timeline.IsSnapToTickEnabled = true;
+            Timeline.TickFrequency = 1;
+            Timeline.Value = 0;
+
+            Timeline.ValueChanged += Timeline_ValueChanged;
+        }
+
+
 
         public void Clear()
         {

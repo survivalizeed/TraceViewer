@@ -196,10 +196,9 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <DockPanel Grid.Row="0" LastChildFill="False" Height="Auto">
-                    <Label x:Name="test" HorizontalAlignment="Left"
-               Style="{StaticResource InstructionsViewTitlesSelectable}"
-               Content="Back" Width="Auto" Height="41"/>
+                <DockPanel Grid.Row="0" LastChildFill="True" Height="30">
+                    <Slider x:Name="Timeline"/>
+
                 </DockPanel>
 
                 <Border Grid.Row="1" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrighterBrush}" Margin="0,3,0,0">

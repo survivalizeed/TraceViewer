@@ -301,6 +301,48 @@
         </Setter>
     </Style>
 
+    <Style TargetType="{x:Type Slider}">
+        <Setter Property="Orientation" Value="Horizontal"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Slider}">
+                    <Grid>
+                        <Border Background="{StaticResource ScrollBarBackgroundBrush}"
+                          Height="8"
+                          VerticalAlignment="Center"
+                          CornerRadius="0"/>
+                        <Track x:Name="PART_Track"
+                         Grid.Row="0"
+                         IsDirectionReversed="False">
+                            <Track.Thumb>
+                                <Thumb>
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="{x:Type Thumb}">
+                                            <Rectangle Fill="{StaticResource ScrollBarThumbBrush}"
+                                                 RadiusX="0"
+                                                 RadiusY="0"
+                                                 Width="10" Height="20">
+                                                <Rectangle.Effect>
+                                                    <DropShadowEffect Color="White"
+                                                                BlurRadius="15"
+                                                                ShadowDepth="0"
+                                                                Opacity="0.8"/>
+                                                </Rectangle.Effect>
+                                            </Rectangle>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                        </Track>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    </Style>
+
     <Style x:Key="InstructionsViewTitles" TargetType="Label">
         <Setter Property="DockPanel.Dock" Value="Left"/>
         <Setter Property="BorderBrush" Value="{StaticResource ViewBorderBrighterBrush}"/>

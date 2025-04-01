@@ -12,12 +12,10 @@ namespace TraceViewer.Core.Analysis
     internal class GraphHandler
     {
 
-        public static HashSet<(int,int)> connections = new HashSet<(int, int)>();
-
-        public static void GenerateGraph()
+        public static bool GenerateGraph()
         {
             if (TraceHandler.Trace == null)
-                return;
+                return false;
             var window = System.Windows.Application.Current.MainWindow as MainWindow ?? throw new Exception("Main window not found");
 
             var traceRows = TraceHandler.Trace.Trace;
@@ -112,7 +110,7 @@ namespace TraceViewer.Core.Analysis
             }
 
 
-            
+            var connections = new List<(int, int)>();
 
             for (int currentBlockIndex = 0; currentBlockIndex < blocks.Count; currentBlockIndex++)
             {
@@ -141,29 +139,102 @@ namespace TraceViewer.Core.Analysis
             }
 
 
-            List<Node> nodes = new List<Node>();
+            List<Node> nodes = new List<Node>(blocks.Count);
+            int y = 0;
+            int x = 0;
+            const int horizontalThreshold = 1500;
+            const int nodeHeight = 30;
+            const int nodeWidth = 80;
+            const int horizontalSpacing = 150;
+            const int verticalSpacing = 200;
+
             for (int i = 0; i < blocks.Count; i++)
             {
-                Node node = new Node();
                 var block = blocks[i];
-
                 ulong startIp = orderedIpEntries[block.startIndex].Key;
                 ulong endIp = orderedIpEntries[block.endIndex].Key;
                 int instructionCount = block.endIndex - block.startIndex + 1;
-                
-                node.Text = $"Block {i}\r\n{instructionCount} instructions\r\n0x{startIp:X} - 0x{endIp:X}";
-                node.Height = 100;
-                node.Width = 300;
-                node.X = 600;
-                node.Y = i * 100;
+
+                if (x > horizontalThreshold)
+                {
+                    y += verticalSpacing;
+                    x = 0;
+                }
+
+                var node = new Node
+                {
+                    Text = $"Block {i}",
+                    Height = nodeHeight,
+                    Width = nodeWidth,
+                    X = x,
+                    Y = y
+                };
+
                 nodes.Add(node);
                 window.AddNode(node);
+
+                x += horizontalSpacing;
             }
 
             foreach (var connection in connections.OrderBy(c => c.Item1).ThenBy(c => c.Item2))
             {
                 window.ConnectNodes(nodes[connection.Item1], nodes[connection.Item2]);
             }
+
+
+            // Sort the connections by controlflow
+            var cf_connections = new List<(int, int)>();
+
+            cf_connections.Add(connections.First());
+
+            var node_index = new List<int>(nodes.Count);
+            var max_node_index = new List<int>(nodes.Count);
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                node_index.Add(0);
+                max_node_index.Add(0);
+            }
+
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                for(int j = 0; j < connections.Count; j++)
+                {
+                    if (connections.ElementAt(j).Item1 == i)
+                    {
+                        max_node_index[i]++;
+                    }
+                }
+            }
+
+
+            bool addedNewConnection = true;
+            while (addedNewConnection)
+            {
+                addedNewConnection = false;
+                var lastConnection = cf_connections.Last();
+                var from_node = lastConnection.Item2;
+                int outgoingConnectionCount = 0;
+
+                foreach (var connection in connections)
+                {
+                    if (connection.Item1 == from_node)
+                    {
+                        if (outgoingConnectionCount == node_index[from_node])
+                        {
+                            cf_connections.Add(connection);
+                            if(node_index[from_node] < max_node_index[from_node])
+                                node_index[from_node]++;
+                            addedNewConnection = true;
+                            break;
+                        }
+                        outgoingConnectionCount++;
+                    }
+                }
+            }        
+
+            window.InitializeTimeline(cf_connections);
+
+            return true;
         } 
 
     }

@@ -32,10 +32,6 @@ namespace TraceViewer
                     }
                 }
             }
-            if(e.Key == Key.T)
-            {
-                GraphHandler.GenerateGraph();
-            }
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Windows.Input;
 using System.Windows.Media.Effects;
 using System.Windows.Media;
 using System.Windows;
+using TraceViewer.Core.Analysis;
 
 namespace TraceViewer
 {
@@ -15,6 +16,8 @@ namespace TraceViewer
     }
     public partial class MainWindow : Window
     {
+        private bool graphGenerated = false;
+
         private readonly DropShadowEffect glowEffect = new DropShadowEffect // Make glow effect readonly
         {
             Color = Colors.White,
@@ -61,6 +64,10 @@ namespace TraceViewer
             SetViewButtonInactive(NotesViewButtonBorder); // Deactivate Notes view button
             SetViewButtonInactive(BookmarksViewButtonBorder); // Set Bookmarks view button as active
             SetViewButtonActive(GraphViewButtonBorder);
+            
+            if (!graphGenerated)
+                graphGenerated = GraphHandler.GenerateGraph();
+
             SetCurrentUIState(UIState.GraphView); // Set UI state to Bookmarks view
         }
 
