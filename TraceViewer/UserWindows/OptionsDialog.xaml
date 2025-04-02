@@ -1,0 +1,69 @@
+﻿<Window x:Class="TraceViewer.UserWindows.OptionsDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TraceViewer.UserWindows"
+        mc:Ignorable="d"
+        Title="Options" Height="260" Width="400"
+        WindowStyle="None"
+        BorderBrush="White"
+        BorderThickness="0.5"
+        ResizeMode="NoResize"
+        Background="#0D0D0D"
+        Topmost="True">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Label Style="{StaticResource InstructionsViewTitles}" HorizontalContentAlignment="Center" Padding="2,5,2,10" FontSize="15" BorderThickness="0" Grid.Row="0">
+            <Label.Content>
+                <TextBlock x:Name="OptionsText" Text="OPTIONS" TextAlignment="Center" TextWrapping="Wrap"/>
+            </Label.Content>
+            <Label.Effect>
+                <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
+            </Label.Effect>
+        </Label>
+
+        <Grid HorizontalAlignment="Center" Grid.Row="1" Margin="0,10,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <CheckBox x:Name="Option1CheckBox" Content="Option 1 Name" Foreground="White" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                <CheckBox x:Name="Option2CheckBox" Content="Option 2 Name" Foreground="White" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center"/>
+
+                <CheckBox x:Name="Option3CheckBox" Content="Option 3 Name" Foreground="White" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
+                <CheckBox x:Name="Option4CheckBox" Content="Option 4 Name" Foreground="White" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center"/>
+
+                <CheckBox x:Name="Option5CheckBox" Content="Option 5 Name" Foreground="White" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
+                <CheckBox x:Name="Option6CheckBox" Content="Option 6 Name" Foreground="White" Grid.Row="2" Grid.Column="1" VerticalAlignment="Center"/>
+
+                <CheckBox x:Name="Option7CheckBox" Content="Option 7 Name" Foreground="White" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
+                <CheckBox x:Name="Option8CheckBox" Content="Option 8 Name" Foreground="White" Grid.Row="3" Grid.Column="1" VerticalAlignment="Center"/>
+            </Grid>
+        </Grid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Label Style="{StaticResource LabelButton}" Padding="10,5,10,5" Content="OK" MouseDown="Ok_MouseDown">
+                <Label.Effect>
+                    <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
+                </Label.Effect>
+            </Label>
+        </StackPanel>
+    </Grid>
+</Window>

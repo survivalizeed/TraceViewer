@@ -343,6 +343,66 @@
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
     </Style>
 
+    <Style TargetType="{x:Type CheckBox}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundBrush}"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontFamily" Value="Consolas"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="10"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type CheckBox}">
+                    <StackPanel Orientation="Horizontal">
+                        <Border x:Name="checkBoxBorder" Width="15" Height="15"
+                            BorderBrush="{TemplateBinding Foreground}" BorderThickness="1"
+                            Background="{TemplateBinding Background}">
+                            <Border.Effect>
+                                <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="5" Opacity="0"/>
+                            </Border.Effect>
+                        </Border>
+                        <ContentPresenter Margin="5,0,0,0"
+                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="checkBoxBorder" Property="Background" Value="White"/>
+                            <Setter TargetName="checkBoxBorder" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="False">
+                            <Setter TargetName="checkBoxBorder" Property="Background" Value="Transparent"/>
+                            <Setter TargetName="checkBoxBorder" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="checkBoxBorder" Property="BorderBrush" Value="{DynamicResource ScrollBarThumbBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="#888"/>
+                            <Setter TargetName="checkBoxBorder" Property="BorderBrush" Value="#888"/>
+                            <Setter TargetName="checkBoxBorder" Property="Background" Value="#333"/>
+                            <Setter TargetName="checkBoxBorder" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect Color="#888" ShadowDepth="0" BlurRadius="15" Opacity="0.5"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="InstructionsViewTitles" TargetType="Label">
         <Setter Property="DockPanel.Dock" Value="Left"/>
         <Setter Property="BorderBrush" Value="{StaticResource ViewBorderBrighterBrush}"/>
