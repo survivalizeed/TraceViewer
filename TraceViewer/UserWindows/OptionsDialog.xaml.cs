@@ -18,13 +18,33 @@ namespace TraceViewer.UserWindows
     public partial class OptionsDialog : Window
     {
 
-        public OptionsDialog(string Title)
+        public OptionsDialog(string Title, List<(string, bool)> options)
         {
             InitializeComponent();
             this.OptionsText.Text = Title;
             this.Owner = Application.Current.MainWindow;
             this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+
+            List<CheckBox> checkBoxes = new List<CheckBox>();
+            foreach (var option_child in OptionsGrid.Children)
+            {
+                if (option_child is CheckBox checkBox)
+                {
+                    checkBox.Visibility = Visibility.Collapsed;
+                    checkBoxes.Add(checkBox);
+                }
+            }
+            if(options.Count > 8)
+                throw new Exception("Too many options for OptionsDialog");
+            for (int i = 0; i < options.Count; i++)
+            {
+                checkBoxes[i].Visibility = Visibility.Visible;
+                checkBoxes[i].Content = options[i].Item1;
+                checkBoxes[i].IsChecked = options[i].Item2;
+            }
         }
+
+
 
         private void Ok_MouseDown(object sender, MouseButtonEventArgs e)
         {

@@ -22,7 +22,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Label Style="{StaticResource InstructionsViewTitles}" HorizontalContentAlignment="Center" Padding="2,5,2,10" FontSize="15" BorderThickness="0" Grid.Row="0">
+        <Label Style="{StaticResource InstructionsViewTitles}" HorizontalContentAlignment="Center" Padding="2,5,2,10" BorderThickness="0" Grid.Row="0">
             <Label.Content>
                 <TextBlock x:Name="OptionsText" Text="OPTIONS" TextAlignment="Center" TextWrapping="Wrap"/>
             </Label.Content>
@@ -32,7 +32,7 @@
         </Label>
 
         <Grid HorizontalAlignment="Center" Grid.Row="1" Margin="0,10,0,10">
-            <Grid>
+            <Grid x:Name="OptionsGrid">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
@@ -44,17 +44,17 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <CheckBox x:Name="Option1CheckBox" Content="Option 1 Name" Foreground="White" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
-                <CheckBox x:Name="Option2CheckBox" Content="Option 2 Name" Foreground="White" Grid.Row="0" Grid.Column="1" VerticalAlignment="Center"/>
-
-                <CheckBox x:Name="Option3CheckBox" Content="Option 3 Name" Foreground="White" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"/>
-                <CheckBox x:Name="Option4CheckBox" Content="Option 4 Name" Foreground="White" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center"/>
-
-                <CheckBox x:Name="Option5CheckBox" Content="Option 5 Name" Foreground="White" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"/>
-                <CheckBox x:Name="Option6CheckBox" Content="Option 6 Name" Foreground="White" Grid.Row="2" Grid.Column="1" VerticalAlignment="Center"/>
-
-                <CheckBox x:Name="Option7CheckBox" Content="Option 7 Name" Foreground="White" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"/>
-                <CheckBox x:Name="Option8CheckBox" Content="Option 8 Name" Foreground="White" Grid.Row="3" Grid.Column="1" VerticalAlignment="Center"/>
+                <CheckBox x:Name="Option0" Content="PLACEHOLDER" Grid.Row="0" Grid.Column="0" />
+                <CheckBox x:Name="Option1" Content="PLACEHOLDER" Grid.Row="0" Grid.Column="1" />
+                                                    
+                <CheckBox x:Name="Option2" Content="PLACEHOLDER" Grid.Row="1" Grid.Column="0" />
+                <CheckBox x:Name="Option3" Content="PLACEHOLDER" Grid.Row="1" Grid.Column="1" />
+                                                    
+                <CheckBox x:Name="Option4" Content="PLACEHOLDER" Grid.Row="2" Grid.Column="0" />
+                <CheckBox x:Name="Option5" Content="PLACEHOLDER" Grid.Row="2" Grid.Column="1" />
+                                                    
+                <CheckBox x:Name="Option6" Content="PLACEHOLDER" Grid.Row="3" Grid.Column="0" />
+                <CheckBox x:Name="Option7" Content="PLACEHOLDER" Grid.Row="3" Grid.Column="1" />
             </Grid>
         </Grid>
 
