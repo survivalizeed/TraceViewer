@@ -16,15 +16,13 @@ using System.Windows.Shapes;
 
 namespace TraceViewer.UserWindows
 {
-    /// <summary>
-    /// Interaction logic for MessageDialog.xaml
-    /// </summary>
+
     public partial class MessageDialog : Window
     {
         public MessageDialog(string Prompt)
         {
             InitializeComponent();
-            this.Prompt.Content = Prompt;
+            this.PromptText.Text = Prompt;
             this.Owner = Application.Current.MainWindow;
             this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             this.PreviewKeyDown += MessageDialog_PreviewKeyDown;

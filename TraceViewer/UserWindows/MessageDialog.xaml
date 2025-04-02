@@ -20,7 +20,10 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <Label Style="{StaticResource InstructionsViewTitles}" x:Name="Prompt" HorizontalContentAlignment="Left" Padding="2,5,2,10" FontSize="15" Content="PROMPT" BorderThickness="0" Grid.Row="0">
+            <Label Style="{StaticResource InstructionsViewTitles}" x:Name="Prompt" HorizontalContentAlignment="Center" Padding="2,5,2,10" FontSize="15" BorderThickness="0" Grid.Row="0">
+                <Label.Content>
+                    <TextBlock x:Name="PromptText" Text="PROMPT" TextAlignment="Center" TextWrapping="Wrap"/>
+                </Label.Content>
                 <Label.Effect>
                     <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
                 </Label.Effect>

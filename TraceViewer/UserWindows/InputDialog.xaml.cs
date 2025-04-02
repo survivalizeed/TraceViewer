@@ -24,7 +24,7 @@ namespace TraceViewer.UserControls
         public InputDialog(string Prompt)
         {
             InitializeComponent();
-            this.Prompt.Content = Prompt;
+            this.PromptText.Text = Prompt;
             this.Owner = Application.Current.MainWindow;
             this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             this.Input.Focus();
