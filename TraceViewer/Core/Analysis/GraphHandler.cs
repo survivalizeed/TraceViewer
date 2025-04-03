@@ -12,6 +12,10 @@ namespace TraceViewer.Core.Analysis
     internal class GraphHandler
     {
 
+        public static List<KeyValuePair<ulong, List<int>>>? orderedIpEntries;
+        public static List<int>? finalSlicePoints;
+        public static List<(int startIndex, int endIndex)>? blocks;
+
         public static bool GenerateGraph()
         {
             if (TraceHandler.Trace == null)
@@ -31,7 +35,7 @@ namespace TraceViewer.Core.Analysis
                 ipOccurrences[row.Ip].Add(row.Id);
             }
 
-            var orderedIpEntries = ipOccurrences.ToList();
+            orderedIpEntries = ipOccurrences.ToList();
 
             SortedSet<int> slice_locations = new SortedSet<int>();
 
@@ -73,7 +77,7 @@ namespace TraceViewer.Core.Analysis
             }
             
 
-            var blocks = new List<(int startIndex, int endIndex)>();
+            blocks = new List<(int startIndex, int endIndex)>();
 
             int currentBlockStartIndex = 0;
             var finalSlicePoints = slice_locations.ToList();

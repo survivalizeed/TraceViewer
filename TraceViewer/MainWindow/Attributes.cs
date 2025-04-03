@@ -72,9 +72,6 @@ namespace TraceViewer
         public IReadOnlyList<Node> Nodes => nodes.AsReadOnly();
 
 
-        // UIState
-        private bool graphGenerated = false;
-
         private readonly DropShadowEffect glowEffect = new DropShadowEffect
         {
             Color = Colors.White,

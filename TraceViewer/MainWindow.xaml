@@ -175,6 +175,8 @@
                         </Grid>
                     </Grid>
                 </DockPanel>
+                <Label Name="Stats" Style="{StaticResource ViewTitles}" Content="" FontSize="15" HorizontalAlignment="Left" Padding="5,0,0,0"
+                        VerticalAlignment="Bottom" Background="Transparent" />
             </Grid>
 
             <Grid Name="NotesView">
@@ -186,7 +188,7 @@
             </Grid>
 
             <Grid Name="BookmarksView">
-                <Border Margin="0,104,0,20" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrush}">
+                <Border Margin="0,104,0,20" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrighterBrush}">
 
                 </Border>
             </Grid>

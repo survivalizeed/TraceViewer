@@ -55,10 +55,6 @@ namespace TraceViewer
             SetViewButtonInactive(NotesViewButtonBorder); // Deactivate Notes view button
             SetViewButtonInactive(BookmarksViewButtonBorder); // Set Bookmarks view button as active
             SetViewButtonActive(GraphViewButtonBorder);
-            
-            if (!graphGenerated)
-                graphGenerated = GraphHandler.GenerateGraph();
-
             SetCurrentUIState(UIState.GraphView); // Set UI state to Bookmarks view
         }
 

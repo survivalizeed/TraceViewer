@@ -47,6 +47,9 @@ namespace TraceViewer.Core
 
             Trace = TraceLoader.OpenX64dbgTrace(path);
 
+            if(Trace.Trace.Count == 0)
+                throw new InvalidOperationException("Trace was empty");
+
             if (Trace.Trace.Count < load_count)
                 load_count = Trace.Trace.Count;
             else
@@ -102,6 +105,10 @@ namespace TraceViewer.Core
             }
 
             MemoryHandler.ComposeMemory(Trace);
+
+            GraphHandler.GenerateGraph();
+
+            window.Stats.Content = $"IDs: {Trace.Trace.Count} Unique Addresses: {GraphHandler.orderedIpEntries.Count}";
 
             LoadRange(0, load_count, false);
         }
