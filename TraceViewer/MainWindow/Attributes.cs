@@ -14,6 +14,26 @@ using System.Windows.Shapes;
 
 namespace TraceViewer
 {
+    public class Option
+    {
+        public bool option;
+
+        public Option(bool option)
+        {
+            this.option = option;
+        }
+
+        public static implicit operator bool(Option o)
+        {
+            return o.option;
+        }
+
+        public static implicit operator Option(bool b)
+        {
+            return new Option(b);
+        }
+    }
+
     public partial class MainWindow : Window
     {
         // MainWindow
@@ -62,6 +82,12 @@ namespace TraceViewer
             ShadowDepth = 0,
             Opacity = 0.8
         };
+
+        // Analysis
+        public Option uselessAssignmentsAnalysis = true;
+        public Option userInflucenceAssignmentAnalysis = false;
+        public Option commentKnownObfuscations = false;
+        public Option blockSlicing = false;
 
     }
 }

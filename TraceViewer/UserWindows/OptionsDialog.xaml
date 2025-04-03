@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TraceViewer.UserWindows"
         mc:Ignorable="d"
-        Title="Options" Height="260" Width="400"
+        Title="Options" Height="300" Width="Auto"
         WindowStyle="None"
         BorderBrush="White"
         BorderThickness="0.5"
@@ -31,7 +31,7 @@
             </Label.Effect>
         </Label>
 
-        <Grid HorizontalAlignment="Center" Grid.Row="1" Margin="0,10,0,10">
+        <Grid HorizontalAlignment="Center" Grid.Row="1" Margin="0,0,0,0">
             <Grid x:Name="OptionsGrid">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

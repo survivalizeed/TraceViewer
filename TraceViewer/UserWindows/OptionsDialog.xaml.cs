@@ -18,10 +18,10 @@ namespace TraceViewer.UserWindows
     public partial class OptionsDialog : Window
     {
 
-        private List<(string, bool)> options;
+        private List<(string, Option)> options;
         List<CheckBox> checkBoxes = new List<CheckBox>();
 
-        public OptionsDialog(string Title, List<(string, bool)> options)
+        public OptionsDialog(string Title, List<(string, Option)> options)
         {
             InitializeComponent();
             this.OptionsText.Text = Title;
@@ -56,7 +56,7 @@ namespace TraceViewer.UserWindows
             {
                 for (int i = 0; i < options.Count; i++)
                 {
-                    options[i] = (options[i].Item1, checkBoxes[i].IsChecked == true);
+                    options[i].Item2.option = checkBoxes[i].IsChecked == true;
                 }
                 this.Close();
             }

@@ -69,11 +69,12 @@ namespace TraceViewer.Core.Analysis
             var window = System.Windows.Application.Current.MainWindow as MainWindow ?? throw new Exception("Main window not found");
 
             var TraceRows = TraceHandler.Trace.Trace;
-
-            MessageDialog input = new MessageDialog("The Deobfuscation tries to detect useless code.\r\nUse at your own risk!");
-            input.ShowDialog();
             
-            HideUselessAssignments(TraceRows);
+            if(window.uselessAssignmentsAnalysis)
+                HideUselessAssignments(TraceRows);
+
+            // Other deobfuscation options
+
             window.RefreshView();
            
         }
