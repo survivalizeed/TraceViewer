@@ -19,13 +19,17 @@ namespace TraceViewer.UserWindows
 
     public partial class MessageDialog : Window
     {
-        public MessageDialog(string Prompt)
+        public MessageDialog(string Prompt, double? width = null, double? height = null)
         {
             InitializeComponent();
             this.PromptText.Text = Prompt;
             this.Owner = Application.Current.MainWindow;
             this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             this.PreviewKeyDown += MessageDialog_PreviewKeyDown;
+            if (width != null)
+                this.Width = (double)width;
+            if (height != null)
+                this.Height = (double)height;
         }
 
         private void MessageDialog_PreviewKeyDown(object sender, KeyEventArgs e)

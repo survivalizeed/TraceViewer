@@ -21,12 +21,16 @@ namespace TraceViewer.UserControls
     {
         private bool result = false;
 
-        public ConfirmDialog(string Prompt)
+        public ConfirmDialog(string Prompt, double? width = null, double? height = null)
         {
             InitializeComponent();
             this.PromptText.Text = Prompt;
             this.Owner = Application.Current.MainWindow;
             this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            if(width != null)
+                this.Width = (double)width;
+            if (height != null)
+                this.Height = (double)height;
         }
 
         private void Ok_MouseDown(object sender, MouseButtonEventArgs e)

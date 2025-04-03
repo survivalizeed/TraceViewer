@@ -21,13 +21,17 @@ namespace TraceViewer.UserControls
     {
         private string result = "";
 
-        public InputDialog(string Prompt)
+        public InputDialog(string Prompt, double? width = null, double? height = null)
         {
             InitializeComponent();
             this.PromptText.Text = Prompt;
             this.Owner = Application.Current.MainWindow;
             this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             this.Input.Focus();
+            if (width != null)
+                this.Width = (double)width;
+            if (height != null)
+                this.Height = (double)height;
         }
 
         private void Ok_MouseDown(object sender, MouseButtonEventArgs e)
