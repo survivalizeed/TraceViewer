@@ -18,6 +18,9 @@ namespace TraceViewer.UserWindows
     public partial class OptionsDialog : Window
     {
 
+        private List<(string, bool)> options;
+        List<CheckBox> checkBoxes = new List<CheckBox>();
+
         public OptionsDialog(string Title, List<(string, bool)> options)
         {
             InitializeComponent();
@@ -25,7 +28,9 @@ namespace TraceViewer.UserWindows
             this.Owner = Application.Current.MainWindow;
             this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
-            List<CheckBox> checkBoxes = new List<CheckBox>();
+            this.options = options;
+
+            
             foreach (var option_child in OptionsGrid.Children)
             {
                 if (option_child is CheckBox checkBox)
@@ -45,11 +50,14 @@ namespace TraceViewer.UserWindows
         }
 
 
-
         private void Ok_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
             {
+                for (int i = 0; i < options.Count; i++)
+                {
+                    options[i] = (options[i].Item1, checkBoxes[i].IsChecked == true);
+                }
                 this.Close();
             }
         }

@@ -143,22 +143,7 @@ namespace TraceViewer
 
     public partial class MainWindow : Window
     {
-        private List<Node> nodes = new List<Node>();
-        private Node currentlyDraggingNode = null;
-        private Point dragStartPoint;
-        private Point initialNodePosition;
-        private Node selectedNode = null;
-        private Brush defaultLineBrush = Brushes.White;
-        private Brush defaultArrowFillBrush = Brushes.Coral;
-        private Brush defaultArrowStrokeBrush = Brushes.Coral;
-        private Brush highlightBrush = Brushes.Coral;
-        private const double ConnectionOffset = 3.0;
-
-
-        private List<(int, int)> connections;
-
-
-        public IReadOnlyList<Node> Nodes => nodes.AsReadOnly();
+ 
 
         public void AddNode(Node node, Node connectTo = null)
         {
@@ -527,8 +512,6 @@ namespace TraceViewer
             }
         }
 
-        private const double Epsilon = 0.1;
-        private const double ArrowSpacing = 120.0f;
 
         private void DrawConnection(Node node1, Node node2)
         {

@@ -10,8 +10,6 @@ namespace TraceViewer
         [DllImport("dwmapi.dll", PreserveSig = true)]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
 
-        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
-
         private void MainWindow_SourceInitialized(object? sender, EventArgs e)
         {
             if (IsWindows10OrHigher())

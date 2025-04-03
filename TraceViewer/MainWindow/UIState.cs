@@ -16,16 +16,7 @@ namespace TraceViewer
     }
     public partial class MainWindow : Window
     {
-        private bool graphGenerated = false;
-
-        private readonly DropShadowEffect glowEffect = new DropShadowEffect // Make glow effect readonly
-        {
-            Color = Colors.White,
-            BlurRadius = 10,
-            ShadowDepth = 0,
-            Opacity = 0.8
-        };
-
+       
         private void DisasmViewButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (e != null)
