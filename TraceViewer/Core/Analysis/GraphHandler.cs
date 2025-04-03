@@ -143,10 +143,10 @@ namespace TraceViewer.Core.Analysis
             int y = 0;
             int x = 0;
             const int horizontalThreshold = 1500;
-            const int nodeHeight = 50;
-            const int nodeWidth = 120;
-            const int horizontalSpacing = 150;
-            const int verticalSpacing = 200;
+            const int nodeHeight = 40;
+            const int nodeWidth = 110;
+            const int horizontalSpacing = 200;
+            const int verticalSpacing = 300;
 
             for (int i = 0; i < blocks.Count; i++)
             {

@@ -47,7 +47,7 @@
                             <MenuItem Header="ANALYZER">
                                 <MenuItem x:Name="Analyze" Header="Analyze" Click="Analyze_Click"/>
                                 <MenuItem x:Name="AnalyzerSettings" Header="Settings" Click="AnalyzerSettings_Click"/>
-                                <MenuItem x:Name="RemoveDeobfuscation" Header="Remove Deobfuscation" Click="RemoveDeobfuscation_Click"/>
+                                <MenuItem x:Name="UnhideAnalyzedInstructions" Header="Unhide Analyzed Instructions" Click="UnhideAnalyzedInstructions_Click"/>
                             </MenuItem>
                             <MenuItem Header="MEMORY">
                                 <MenuItem x:Name="StackAlignmentBase" Header="Stack Alignment Base Address" Click="StackAlignmentBase_Click"/>

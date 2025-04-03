@@ -18,12 +18,6 @@ namespace TraceViewer
                 DeObfus.DeObfuscate();
         }
 
-        private void RemoveDeobfuscation_Click(object sender, RoutedEventArgs e)
-        {
-            DeObfus.deObHiddenRows.Clear();
-            RefreshView();
-        }
-
         private void AnalyzerSettings_Click(object sender, RoutedEventArgs e)
         {
             List<(string, Option)> options = new List<(string, Option)>();
@@ -34,5 +28,12 @@ namespace TraceViewer
             OptionsDialog dialog = new OptionsDialog("Analyzer Settings", options);
             dialog.ShowDialog();
         }
+
+        private void UnhideAnalyzedInstructions_Click(object sender, RoutedEventArgs e)
+        {
+            DeObfus.deObHiddenRows.Clear();
+            RefreshView();
+        }
+
     }
 }
