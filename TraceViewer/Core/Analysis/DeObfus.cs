@@ -75,8 +75,7 @@ namespace TraceViewer.Core.Analysis
 
             // Other deobfuscation options
 
-            window.RefreshView();
-           
+            window.RefreshView();           
         }
 
         private static void HideUselessAssignments(List<TraceRow> TraceRows)

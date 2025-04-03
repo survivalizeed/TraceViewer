@@ -16,8 +16,8 @@ namespace TraceViewer
                 "The useless assignment detection may flag overwritten function arguments as useless.\r\n\n\r" +
                 "Make sure to only use this on actually obfuscated code!", null, 230);
             confirmDialog.ShowDialog();
-            if(confirmDialog.GetResult())
-                DeObfus.DeObfuscate();
+            if (confirmDialog.GetResult())
+                Analyzer.Analyze();
         }
 
         private void AnalyzerSettings_Click(object sender, RoutedEventArgs e)
