@@ -27,7 +27,7 @@ namespace TraceViewer
             options.Add(("User Influcence Assignment Analysis", userInflucenceAssignmentAnalysis));
             options.Add(("Comment Known Obfuscations", commentKnownObfuscations));
             options.Add(("Block Slicing", blockSlicing));
-            OptionsDialog dialog = new OptionsDialog("Analyzer Settings", options);
+            OptionsDialog dialog = new OptionsDialog("Analyzer Settings", options, 680, 170);
             dialog.ShowDialog();
         }
 
