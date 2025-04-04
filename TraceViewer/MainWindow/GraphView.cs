@@ -196,9 +196,10 @@ namespace TraceViewer
 
 
 
-        public void Clear()
+        public void GraphViewClear()
         {
-            nodes.Clear();
+            nodes?.Clear();
+            connections?.Clear();
             if (GraphViewCanvas != null)
             {
                 GraphViewCanvas.Children.Clear();

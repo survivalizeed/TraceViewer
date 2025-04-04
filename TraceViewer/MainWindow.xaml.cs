@@ -13,6 +13,7 @@ using TraceViewer.Core;
 using TraceViewer.Core.Analysis;
 using TraceViewer.UserControls;
 using TraceViewer.UserWindows;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace TraceViewer
 {
@@ -33,13 +34,16 @@ namespace TraceViewer
             InstructionsView.DragLeave += DragLeave;
             InstructionsView.Drop += Drop;
 
+            this.Loaded += MainWindow_Loaded;
+            this.Closing += MainWindow_Closing;
+
             DisasmViewButton_MouseDown(null, null);
 
         }
 
-        private void SetTitle(string text, bool append)
+    private void SetTitle(string text, bool append)
         {
-            Title = append ? Title + text : text;
+            Dispatcher.Invoke(() => { this.Title = append ? Title + text : text; ; });
         }
 
         public void RefreshView()

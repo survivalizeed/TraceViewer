@@ -240,5 +240,11 @@ namespace TraceViewer.Core.Analysis
             return true;
         } 
 
+        public static void Clear()
+        {
+            orderedIpEntries?.Clear();
+            blocks?.Clear();
+        }
+
     }
 }

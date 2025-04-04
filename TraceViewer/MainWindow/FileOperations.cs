@@ -58,6 +58,8 @@ namespace TraceViewer
             RegisterViewItems.Clear();
             NotesContent.Text = "";
             Stack.Inlines.Clear();
+            Heap.Inlines.Clear();
+            Stats.Content = "";
             _current_project_path = "";
             SetTitle("survivalizeed's Trace Viewer", false);
             WPF_TraceRow.hiddenRows.Clear();
@@ -67,6 +69,9 @@ namespace TraceViewer
             WPF_TraceRow.heap_alignment_base = 0;
             DeObfus.deObHiddenRows.Clear();
             MemoryHandler.Clear();
+            GraphHandler.Clear();
+            GraphViewClear();
+            
         }
 
         private void OpenTrace_Click(object sender, RoutedEventArgs e)
@@ -164,25 +169,30 @@ namespace TraceViewer
 
         private void SaveProjectToFile(string filename)
         {
-            _current_project_path = filename; // Update current project path
-            SetTitle(original_title + "  -  " + filename, false);
-            // Save project data to the specified file
+            Dispatcher.Invoke(() =>
+            {
+                _current_project_path = filename;
+                SetTitle(original_title + "  -   " + filename, false);
+            });
+
             Project project = new Project
             {
                 TraceData = TraceHandler.Trace,
                 HiddenRows = WPF_TraceRow.hiddenRows,
                 DeObHiddenRows = DeObfus.deObHiddenRows,
-                Comments = new List<Tuple<int, string>>(), // Initialize comments collection
-                Notes = NotesContent.Text // Save notes to project
+                Comments = new List<Tuple<int, string>>(), 
+                Notes = Dispatcher.Invoke(() => NotesContent.Text) 
             };
+
             foreach (var item in TraceHandler.Trace.Trace)
             {
                 if (!string.IsNullOrEmpty(item.comments))
-                    project.Comments.Add(new Tuple<int, string>(Convert.ToInt32(item.Id), item.comments)); // Add comments to project
+                    project.Comments.Add(new Tuple<int, string>(Convert.ToInt32(item.Id), item.comments)); 
             }
 
-            ProjectWriter.SaveProject(project, filename); // Write project to file
+            ProjectWriter.SaveProject(project, filename);
         }
+
 
         private void CloseProject_Click(object sender, RoutedEventArgs e)
         {
