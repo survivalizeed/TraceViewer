@@ -108,7 +108,7 @@ namespace TraceViewer.Core
 
             GraphHandler.GenerateGraph();
 
-            window.Stats.Content = $"IDs: {Trace.Trace.Count} Unique Addresses: {GraphHandler.orderedIpEntries.Count}";
+            window.Stats.Content = $"IDs: {Trace.Trace.Count}  -  Unique Addresses: {GraphHandler.uniqueIPAccesses.Count}";
 
             LoadRange(0, load_count, false);
         }

@@ -27,7 +27,7 @@ namespace TraceViewer.Core.Analysis
         {
             for (int i = 0; i < GraphHandler.blocks?.Count; i++)
             {
-                var ids = GraphHandler.orderedIpEntries?[GraphHandler.blocks[i].startIndex].Value;
+                var ids = GraphHandler.uniqueIPAccesses?[GraphHandler.blocks[i].startIndex].Value;
                 for (int j = 0; j < ids?.Count; j++)
                 {
                     var row = TraceHandler.Trace?.Trace[ids[j]];

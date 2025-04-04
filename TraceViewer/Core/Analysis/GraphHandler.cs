@@ -12,7 +12,7 @@ namespace TraceViewer.Core.Analysis
     internal class GraphHandler
     {
 
-        public static List<KeyValuePair<ulong, List<int>>>? orderedIpEntries;
+        public static List<KeyValuePair<ulong, List<int>>>? uniqueIPAccesses;
         public static List<(int startIndex, int endIndex)>? blocks;
 
         public static bool GenerateGraph()
@@ -34,18 +34,18 @@ namespace TraceViewer.Core.Analysis
                 ipOccurrences[row.Ip].Add(row.Id);
             }
 
-            orderedIpEntries = ipOccurrences.ToList();
+            uniqueIPAccesses = ipOccurrences.ToList();
 
             SortedSet<int> slice_locations = new SortedSet<int>();
 
-            foreach (var kvp in orderedIpEntries.Select((Value, Index) => new { Value, Index }))
+            foreach (var kvp in uniqueIPAccesses.Select((Value, Index) => new { Value, Index }))
             {
                 var occ = kvp.Value;
                 var currentIndex = kvp.Index;
 
-                if (currentIndex < orderedIpEntries.Count - 1)
+                if (currentIndex < uniqueIPAccesses.Count - 1)
                 {
-                    var next = orderedIpEntries[currentIndex + 1];
+                    var next = uniqueIPAccesses[currentIndex + 1];
                     if (occ.Value.Count != next.Value.Count)
                     {
                         slice_locations.Add(currentIndex);
@@ -54,13 +54,13 @@ namespace TraceViewer.Core.Analysis
             }
 
             // Split based on execution flow
-            for (int i = 0; i < orderedIpEntries.Count - 1; i++)
+            for (int i = 0; i < uniqueIPAccesses.Count - 1; i++)
             {
                 if (slice_locations.Contains(i) || slice_locations.Contains(i + 1)) 
                     continue;
 
-                var currentEntry = orderedIpEntries[i];
-                var nextEntry = orderedIpEntries[i + 1];
+                var currentEntry = uniqueIPAccesses[i];
+                var nextEntry = uniqueIPAccesses[i + 1];
 
                 if (currentEntry.Value.Count == nextEntry.Value.Count)
                 {
@@ -80,7 +80,7 @@ namespace TraceViewer.Core.Analysis
 
             int currentBlockStartIndex = 0;
             var finalSlicePoints = slice_locations.ToList();
-            finalSlicePoints.Add(orderedIpEntries.Count - 1);
+            finalSlicePoints.Add(uniqueIPAccesses.Count - 1);
             finalSlicePoints.Sort(); 
 
             foreach (int sliceIndex in finalSlicePoints.Distinct())
@@ -101,7 +101,7 @@ namespace TraceViewer.Core.Analysis
                 var block = blocks[blockIndex];
                 for (int i = block.startIndex; i <= block.endIndex; i++)
                 {
-                    ipToBlockIndexMap[orderedIpEntries[i].Key] = blockIndex;
+                    ipToBlockIndexMap[uniqueIPAccesses[i].Key] = blockIndex;
                 }
             }
 
@@ -120,7 +120,7 @@ namespace TraceViewer.Core.Analysis
                 var currentBlock = blocks[currentBlockIndex];
                 int lastEntryIndexInBlock = currentBlock.endIndex;
 
-                var lastIpEntry = orderedIpEntries[lastEntryIndexInBlock];
+                var lastIpEntry = uniqueIPAccesses[lastEntryIndexInBlock];
                 List<int> lastIpTraceIds = lastIpEntry.Value;
 
                 foreach (int traceId in lastIpTraceIds)
@@ -154,8 +154,8 @@ namespace TraceViewer.Core.Analysis
             for (int i = 0; i < blocks.Count; i++)
             {
                 var block = blocks[i];
-                ulong startIp = orderedIpEntries[block.startIndex].Key;
-                ulong endIp = orderedIpEntries[block.endIndex].Key;
+                ulong startIp = uniqueIPAccesses[block.startIndex].Key;
+                ulong endIp = uniqueIPAccesses[block.endIndex].Key;
                 int instructionCount = block.endIndex - block.startIndex + 1;
 
                 if (x > horizontalThreshold)
@@ -242,7 +242,7 @@ namespace TraceViewer.Core.Analysis
 
         public static void Clear()
         {
-            orderedIpEntries?.Clear();
+            uniqueIPAccesses?.Clear();
             blocks?.Clear();
         }
 

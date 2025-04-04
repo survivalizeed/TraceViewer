@@ -29,7 +29,7 @@ namespace TraceViewer
                         }
                     }, cancellationToken);
 
-                    await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
+                    await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
                 }
             }
             catch (TaskCanceledException)
