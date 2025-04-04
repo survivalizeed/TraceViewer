@@ -120,8 +120,11 @@ namespace TraceViewer
             comments.Width = window.Cd4.Width.Value;
             mnemonicBrief.Width = window.Cd4.Width.Value;
 
-            if(hiddenRows.Contains(traceRow.Id) || DeObfus.deObHiddenRows.Contains(traceRow.Id))
+            if (hiddenRows.Contains(traceRow.Id) || DeObfus.deObHiddenRows.Contains(traceRow.Id))
+            {
                 parent_panel.Opacity = hiddenOpacity;
+                hidden = true;
+            }
         }
 
 
@@ -461,33 +464,47 @@ namespace TraceViewer
         {
             if (!hidden)
             {
-                hiddenRows.Add(traceRow.Id);
-                parent_panel.Opacity = hiddenOpacity;
+                var index = GraphHandler.uniqueIPAccesses?.FindIndex(x => x.Key == traceRow.Ip);
+                if (index != null)
+                {
+                    var ids = GraphHandler.uniqueIPAccesses[(int)index].Value;
+                    foreach (var id in ids)
+                    {
+                        hiddenRows.Add(id);
+                        foreach (var instruction in window.InstructionViewItems)
+                        {
+                            if (instruction.id.Text == id.ToString())
+                            {
+                                instruction.parent_panel.Opacity = hiddenOpacity;
+                            }
+                        }
+                    }
+                }
             }
             else
             {
-                hiddenRows.Remove(traceRow.Id);
-                DeObfus.deObHiddenRows.Remove(traceRow.Id); // Also remove there so the users input ALWAYS overwrites the deobfuscation
-                parent_panel.Opacity = 1;
+                var index = GraphHandler.uniqueIPAccesses?.FindIndex(x => x.Key == traceRow.Ip);
+                if (index != null)
+                {
+                    var ids = GraphHandler.uniqueIPAccesses[(int)index].Value;
+                    foreach (var id in ids)
+                    {
+                        hiddenRows.Remove(id);
+                        DeObfus.deObHiddenRows.Remove(id); // Also remove there so the users input ALWAYS overwrites the deobfuscation
+                        foreach (var instruction in window.InstructionViewItems)
+                        {
+                            if (instruction.id.Text == id.ToString())
+                            {
+                                instruction.parent_panel.Opacity = 1;
+                            }
+                        }
+                    }
+                }
             }
             hidden = !hidden;
         }
 
-        public void Hide(bool hide)
-        {
-            if (hide)
-            {
-                hiddenRows.Add(traceRow.Id);
-                parent_panel.Opacity = hiddenOpacity;
-            }
-            else
-            {
-                hiddenRows.Remove(traceRow.Id);
-                DeObfus.deObHiddenRows.Remove(traceRow.Id); // Also remove there so the users input ALWAYS overwrites the deobfuscation
-                parent_panel.Opacity = 1;
-            }
-            hidden = hide;
-        }
+       
 
         private void FocusNextCommentBox(int direction)
         {

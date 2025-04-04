@@ -13,7 +13,7 @@
         >
     <Grid Name="Window">
         <Rectangle Fill="{StaticResource PrimaryBackgroundBrush}"/>
-        <Line Margin="0,0,0,0" X1="0" Y1="0" X2="10000" Y2="0" Stroke="{StaticResource PrimaryForegroundBrush}" StrokeThickness="5"/>
+        <Line Margin="0,0,0,0" X1="0" Y1="0" X2="10000" Y2="0" Stroke="{StaticResource PrimaryForegroundBrush}" StrokeThickness="2"/>
         <ScrollViewer Name="MnemonicReaderScrollView" Visibility="Collapsed">
             <Label Name="MnemonicReader" FontSize="15" FontFamily="Miriam Mono CLM" Foreground="{StaticResource PrimaryForegroundBrush}" Background="{StaticResource DimmedBackgroundBrush}"
                    MouseDown="MnemonicReader_MouseDown"/>
