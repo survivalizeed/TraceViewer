@@ -21,7 +21,7 @@ namespace TraceViewer.UserWindows
         private List<(string, Option)> options;
         List<CheckBox> checkBoxes = new List<CheckBox>();
 
-        public OptionsDialog(string Title, List<(string, Option)> options)
+        public OptionsDialog(string Title, List<(string, Option)> options, double? width = null, double? height = null)
         {
             InitializeComponent();
             this.OptionsText.Text = Title;
@@ -30,7 +30,11 @@ namespace TraceViewer.UserWindows
 
             this.options = options;
 
-            
+            if(width != null)
+                this.Width = (double)width;
+            if (height != null)
+                this.Height = (double)height;
+
             foreach (var option_child in OptionsGrid.Children)
             {
                 if (option_child is CheckBox checkBox)
