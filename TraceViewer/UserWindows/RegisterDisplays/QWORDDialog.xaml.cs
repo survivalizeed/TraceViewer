@@ -80,7 +80,7 @@ namespace TraceViewer.UserWindows
             Label rowHeaderLabel = new Label
             {
                 Content = rowLabel,
-                Style = (Style)FindResource("MemoryViewLabel"),
+                Style = (Style)FindResource("InspectorViewLabel"),
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(0, 5, 0, 0)
@@ -107,7 +107,7 @@ namespace TraceViewer.UserWindows
                     Content = labelNames[i].Substring(0, labelNames[i].Length - (i.ToString().Length)),
                     BorderBrush = color,
                     BorderThickness = new Thickness(0.5),
-                    Style = (Style)FindResource("MemoryViewLabel"),
+                    Style = (Style)FindResource("InspectorViewLabel"),
                     Foreground = color,
                     Margin = new Thickness(0, 5, 0, 0),
                     VerticalAlignment = VerticalAlignment.Center,

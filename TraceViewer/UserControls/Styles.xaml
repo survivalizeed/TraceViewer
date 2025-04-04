@@ -403,6 +403,14 @@
         </Setter>
     </Style>
 
+    <Style x:Key="InspectorViewLabel" TargetType="Label">
+        <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundBrush}"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontFamily" Value="Consolas"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    </Style>
+
     <Style x:Key="InstructionsViewTitles" TargetType="Label">
         <Setter Property="DockPanel.Dock" Value="Left"/>
         <Setter Property="BorderBrush" Value="{StaticResource ViewBorderBrighterBrush}"/>
