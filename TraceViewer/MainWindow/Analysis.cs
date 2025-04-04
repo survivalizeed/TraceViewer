@@ -8,7 +8,7 @@ namespace TraceViewer
 {
     public partial class MainWindow : Window
     {
-        private void Analyze_Click(object sender, RoutedEventArgs e)
+        private void StartAnalysis_Click(object sender, RoutedEventArgs e)
         {
             if (TraceHandler.Trace == null)
                 return;

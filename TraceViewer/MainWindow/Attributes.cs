@@ -82,8 +82,8 @@ namespace TraceViewer
 
         // Analysis
         public Option uselessAssignmentsAnalysis = true;
-        public Option commentKnownObfuscations = false;
-        public Option blockSlicing = false;
+        public Option commentKnownObfuscations = true;
+        public Option blockSlicing = true;
 
     }
 }

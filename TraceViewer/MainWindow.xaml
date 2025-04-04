@@ -45,7 +45,7 @@
                                 <MenuItem x:Name="CloseProject" Header="Quit Project/Trace" Click="CloseProject_Click"/>
                             </MenuItem>
                             <MenuItem Header="ANALYZER">
-                                <MenuItem x:Name="Analyze" Header="Analyze" Click="Analyze_Click"/>
+                                <MenuItem x:Name="StartAnalysis" Header="Start Analysis" Click="StartAnalysis_Click"/>
                                 <MenuItem x:Name="AnalyzerSettings" Header="Settings" Click="AnalyzerSettings_Click"/>
                                 <MenuItem x:Name="UnhideAnalyzedInstructions" Header="Unhide Analyzed Instructions" Click="UnhideAnalyzedInstructions_Click"/>
                             </MenuItem>

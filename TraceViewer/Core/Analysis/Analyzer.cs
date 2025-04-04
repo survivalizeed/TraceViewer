@@ -20,6 +20,9 @@ namespace TraceViewer.Core.Analysis
             if (window.blockSlicing)
                 BlockSlicing();
 
+            if (window.commentKnownObfuscations)
+                CommentKnownObfuscations();
+
             window.RefreshView();
         }
 
@@ -38,5 +41,23 @@ namespace TraceViewer.Core.Analysis
                 }
             }
         }
+
+        private static void CommentKnownObfuscations()
+        {
+            var TraceRows = TraceHandler.Trace?.Trace;
+            if (TraceRows == null)
+                return;
+            for (int i = 0; i < TraceRows.Count - 1; i++)
+            {
+                if (TraceRows[i].Disasm.StartsWith("push"))
+                    if(TraceRows[i + 1].Disasm.StartsWith("ret"))
+                    {
+                        string operand = TraceRows[i].Disasm.Split(' ')[1];
+                        TraceRows[i].comments = "-----";
+                        TraceRows[i + 1].comments = $"Jump to {operand}";
+                    }
+            }
+        }
+
     }
 }
