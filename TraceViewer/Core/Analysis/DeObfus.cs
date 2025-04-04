@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows;
 using TraceViewer.UserControls;
 using TraceViewer.UserWindows;
 
@@ -79,6 +80,7 @@ namespace TraceViewer.Core.Analysis
 
         private static void HideUselessAssignments(List<TraceRow> TraceRows)
         {
+            var window = System.Windows.Application.Current.MainWindow as MainWindow ?? throw new Exception("Main window not found");
             List<DisasmDescriptor> descriptors = new List<DisasmDescriptor>();
             for (int i = 0; i < TraceRows.Count; i++)
             {
@@ -93,11 +95,13 @@ namespace TraceViewer.Core.Analysis
                 {
                     var currentDescriptor = descriptors[i];
 
-                    if (currentDescriptor.type != DisasmType.Setter && currentDescriptor.type != DisasmType.Manipulator)
-                        continue;
+                    
 
                     if (string.IsNullOrEmpty(currentDescriptor.write_to) || currentDescriptor.useless)
                         continue;
+
+                    if (currentDescriptor.type != DisasmType.Setter && currentDescriptor.type != DisasmType.Manipulator)
+                        continue;                
 
                     bool found = false;
                     foreach (var rspx in registerFamilies["rspx"]) // rsp won't be touched as its too hard to track
@@ -110,15 +114,15 @@ namespace TraceViewer.Core.Analysis
                         if (TraceRows[i].Disasm.Contains(ripx))
                             found = true;
                     }
-                    if(currentDescriptor.write_to == "memory")
+                    if (currentDescriptor.write_to == "memory")
                     {
                         found = true;
                     }
                     if (found)
                         continue;
 
-
                     string writtenRegister = currentDescriptor.write_to;
+
                     bool isUseless = false;
 
                     for (int j = i + 1; j < descriptors.Count; j++)
@@ -126,6 +130,7 @@ namespace TraceViewer.Core.Analysis
                         var nextDescriptor = descriptors[j];
                         if (nextDescriptor.type == DisasmType.Other)
                             continue;
+
 
                         foreach (var readReg in nextDescriptor.read_from)
                         {

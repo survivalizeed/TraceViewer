@@ -24,7 +24,6 @@ namespace TraceViewer
         {
             List<(string, Option)> options = new List<(string, Option)>();
             options.Add(("Hide Useless Assignments", uselessAssignmentsAnalysis));
-            options.Add(("User Influcence Assignment Analysis", userInflucenceAssignmentAnalysis));
             options.Add(("Comment Known Obfuscations", commentKnownObfuscations));
             options.Add(("Block Slicing", blockSlicing));
             OptionsDialog dialog = new OptionsDialog("Analyzer Settings", options, 680, 170);
