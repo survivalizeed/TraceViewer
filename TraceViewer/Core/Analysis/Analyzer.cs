@@ -20,12 +20,20 @@ namespace TraceViewer.Core.Analysis
             if (window.blockSlicing)
                 BlockSlicing();
 
-
+            window.RefreshView();
         }
 
         private static void BlockSlicing()
         {
-
+            for(int i = 0; i < GraphHandler.blocks.Count; i++)
+            {
+                var ids = GraphHandler.orderedIpEntries[GraphHandler.blocks[i].startIndex].Value;
+                for(int j = 0; j < ids.Count; j++)
+                {
+                    var row = TraceHandler.Trace.Trace[ids[j]];
+                    row.comments = $"Block: {i} - Execution: {j + 1}/{ids.Count}";
+                }
+            }
         }
     }
 }

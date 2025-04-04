@@ -13,7 +13,6 @@ namespace TraceViewer.Core.Analysis
     {
 
         public static List<KeyValuePair<ulong, List<int>>>? orderedIpEntries;
-        public static List<int>? finalSlicePoints;
         public static List<(int startIndex, int endIndex)>? blocks;
 
         public static bool GenerateGraph()
