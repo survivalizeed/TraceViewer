@@ -209,8 +209,7 @@ namespace TraceViewer
             if(MemoryHandler.stacks.Count == 0)      
                 return;
 
-
-            var stack = MemoryHandler.stacks[traceRow.Id - 1].ToList();
+            var stack = MemoryHandler.GetMemoryStateAt(traceRow.Id - 1, true).ToList();
 
             if (traceRow.Id - 1 < 0)
                 return;
@@ -319,7 +318,7 @@ namespace TraceViewer
                 return;
 
 
-            var heap = MemoryHandler.heaps[traceRow.Id - 1].ToList();
+            var heap = MemoryHandler.GetMemoryStateAt(traceRow.Id - 1, false).ToList();
 
             if (traceRow.Id - 1 < 0)
                 return;
