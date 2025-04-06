@@ -70,9 +70,12 @@ namespace TraceViewer.Core.Analysis
             var window = System.Windows.Application.Current.MainWindow as MainWindow ?? throw new Exception("Main window not found");
 
             var TraceRows = TraceHandler.Trace.Trace;
-            
-            if(window.uselessAssignmentsAnalysis)
+
+            if (window.uselessAssignmentsAnalysis)
+            {
                 HideUselessAssignments(TraceRows);
+                //HideUselessFlagModifications(TraceRows);
+            }
 
             // Other deobfuscation options
             
@@ -344,6 +347,39 @@ namespace TraceViewer.Core.Analysis
                 }
             }
             return dD;
-        } 
+        }
+
+
+        public class RFlags
+        {
+            private readonly ulong _rflagsValue;
+
+            public RFlags(ulong rflags)
+            {
+                _rflagsValue = rflags;
+            }
+
+            // Status Flags
+            public bool CarryFlag => (_rflagsValue & (1UL << 0)) != 0;
+            public bool ParityFlag => (_rflagsValue & (1UL << 2)) != 0;
+            public bool AdjustFlag => (_rflagsValue & (1UL << 4)) != 0;
+            public bool ZeroFlag => (_rflagsValue & (1UL << 6)) != 0;
+            public bool SignFlag => (_rflagsValue & (1UL << 7)) != 0;
+            public bool OverflowFlag => (_rflagsValue & (1UL << 11)) != 0;
+
+            // Control Flags
+            public bool TrapFlag => (_rflagsValue & (1UL << 8)) != 0;
+            public bool InterruptEnableFlag => (_rflagsValue & (1UL << 9)) != 0;
+            public bool DirectionFlag => (_rflagsValue & (1UL << 10)) != 0;
+
+        }
+
+        private static void HideUselessFlagModifications(List<TraceRow> TraceRows)
+        {
+            foreach(var traceRow in TraceRows)
+            {
+                RFlags current_rflags = new RFlags(BitConverter.ToUInt64(traceRow.Regs[17]));
+            }
+        }
     }
 }
