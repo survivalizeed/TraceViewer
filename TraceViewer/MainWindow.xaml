@@ -161,16 +161,27 @@
                                MouseDown="StackHeapToggle_MouseDown"/>
                         <Grid x:Name="MemoryViewGrid" Grid.Row="2" Margin="0,0,0,0">
                             <Border Name="StackBorderParent" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrush}" Visibility="Visible">
-                                <ScrollViewer Name="StackScroller" VerticalScrollBarVisibility="Auto">
-                                    <TextBlock Name="Stack" Style="{StaticResource DisasmTextBlock}" Text="" FontSize="13" TextWrapping="Wrap"
-                                               VerticalAlignment="Top" Background="Transparent" />
-                                </ScrollViewer>
+                                <RichTextBox x:Name="StackView"
+                                    IsReadOnly="True"
+                                    Focusable="False"
+                                    IsTabStop="False"
+                                    BorderThickness="0"
+                                    Background="Transparent"
+                                    VerticalScrollBarVisibility="Auto"
+                                    FontFamily="Lucida Console" FontSize="13"
+                                    VerticalAlignment="Top"/>
                             </Border>
                             <Border Name="HeapBorderParent" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrush}" Visibility="Collapsed">
-                                <ScrollViewer Name="HeapScroller" VerticalScrollBarVisibility="Auto">
-                                    <TextBlock Name="Heap" Style="{StaticResource DisasmTextBlock}" Text="" FontSize="13" TextWrapping="Wrap"
-                                               VerticalAlignment="Top" Background="Transparent" />
-                                </ScrollViewer>
+                                <RichTextBox x:Name="HeapView"
+                                    IsReadOnly="True"
+                                    Focusable="False"
+                                    IsTabStop="False"
+                                    BorderThickness="0"
+                                    Background="Transparent"
+                                    VerticalScrollBarVisibility="Auto"
+                                    FontFamily="Lucida Console"
+                                    FontSize="13"
+                                    VerticalAlignment="Top"/>
                             </Border>
                         </Grid>
                     </Grid>

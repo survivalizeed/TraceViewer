@@ -168,8 +168,9 @@ namespace TraceViewer
 
         void UpdateStack()
         {
-            window.Stack.Text = "";
-            window.Stack.Inlines.Clear();
+            FlowDocument flowDoc = new FlowDocument();
+            Paragraph paragraph = new Paragraph();
+            flowDoc.Blocks.Add(paragraph);
 
             if (traceRow.Id - 1 < 0)
                 return;
@@ -184,35 +185,33 @@ namespace TraceViewer
             Action<ulong, string> WriteLine = (address, data) => {
                 Run addressRun = new Run($"{HexPrefix}{address:X} : ");
                 addressRun.Foreground = System.Windows.Media.Brushes.DarkGoldenrod;
-                window.Stack.Inlines.Add(addressRun);
+                paragraph.Inlines.Add(addressRun);
                 Run run = new Run($"{HexPrefix}{data}");
                 run.Foreground = System.Windows.Media.Brushes.White;
-                window.Stack.Inlines.Add(run);
+                paragraph.Inlines.Add(run);
                 if (address == stack_alignment_base)
                 {
                     Run baseMark = new Run($" (BASE)");
                     baseMark.Foreground = System.Windows.Media.Brushes.Red;
-                    window.Stack.Inlines.Add(baseMark);
+                    paragraph.Inlines.Add(baseMark);
                 }
                 if (rsp_index != 0)
                 {
                     Run rspRun = new Run($"  <--- RSP (past {rsp_index}th byte)");
                     rspRun.Foreground = System.Windows.Media.Brushes.Coral;
-                    window.Stack.Inlines.Add(rspRun);
+                    paragraph.Inlines.Add(rspRun);
                 }
-                window.Stack.Inlines.Add(new LineBreak());
+                paragraph.Inlines.Add(new LineBreak());
                 composed = "";
                 alignment_counter = 0;
                 rsp_index = 0;
             };
 
-            if(MemoryHandler.stacks.Count == 0)      
+            if (MemoryHandler.stacks.Count == 0)
                 return;
 
             var stack = MemoryHandler.GetMemoryStateAt(traceRow.Id - 1, true).ToList();
 
-            if (traceRow.Id - 1 < 0)
-                return;
 
             ulong updated_rsp = BitConverter.ToUInt64(TraceHandler.Trace.Trace[traceRow.Id].Regs[4], 0);
 
@@ -231,33 +230,35 @@ namespace TraceViewer
                     var previous_entry = stack[i - 1];
                     if (previous_entry.Key - entry.Key > 1)
                     {
-                        if (!string.IsNullOrEmpty(composed) && blockEndAddress.HasValue)
+                        if (!string.IsNullOrEmpty(composed))
                         {
-                            WriteLine(previous_entry.Key, composed); // Display the end address of the previous block
+                            WriteLine(previous_entry.Key, composed);
                         }
 
                         long difference = (long)previous_entry.Key - (long)entry.Key;
                         Run paddingDataRun = new Run($"PADDING : 0x{difference - 1:X}");
                         paddingDataRun.Foreground = System.Windows.Media.Brushes.Gray;
-                        window.Stack.Inlines.Add(paddingDataRun);
+                        paragraph.Inlines.Add(paddingDataRun);
                         if (updated_rsp > entry.Key && updated_rsp < previous_entry.Key)
                         {
                             Run rspIndicatorRun = new Run($" <--- RSP (past byte 0x{previous_entry.Key - updated_rsp:X})");
                             rspIndicatorRun.Foreground = System.Windows.Media.Brushes.Coral;
-                            window.Stack.Inlines.Add(rspIndicatorRun);
+                            paragraph.Inlines.Add(rspIndicatorRun);
                         }
-                        window.Stack.Inlines.Add(new LineBreak());
-                        blockStartAddress = entry.Key;
+                        paragraph.Inlines.Add(new LineBreak());
+                        blockStartAddress = entry.Key; 
+                        composed = ""; 
+                        alignment_counter = 0;
+                        rsp_index = 0;
                     }
                 }
 
                 composed += $"{entry.Value:X2}";
-
                 alignment_counter++;
 
                 if (stack_alignment_base + (ulong)stack_alignment == entry.Key)
                 {
-                    if (alignment_counter > 0)
+                    if (alignment_counter > 0 && blockEndAddress.HasValue)
                     {
                         WriteLine(blockEndAddress.Value, composed);
                     }
@@ -270,23 +271,26 @@ namespace TraceViewer
                 {
                     if (blockEndAddress.HasValue && !string.IsNullOrEmpty(composed))
                     {
-                        WriteLine(blockEndAddress.Value, composed); // Display the end address of the current line
+                        WriteLine(blockEndAddress.Value, composed);
                     }
                     blockStartAddress = i < stack.Count - 1 ? stack[i + 1].Key : (ulong?)null;
                 }
             }
 
-            // Handle remaining bytes
             if (!string.IsNullOrEmpty(composed) && blockEndAddress.HasValue)
             {
-                WriteLine(blockEndAddress.Value, composed); // Display the end address of the last line
+                WriteLine(blockEndAddress.Value, composed);
             }
+            window.StackView.Document = flowDoc;
         }
+
 
         void UpdateHeap()
         {
-            window.Heap.Text = "";
-            window.Heap.Inlines.Clear();
+
+            FlowDocument flowDoc = new FlowDocument();
+            Paragraph paragraph = new Paragraph();
+            flowDoc.Blocks.Add(paragraph);
 
             if (traceRow.Id - 1 < 0)
                 return;
@@ -301,15 +305,15 @@ namespace TraceViewer
                 addressRun.Foreground = System.Windows.Media.Brushes.DarkGoldenrod;
                 Run dataRun = new Run($"{HexPrefix}{data}");
                 dataRun.Foreground = System.Windows.Media.Brushes.White;
-                window.Heap.Inlines.Add(addressRun);
-                window.Heap.Inlines.Add(dataRun);
+                paragraph.Inlines.Add(addressRun);
+                paragraph.Inlines.Add(dataRun);
                 if (address == heap_alignment_base)
                 {
                     Run baseMark = new Run($" (BASE)");
                     baseMark.Foreground = System.Windows.Media.Brushes.Red;
-                    window.Heap.Inlines.Add(baseMark);
+                    paragraph.Inlines.Add(baseMark);
                 }
-                window.Heap.Inlines.Add(new LineBreak());
+                paragraph.Inlines.Add(new LineBreak());
                 composed = "";
                 alignment_counter = 0;
             };
@@ -319,9 +323,6 @@ namespace TraceViewer
 
 
             var heap = MemoryHandler.GetMemoryStateAt(traceRow.Id - 1, false).ToList();
-
-            if (traceRow.Id - 1 < 0)
-                return;
 
 
             for (int i = 0; i < heap.Count; i++)
@@ -339,17 +340,19 @@ namespace TraceViewer
                     var previous_entry = heap[i - 1];
                     if (previous_entry.Key - entry.Key > 1)
                     {
-                        if (!string.IsNullOrEmpty(composed) && blockEndAddress.HasValue)
+                        if (!string.IsNullOrEmpty(composed)) 
                         {
-                            WriteLine(previous_entry.Key, composed); // Display the end address of the previous block
+                            WriteLine(previous_entry.Key, composed);
                         }
 
                         long difference = (long)previous_entry.Key - (long)entry.Key;
                         Run paddingDataRun = new Run($"PADDING : 0x{difference - 1:X}");
                         paddingDataRun.Foreground = System.Windows.Media.Brushes.Gray;
-                        window.Heap.Inlines.Add(paddingDataRun);
-                        window.Heap.Inlines.Add(new LineBreak());
+                        paragraph.Inlines.Add(paddingDataRun);
+                        paragraph.Inlines.Add(new LineBreak());
                         blockStartAddress = entry.Key;
+                        composed = "";
+                        alignment_counter = 0;
                     }
                 }
 
@@ -358,7 +361,7 @@ namespace TraceViewer
 
                 if (heap_alignment_base + (ulong)heap_alignment == entry.Key)
                 {
-                    if (alignment_counter > 0)
+                    if (alignment_counter > 0 && blockEndAddress.HasValue)
                     {
                         WriteLine(blockEndAddress.Value, composed);
                     }
@@ -368,17 +371,18 @@ namespace TraceViewer
                 {
                     if (blockEndAddress.HasValue && !string.IsNullOrEmpty(composed))
                     {
-                        WriteLine(blockEndAddress.Value, composed); // Display the end address of the current line
+                        WriteLine(blockEndAddress.Value, composed);
                     }
                     blockStartAddress = i < heap.Count - 1 ? heap[i + 1].Key : (ulong?)null;
                 }
             }
 
-            // Handle remaining bytes
             if (!string.IsNullOrEmpty(composed) && blockEndAddress.HasValue)
             {
-                WriteLine(blockEndAddress.Value, composed); // Display the end address of the last line
+                WriteLine(blockEndAddress.Value, composed);
             }
+
+            window.HeapView.Document = flowDoc;
         }
 
         private void UpdateRegisterDisplay(WPF_RegisterRow registerRow, int registerIndex, bool isHighlighted)

@@ -166,7 +166,7 @@ namespace TraceViewer.Core.Analysis
 
                 var node = new Node
                 {
-                    Text = $"Block {i}\r\n{block.endIndex - block.startIndex} instructions",
+                    Text = $"Block {i}\r\n{block.endIndex - block.startIndex + 1} instructions",
                     Height = nodeHeight,
                     Width = nodeWidth,
                     X = x,

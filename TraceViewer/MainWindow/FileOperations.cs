@@ -57,8 +57,8 @@ namespace TraceViewer
             InstructionViewItems.Clear();
             RegisterViewItems.Clear();
             NotesContent.Text = "";
-            Stack.Inlines.Clear();
-            Heap.Inlines.Clear();
+            StackView.Document.Blocks.Clear();
+            HeapView.Document.Blocks.Clear();
             Stats.Content = "";
             _current_project_path = "";
             SetTitle("survivalizeed's Trace Viewer", false);
