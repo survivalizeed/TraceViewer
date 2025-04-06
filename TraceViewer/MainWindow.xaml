@@ -55,6 +55,9 @@
                                 <MenuItem x:Name="HeapAlignmentBase" Header="Heap Alignment Base Address" Click="HeapAlignmentBase_Click"/>
                                 <MenuItem x:Name="HeapAlignment" Header="Heap Alignment" Click="HeapAlignment_Click"/>
                             </MenuItem>
+                            <MenuItem Header="EDITOR">
+                                <MenuItem x:Name="EditorSettings" Header="Settings" Click="EditorSettings_Click"/>
+                            </MenuItem>
                         </Menu>
                     </DockPanel>
                     <DockPanel Margin="0,30,0,0"  LastChildFill="False">

@@ -31,6 +31,8 @@ namespace TraceViewer
         private bool hidden = false;
         private float hiddenOpacity = 0.2f;
 
+        private bool isFocused = false;
+
         private const string HexPrefix = "0x";
         private const string ChangeSeparator = "; ";
         private const string ChangeArrow = " -> ";
@@ -119,6 +121,9 @@ namespace TraceViewer
 
             comments.Width = window.Cd4.Width.Value;
             mnemonicBrief.Width = window.Cd4.Width.Value;
+
+            comments.GotFocus += Comments_GotFocus;
+            comments.LostFocus += Comments_LostFocus;
 
             if (hiddenRows.Contains(traceRow.Id) || DeObfus.deObHiddenRows.Contains(traceRow.Id))
             {
@@ -564,8 +569,36 @@ namespace TraceViewer
         private void TextChangedComments(object sender, TextChangedEventArgs e)
         {
             traceRow.comments = comments.Text;
+            if (window.addressBasedCommenting && isFocused)
+            {
+                var index = GraphHandler.uniqueIPAccesses?.FindIndex(x => x.Key == traceRow.Ip);
+                if (index != null)
+                {
+                    var ids = GraphHandler.uniqueIPAccesses[(int)index].Value;
+                    foreach (var id in ids)
+                    {
+                        TraceHandler.Trace.Trace[id].comments = comments.Text;
+                        foreach (var instruction in window.InstructionViewItems)
+                        {
+                            if (instruction.id.Text == id.ToString())
+                            {
+                                instruction.comments.Text = comments.Text;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
+        private void Comments_LostFocus(object sender, RoutedEventArgs e)
+        {
+            isFocused = false;
+        }
+
+        private void Comments_GotFocus(object sender, RoutedEventArgs e)
+        {
+            isFocused = true;
+        }
 
         private void disasm_MouseDown(object sender, MouseButtonEventArgs e)
         {

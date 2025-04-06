@@ -85,5 +85,8 @@ namespace TraceViewer
         public Option commentKnownObfuscations = true;
         public Option blockSlicing = true;
 
+        // Comments
+        public Option addressBasedCommenting = true;
+
     }
 }
