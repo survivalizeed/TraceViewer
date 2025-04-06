@@ -81,7 +81,7 @@ namespace TraceViewer.UserWindows
             {
                 Brush color = Brushes.White;
                 if (labelNames[i].StartsWith("xmm"))
-                    color = (SolidColorBrush)FindResource("DataTypeXMMColor");
+                    color = (SolidColorBrush)FindResource("DataTypeXmmColor");
                 if (labelNames[i].StartsWith("qword"))
                     color = (SolidColorBrush)FindResource("DataTypeQwordColor");
                 if (labelNames[i].StartsWith("dword"))
