@@ -35,16 +35,6 @@ namespace TraceViewer.Core
             if (window == null)
                 throw new InvalidOperationException("Main window not found");
 
-            if (Trace != null)
-            {
-                Trace.Trace.Clear();
-                Trace.Regs.Clear();
-                Trace = null;
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect(); // Here needed. Otherwise the GC will wait too long to collect big unloaded traces
-            }
-
             Trace = TraceLoader.OpenX64dbgTrace(path);
 
             if(Trace.Trace.Count == 0)
@@ -190,6 +180,15 @@ namespace TraceViewer.Core
                 default:
                     return i >= 35 ? RegisterType.FPU : RegisterType.GeneralPurpose; // Simplified FPU check
             }
+        }
+
+        public static void Clear()
+        {
+            if (Trace == null)
+                return;
+            Trace.Trace.Clear();
+            Trace.Regs.Clear();
+            Trace = null;
         }
     }
 }

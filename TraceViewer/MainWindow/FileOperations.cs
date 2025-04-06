@@ -71,7 +71,12 @@ namespace TraceViewer
             MemoryHandler.Clear();
             GraphHandler.Clear();
             GraphViewClear();
-            
+            TraceHandler.Clear(); // Clear trace data
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect(); // Here needed. Otherwise the GC will wait too long to collect big unloaded traces
+
         }
 
         private void OpenTrace_Click(object sender, RoutedEventArgs e)
