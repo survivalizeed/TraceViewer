@@ -36,7 +36,8 @@ namespace TraceViewer.Core.Analysis
                     var row = TraceHandler.Trace?.Trace[ids[j]];
                     if (row != null)
                     {
-                        row.comments = $"Block: {i} - Execution: {j + 1}/{ids.Count}";
+                        row.block = $"Block: {i} - Execution: {j + 1}/{ids.Count}";
+                        row.isBlockStart = true;
                     }
                 }
             }

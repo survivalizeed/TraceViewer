@@ -125,6 +125,11 @@ namespace TraceViewer
             comments.GotFocus += Comments_GotFocus;
             comments.LostFocus += Comments_LostFocus;
 
+            if (traceRow.isBlockStart)
+            {
+                block_panel.Visibility = Visibility.Visible;
+                block.Text = traceRow.block;
+            }
             if (hiddenRows.Contains(traceRow.Id) || DeObfus.deObHiddenRows.Contains(traceRow.Id))
             {
                 parent_panel.Opacity = hiddenOpacity;

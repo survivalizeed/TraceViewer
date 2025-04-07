@@ -113,6 +113,10 @@ namespace TraceViewer.Core
         public string comments = ""; // Will be set by WPF_TraceRow
 
         public bool already_swaped = false;
+
+        public bool isBlockStart = false;
+
+        public string block = ""; // Will be set by the analyzer
     }
 
     public class MemoryAccess

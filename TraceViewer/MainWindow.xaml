@@ -109,11 +109,11 @@
 
                         </Grid>
                     </DockPanel>
-                    <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="29.2,0,0,0">
+                    <DockPanel LastChildFill="False" Height="41" VerticalAlignment="Top" DockPanel.Dock="Left" Margin="21,0,0,0">
                         <Label x:Name="Fpu" Style="{StaticResource InstructionsViewTitlesSelectable}" Content="    FPU    " MouseDown="Fpu_MouseDown"/>
                     </DockPanel>
                 </DockPanel>
-                <DockPanel Margin="0,150,0,10" LastChildFill="True">
+                <DockPanel Margin="0,150,0,19" LastChildFill="True">
                     <Grid x:Name="InstructionsViewGrid" DockPanel.Dock="Left">
                         <ItemsControl x:Name="InstructionsView" VirtualizingStackPanel.IsVirtualizing="True"
                                       VirtualizingStackPanel.VirtualizationMode="Recycling"

@@ -74,7 +74,7 @@ namespace TraceViewer
         private void SetInstructionsViewWidth()
         {
             // Calculate and set the minimum and maximum width of InstructionsView based on column widths
-            double totalWidth = Cd0.Width.Value + Cd1.Width.Value + Cd2.Width.Value + Cd3.Width.Value + Cd4.Width.Value + Cd5.Width.Value + 8; // Add a small buffer
+            double totalWidth = Cd0.Width.Value + Cd1.Width.Value + Cd2.Width.Value + Cd3.Width.Value + Cd4.Width.Value + Cd5.Width.Value; // Add a small buffer
             if (totalWidth > 0)
             {
                 InstructionsView.MinWidth = totalWidth;
