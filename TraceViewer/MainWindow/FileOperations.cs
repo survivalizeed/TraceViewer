@@ -126,6 +126,17 @@ namespace TraceViewer
             NotesContent.Text = project.Notes ?? ""; // Load notes, handle null
             WPF_TraceRow.hiddenRows = project.HiddenRows; // Load hidden rows
             DeObfus.deObHiddenRows = project.DeObHiddenRows; // Load deobfuscated hidden rows
+
+            foreach(var block in project.Blocks)
+            {
+                var row = TraceHandler.Trace.Trace[block.Item1];
+                if (row != null)
+                {
+                    row.block = block.Item2; // Apply loaded block information
+                    row.isBlockStart = true;
+                }
+            }
+
             RefreshView(); // Refresh view after loading project
         }
 

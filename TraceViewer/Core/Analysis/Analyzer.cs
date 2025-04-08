@@ -8,6 +8,7 @@ namespace TraceViewer.Core.Analysis
 {
     class Analyzer
     {
+        private static List<int> BlockIDs = new List<int>();
 
         public static void Analyze()
         {
@@ -26,6 +27,26 @@ namespace TraceViewer.Core.Analysis
             window.RefreshView();
         }
 
+
+        public static void RemoveAnalysis()
+        {
+            var window = System.Windows.Application.Current.MainWindow as MainWindow ?? throw new Exception("Main window not found");
+
+            DeObfus.deObHiddenRows.Clear();
+
+            foreach (var id in BlockIDs)
+            {
+                var row = TraceHandler.Trace?.Trace[id];
+                if (row != null && row.block.StartsWith("Block: "))
+                {
+                    row.block = "";
+                    row.isBlockStart = false;
+                }
+            }
+            window.RefreshView();
+
+        }
+
         private static void BlockSlicing()
         {
             for (int i = 0; i < GraphHandler.blocks?.Count; i++)
@@ -34,10 +55,11 @@ namespace TraceViewer.Core.Analysis
                 for (int j = 0; j < ids?.Count; j++)
                 {
                     var row = TraceHandler.Trace?.Trace[ids[j]];
-                    if (row != null)
+                    if (row != null && !row.isBlockStart)
                     {
                         row.block = $"Block: {i} - Execution: {j + 1}/{ids.Count}";
                         row.isBlockStart = true;
+                        BlockIDs.Add(row.Id);
                     }
                 }
             }

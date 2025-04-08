@@ -47,7 +47,7 @@
                             <MenuItem Header="ANALYZER">
                                 <MenuItem x:Name="StartAnalysis" Header="Start Analysis" Click="StartAnalysis_Click"/>
                                 <MenuItem x:Name="AnalyzerSettings" Header="Settings" Click="AnalyzerSettings_Click"/>
-                                <MenuItem x:Name="UnhideAnalyzedInstructions" Header="Unhide Analyzed Instructions" Click="UnhideAnalyzedInstructions_Click"/>
+                                <MenuItem x:Name="RemoveAnalysis" Header="Remove Analysis" Click="RemoveAnalysis_Click"/>
                             </MenuItem>
                             <MenuItem Header="MEMORY">
                                 <MenuItem x:Name="StackAlignmentBase" Header="Stack Alignment Base Address" Click="StackAlignmentBase_Click"/>
@@ -198,7 +198,7 @@
             <Grid Name="NotesView">
                 <Border Margin="0,104,0,20" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrighterBrush}">
                     <TextBox Name="NotesContent" Text="" Foreground="{StaticResource PrimaryForegroundBrush}" AcceptsReturn="True" TextWrapping="Wrap"
-                             Background="{StaticResource DimmedBackgroundBrush}" FontSize="15" FontFamily="Consolas" Padding="3"
+                             Background="{StaticResource DimmedBackgroundBrush}" FontSize="15" FontFamily="Consolas" Padding="3" AcceptsTab="True" 
                              BorderThickness="0"/>
                 </Border>
             </Grid>

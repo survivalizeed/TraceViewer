@@ -20,6 +20,8 @@ namespace TraceViewer.Core
 
         public HashSet<int> DeObHiddenRows;
 
+        public List<(int, string)> Blocks;
+
         public string Notes;
 
     }
@@ -110,6 +112,8 @@ namespace TraceViewer.Core
 
                     project.DeObHiddenRows = ReadHiddenRows(decompressedReader);
 
+                    project.Blocks = ReadBlocks(decompressedReader);
+
                     project.Notes = ReadNotes(decompressedReader);
                 }
                 
@@ -160,6 +164,20 @@ namespace TraceViewer.Core
             return hiddenRows;
         }
 
+        private static List<(int, string)> ReadBlocks(BinaryReader reader)
+        {
+            List<(int, string)> blocks = new List<(int, string)>();
+            int blockCount = reader.ReadInt32();
+            for (int i = 0; i < blockCount; i++)
+            {
+                int id = reader.ReadInt32();
+                short len = reader.ReadInt16();
+                string block = new string(reader.ReadChars(len));
+                blocks.Add((id, block));
+            }
+            return blocks;
+        }
+
         private static string ReadNotes(BinaryReader reader)
         {
             return Encoding.UTF8.GetString(reader.ReadBytes((int)(reader.BaseStream.Length - reader.BaseStream.Position)));
@@ -191,6 +209,8 @@ namespace TraceViewer.Core
 
                 byte[] deObHiddenRowsData = WriteHiddenRows(project.DeObHiddenRows);
 
+                byte[] blocks = WriteBlocks(project.TraceData.Trace);
+
                 byte[] notesData = Encoding.UTF8.GetBytes(project.Notes);
 
                 using (MemoryStream decompressedMs = new MemoryStream())
@@ -201,6 +221,7 @@ namespace TraceViewer.Core
                     decompressedWriter.Write(commentsData);
                     decompressedWriter.Write(hiddenRowsData);
                     decompressedWriter.Write(deObHiddenRowsData);
+                    decompressedWriter.Write(blocks);
                     decompressedWriter.Write(notesData);
 
                     byte[] decompressedBlock = decompressedMs.ToArray();
@@ -245,7 +266,7 @@ namespace TraceViewer.Core
                 {
                     writer.Write(comment.Item1);
                     writer.Write((short)comment.Item2.Length);
-                    writer.Write(comment.Item2.ToCharArray()); 
+                    writer.Write(comment.Item2.ToCharArray());
                 }
                 return ms.ToArray();
             }
@@ -260,6 +281,28 @@ namespace TraceViewer.Core
                 foreach (var hiddenRow in hiddenRows)
                 {
                     writer.Write(hiddenRow);
+                }
+                return ms.ToArray();
+            }
+        }
+
+        private static byte[] WriteBlocks(List<TraceRow> traceRows)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(ms))
+            {
+                List<int> blocks = new List<int>();
+                foreach (var row in traceRows)
+                {
+                    if(row.isBlockStart)
+                        blocks.Add(row.Id);
+                }
+                writer.Write(blocks.Count);
+                foreach (var block in blocks)
+                {
+                    writer.Write(traceRows[block].Id);
+                    writer.Write((short)traceRows[block].block.Length);
+                    writer.Write(traceRows[block].block.ToCharArray());
                 }
                 return ms.ToArray();
             }

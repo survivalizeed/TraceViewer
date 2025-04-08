@@ -12,7 +12,7 @@ namespace TraceViewer
         {
             if (TraceHandler.Trace == null)
                 return;
-            ConfirmDialog confirmDialog = new ConfirmDialog("The Analysis can change comments in your project depending on your settings!\r\n" +
+            ConfirmDialog confirmDialog = new ConfirmDialog("The Analysis can make mistakes!\r\n" +
                 "The useless assignment detection may flag overwritten function arguments as useless.\r\n\n\r" +
                 "Make sure to only use this on actually obfuscated code!", null, 230);
             confirmDialog.ShowDialog();
@@ -30,10 +30,9 @@ namespace TraceViewer
             dialog.ShowDialog();
         }
 
-        private void UnhideAnalyzedInstructions_Click(object sender, RoutedEventArgs e)
+        private void RemoveAnalysis_Click(object sender, RoutedEventArgs e)
         {
-            DeObfus.deObHiddenRows.Clear();
-            RefreshView();
+            Analyzer.RemoveAnalysis();
         }
 
     }

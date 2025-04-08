@@ -700,6 +700,23 @@ namespace TraceViewer
             Clipboard.SetText($"#: {id.Text} | {address.Text} | {traceRow.Disasm} | {changesText} | {comments.Text}");
         }
 
+        private void MarkUnmarkAsBlockStart_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
+            if(traceRow.isBlockStart)
+            {
+                traceRow.isBlockStart = false;
+                block_panel.Visibility = Visibility.Collapsed;
+                block.Text = "";
+            }
+            else
+            {
+                traceRow.isBlockStart = true;
+                block_panel.Visibility = Visibility.Visible;
+                block.Focus();
+            }
+        }
+
         private void AddBookmark_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton != MouseButtonState.Pressed) return;
@@ -720,6 +737,11 @@ namespace TraceViewer
         private void ContextMenu_Closed(object sender, RoutedEventArgs e)
         {
             window.DimmingOverlay.Visibility = Visibility.Collapsed;
+        }
+
+        private void block_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            traceRow.block = block.Text;
         }
     }
 }

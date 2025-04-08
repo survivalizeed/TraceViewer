@@ -12,13 +12,17 @@
             <MenuItem Name="ShowOrRemove" Header="Show/Remove" PreviewMouseDown="ShowOrRemove_PreviewMouseDown"/>
             <MenuItem Name="Copy" Header="Copy" PreviewMouseDown="Copy_PreviewMouseDown"/>
             <MenuItem Name="CopyRow" Header="Copy Row" PreviewMouseDown="CopyRow_PreviewMouseDown"/>
+            <MenuItem Name="MarkUnmarkAsBlockStart" Header="Mark/Unmark As Block Start" PreviewMouseDown="MarkUnmarkAsBlockStart_PreviewMouseDown"/>
             <MenuItem Name="AddBookmark" Header="Add Bookmark" PreviewMouseDown="AddBookmark_PreviewMouseDown"/>
         </ContextMenu>
     </UserControl.Resources>
     <Grid Margin="0,0,0,0" >
         <StackPanel Orientation="Vertical">
             <StackPanel x:Name="block_panel" Orientation="Vertical" Visibility="Collapsed">
-                <TextBlock x:Name="block" Style="{StaticResource DisasmTextBlock}" Foreground="{StaticResource PrimaryForegroundBrush}" FontSize="12" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                <TextBox x:Name="block" Style="{StaticResource CommentsTextBox}" HorizontalAlignment="Center" 
+                         HorizontalContentAlignment="Center" FontSize="15" Padding="50,5,50,5" 
+                         BorderThickness="0" FontWeight="Bold"
+                         TextChanged="block_TextChanged"/>
                 <Line Margin="0,0,0,5" X1="0" Y1="0" X2="10000" Y2="0" Stroke="{StaticResource ViewBorderHoverBrush}" StrokeThickness="1"/>
             </StackPanel>
             <DockPanel x:Name="parent_panel" LastChildFill="False">
