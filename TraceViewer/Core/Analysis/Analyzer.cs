@@ -32,11 +32,14 @@ namespace TraceViewer.Core.Analysis
         {
             var window = System.Windows.Application.Current.MainWindow as MainWindow ?? throw new Exception("Main window not found");
 
+            if (TraceHandler.Trace == null)
+                return;
+
             DeObfus.deObHiddenRows.Clear();
 
             foreach (var id in BlockIDs)
             {
-                var row = TraceHandler.Trace?.Trace[id];
+                var row = TraceHandler.Trace.Trace[id];
                 if (row != null && row.block.StartsWith("Block: "))
                 {
                     row.block = "";

@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Shapes;
+using TraceViewer.Core;
 
 namespace TraceViewer
 {
@@ -49,6 +50,9 @@ namespace TraceViewer
         public ObservableCollection<WPF_RegisterRow> RegisterViewItems = new();
 
 
+        // InstructionsView
+        public int index = TraceHandler.load_count; // Initial index for trace loading
+
         // Appearance
         private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
 
@@ -85,8 +89,9 @@ namespace TraceViewer
         public Option commentKnownObfuscations = true;
         public Option blockSlicing = true;
 
-        // Comments
-        public Option addressBasedCommenting = true;
+        // EditorSettings
+        public Option addressBasedCommenting = false;
+
 
     }
 }

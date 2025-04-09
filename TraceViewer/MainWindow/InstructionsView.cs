@@ -90,7 +90,7 @@ namespace TraceViewer
             ScrollControl(delta);
         }
 
-        static int index = TraceHandler.load_count; // Initial index for trace loading
+        
 
         public bool ScrollControl(int steps, bool set = false)
         {

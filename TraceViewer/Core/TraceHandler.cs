@@ -100,6 +100,8 @@ namespace TraceViewer.Core
 
             window.Stats.Content = $"IDs: {Trace.Trace.Count}  -  Unique Addresses: {GraphHandler.uniqueIPAccesses.Count}";
 
+            window.index = load_count;
+
             LoadRange(0, load_count, false);
         }
 
