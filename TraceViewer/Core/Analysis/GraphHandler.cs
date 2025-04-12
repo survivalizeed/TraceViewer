@@ -185,6 +185,10 @@ namespace TraceViewer.Core.Analysis
             }
 
 
+            if(connections.Count == 0)
+            {
+                return false;
+            }
             // Sort the connections by controlflow
             var cf_connections = new List<(int, int)>();
 
