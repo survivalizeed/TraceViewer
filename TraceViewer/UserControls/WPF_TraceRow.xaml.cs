@@ -140,7 +140,6 @@ namespace TraceViewer
         private void SetDisassemblyText(string disassemblyText)
         {
             disasm.Inlines.Clear();
-            // Faster than regex
             string[] singleInstructions = Regex.Split(disassemblyText, @"([ ,:\[\]*])");
 
             foreach (string singleInstruction in singleInstructions)
