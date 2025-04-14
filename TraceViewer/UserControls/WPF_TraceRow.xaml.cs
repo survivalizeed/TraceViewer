@@ -145,7 +145,7 @@ namespace TraceViewer
 
             foreach (string singleInstruction in singleInstructions)
             {           
-                if (highlightedRegisterFamily != "" && DeObfus.registerFamilies[highlightedRegisterFamily].Contains(singleInstruction))
+                if (highlightedRegisterFamily != "" && DeObfus.registerFamiliesSSE[highlightedRegisterFamily].Contains(singleInstruction))
                     disasm.Inlines.Add(new Run(singleInstruction) { Foreground = SyntaxHighlighter.Check_Type(singleInstruction), 
                         Background = Brushes.DarkRed });
                 else
@@ -640,7 +640,7 @@ namespace TraceViewer
                 string wordUnderMouse = wordRange.Text.Trim();
 
 
-                foreach (var registerFamily in DeObfus.registerFamilies)
+                foreach (var registerFamily in DeObfus.registerFamiliesSSE)
                 {
                     foreach (var register in registerFamily.Value)
                     {
