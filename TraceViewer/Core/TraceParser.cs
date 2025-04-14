@@ -3,16 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-// using Newtonsoft.Json; // Optional, falls wieder benötigt
-// using Newtonsoft.Json.Linq; // Optional, falls wieder benötigt
 using Gee.External.Capstone;
 using Gee.External.Capstone.X86;
 using System.Text.RegularExpressions;
-// using System.Windows.Controls; // Unbenutzt, falls nicht für UI benötigt
-
-// --- Hinzufügen für System.Text.Json ---
 using System.Text.Json;
-// --- Ende Hinzufügen ---
+
 
 
 namespace TraceViewer.Core
