@@ -1,0 +1,26 @@
+﻿<UserControl x:Class="TraceViewer.WPF_BlockRow"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:TraceViewer"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800"
+             >
+    <Grid Margin="0,0,0,0" >
+        <StackPanel Orientation="Vertical">
+          
+            <DockPanel LastChildFill="True">
+                <Border x:Name="id_border" Style="{StaticResource DisasmTextBlockBorder}" Width="100" DockPanel.Dock="Left" MouseDown="OnMouseDown">
+                    <TextBlock x:Name="id" Width="100" Style="{StaticResource DisasmTextBlock}" FontSize="15" HorizontalAlignment="Left" DockPanel.Dock="Left" />
+                </Border>
+                <Border x:Name="address_border" Style="{StaticResource DisasmTextBlockBorder}" Width="200" DockPanel.Dock="Left" MouseDown="OnMouseDown">
+                    <TextBlock x:Name="address" Width="200" Style="{StaticResource DisasmTextBlock}" HorizontalAlignment="Left" FontSize="15" DockPanel.Dock="Left" />
+                </Border>
+                <Border x:Name="block_border" Style="{StaticResource DisasmTextBlockBorder}" DockPanel.Dock="Left" MouseDown="OnMouseDown">
+                    <TextBlock x:Name="block" Style="{StaticResource DisasmTextBlock}" HorizontalAlignment="Left" FontSize="15" DockPanel.Dock="Left" />
+                </Border>
+            </DockPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>
