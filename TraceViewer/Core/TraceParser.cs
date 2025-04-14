@@ -17,11 +17,9 @@ using System.Text.Json;
 
 namespace TraceViewer.Core
 {
-    public static class prefs
+    public static class REGDUMP
     {
-        // *** KORRIGIERTE LISTE basierend auf C++ REGDUMP Analyse ***
-        public static readonly List<Tuple<string, int>> X64_REGS = new List<Tuple<string, int>> {
-             // --- REGISTERCONTEXT Fields Start ---
+        public static readonly List<Tuple<string, int>> X64_REGS_PARSING = new List<Tuple<string, int>> {
             new Tuple<string, int>("rax", 8),    
             new Tuple<string, int>("rcx", 8),    
             new Tuple<string, int>("rdx", 8),    
@@ -62,134 +60,134 @@ namespace TraceViewer.Core
             new Tuple<string, int>("", 4),
             new Tuple<string, int>("", 4),
             new Tuple<string, int>("", 4),  //mxcsr
-                                            //
-            new Tuple<string, int>("xmm0h", 8),
+                                            
             new Tuple<string, int>("xmm0l", 8),
+            new Tuple<string, int>("xmm0h", 8),
 
-            new Tuple<string, int>("xmm1h", 8),
             new Tuple<string, int>("xmm1l", 8),
+            new Tuple<string, int>("xmm1h", 8),
 
-            new Tuple<string, int>("xmm2h", 8),
             new Tuple<string, int>("xmm2l", 8),
+            new Tuple<string, int>("xmm2h", 8),
 
-            new Tuple<string, int>("xmm3h", 8),
             new Tuple<string, int>("xmm3l", 8),
+            new Tuple<string, int>("xmm3h", 8),
 
-            new Tuple<string, int>("xmm4h", 8),
             new Tuple<string, int>("xmm4l", 8),
+            new Tuple<string, int>("xmm4h", 8),
 
-            new Tuple<string, int>("xmm5h", 8),
             new Tuple<string, int>("xmm5l", 8),
+            new Tuple<string, int>("xmm5h", 8),
 
-            new Tuple<string, int>("xmm6h", 8),
             new Tuple<string, int>("xmm6l", 8),
+            new Tuple<string, int>("xmm6h", 8),
 
-            new Tuple<string, int>("xmm7h", 8),
-            new Tuple<string, int>("xmm7l", 8),   
+            new Tuple<string, int>("xmm7l", 8),
+            new Tuple<string, int>("xmm7h", 8),   
 
-            new Tuple<string, int>("xmm8h", 8),   
-            new Tuple<string, int>("xmm8l", 8), 
+            new Tuple<string, int>("xmm8l", 8),   
+            new Tuple<string, int>("xmm8h", 8), 
             
-            new Tuple<string, int>("xmm9h", 8),   
             new Tuple<string, int>("xmm9l", 8),   
+            new Tuple<string, int>("xmm9h", 8),   
 
-            new Tuple<string, int>("xmm10h", 8),   
             new Tuple<string, int>("xmm10l", 8),   
+            new Tuple<string, int>("xmm10h", 8),   
 
-            new Tuple<string, int>("xmm11h", 8),   
             new Tuple<string, int>("xmm11l", 8),   
+            new Tuple<string, int>("xmm11h", 8),   
 
-            new Tuple<string, int>("xmm12h", 8),  
             new Tuple<string, int>("xmm12l", 8),  
+            new Tuple<string, int>("xmm12h", 8),  
 
-            new Tuple<string, int>("xmm13h", 8),  
             new Tuple<string, int>("xmm13l", 8),  
+            new Tuple<string, int>("xmm13h", 8),  
 
-            new Tuple<string, int>("xmm14h", 8),  
-            new Tuple<string, int>("xmm14l", 8),
+            new Tuple<string, int>("xmm14l", 8),  
+            new Tuple<string, int>("xmm14h", 8),
 
-            new Tuple<string, int>("xmm15h", 8),
             new Tuple<string, int>("xmm15l", 8),
+            new Tuple<string, int>("xmm15h", 8),
 
-            new Tuple<string, int>("ymm0hl", 8),   
-            new Tuple<string, int>("ymm0ll", 8),
-            new Tuple<string, int>("ymm0hh", 8),
+            new Tuple<string, int>("ymm0ll", 8),   
+            new Tuple<string, int>("ymm0hl", 8),
             new Tuple<string, int>("ymm0lh", 8),
+            new Tuple<string, int>("ymm0hh", 8),
 
-            new Tuple<string, int>("ymm1hl", 8),
             new Tuple<string, int>("ymm1ll", 8),
-            new Tuple<string, int>("ymm1hh", 8),
+            new Tuple<string, int>("ymm1hl", 8),
             new Tuple<string, int>("ymm1lh", 8),
+            new Tuple<string, int>("ymm1hh", 8),
 
-            new Tuple<string, int>("ymm2hl", 8),
             new Tuple<string, int>("ymm2ll", 8),
-            new Tuple<string, int>("ymm2hh", 8),
+            new Tuple<string, int>("ymm2hl", 8),
             new Tuple<string, int>("ymm2lh", 8),
+            new Tuple<string, int>("ymm2hh", 8),
 
-            new Tuple<string, int>("ymm3hl", 8),
             new Tuple<string, int>("ymm3ll", 8),
-            new Tuple<string, int>("ymm3hh", 8),
+            new Tuple<string, int>("ymm3hl", 8),
             new Tuple<string, int>("ymm3lh", 8),
+            new Tuple<string, int>("ymm3hh", 8),
 
-            new Tuple<string, int>("ymm4hl", 8),
             new Tuple<string, int>("ymm4ll", 8),
-            new Tuple<string, int>("ymm4hh", 8),
+            new Tuple<string, int>("ymm4hl", 8),
             new Tuple<string, int>("ymm4lh", 8),
+            new Tuple<string, int>("ymm4hh", 8),
 
-            new Tuple<string, int>("ymm5hl", 8),
             new Tuple<string, int>("ymm5ll", 8),
-            new Tuple<string, int>("ymm5hh", 8),
+            new Tuple<string, int>("ymm5hl", 8),
             new Tuple<string, int>("ymm5lh", 8),
+            new Tuple<string, int>("ymm5hh", 8),
 
-            new Tuple<string, int>("ymm6hl", 8),
             new Tuple<string, int>("ymm6ll", 8),
-            new Tuple<string, int>("ymm6hh", 8),
+            new Tuple<string, int>("ymm6hl", 8),
             new Tuple<string, int>("ymm6lh", 8),
+            new Tuple<string, int>("ymm6hh", 8),
 
-            new Tuple<string, int>("ymm7hl", 8),
             new Tuple<string, int>("ymm7ll", 8),
-            new Tuple<string, int>("ymm7hh", 8),
+            new Tuple<string, int>("ymm7hl", 8),
             new Tuple<string, int>("ymm7lh", 8),
+            new Tuple<string, int>("ymm7hh", 8),
 
-            new Tuple<string, int>("ymm8hl", 8),
             new Tuple<string, int>("ymm8ll", 8),
-            new Tuple<string, int>("ymm8hh", 8),
+            new Tuple<string, int>("ymm8hl", 8),
             new Tuple<string, int>("ymm8lh", 8),
+            new Tuple<string, int>("ymm8hh", 8),
 
-            new Tuple<string, int>("ymm9hl", 8),
             new Tuple<string, int>("ymm9ll", 8),
-            new Tuple<string, int>("ymm9hh", 8),
+            new Tuple<string, int>("ymm9hl", 8),
             new Tuple<string, int>("ymm9lh", 8),
+            new Tuple<string, int>("ymm9hh", 8),
 
-            new Tuple<string, int>("ymm10hl", 8),
             new Tuple<string, int>("ymm10ll", 8),
-            new Tuple<string, int>("ymm10hh", 8),
+            new Tuple<string, int>("ymm10hl", 8),
             new Tuple<string, int>("ymm10lh", 8),
+            new Tuple<string, int>("ymm10hh", 8),
 
-            new Tuple<string, int>("ymm11hl", 8),
             new Tuple<string, int>("ymm11ll", 8),
-            new Tuple<string, int>("ymm11hh", 8),
+            new Tuple<string, int>("ymm11hl", 8),
             new Tuple<string, int>("ymm11lh", 8),
+            new Tuple<string, int>("ymm11hh", 8),
 
-            new Tuple<string, int>("ymm12hl", 8),
             new Tuple<string, int>("ymm12ll", 8),
-            new Tuple<string, int>("ymm12hh", 8),
+            new Tuple<string, int>("ymm12hl", 8),
             new Tuple<string, int>("ymm12lh", 8),
+            new Tuple<string, int>("ymm12hh", 8),
 
-            new Tuple<string, int>("ymm13hl", 8),
             new Tuple<string, int>("ymm13ll", 8),
-            new Tuple<string, int>("ymm13hh", 8),
+            new Tuple<string, int>("ymm13hl", 8),
             new Tuple<string, int>("ymm13lh", 8),
+            new Tuple<string, int>("ymm13hh", 8),
 
-            new Tuple<string, int>("ymm14hl", 8),
             new Tuple<string, int>("ymm14ll", 8),
-            new Tuple<string, int>("ymm14hh", 8),
+            new Tuple<string, int>("ymm14hl", 8),
             new Tuple<string, int>("ymm14lh", 8),
+            new Tuple<string, int>("ymm14hh", 8),
 
-            new Tuple<string, int>("ymm15hl", 8),
             new Tuple<string, int>("ymm15ll", 8),
-            new Tuple<string, int>("ymm15hh", 8),
+            new Tuple<string, int>("ymm15hl", 8),
             new Tuple<string, int>("ymm15lh", 8),
+            new Tuple<string, int>("ymm15hh", 8),
 
             new Tuple<string, int>("", 8),        
             new Tuple<string, int>("", 80),       
@@ -201,7 +199,67 @@ namespace TraceViewer.Core
             new Tuple<string, int>("", 4)
         };
 
-        public static readonly string[] X32_REGS = { "eax", "ebx", "ecx", "edx", "ebp", "esp", "esi", "edi", "eip" };
+        public static readonly List<Tuple<string, int>> X64_REGS = new List<Tuple<string, int>> {
+            new Tuple<string, int>("rax", 8),
+            new Tuple<string, int>("rcx", 8),
+            new Tuple<string, int>("rdx", 8),
+            new Tuple<string, int>("rbx", 8),
+            new Tuple<string, int>("rsp", 8),
+            new Tuple<string, int>("rbp", 8),
+            new Tuple<string, int>("rsi", 8),
+            new Tuple<string, int>("rdi", 8),
+            new Tuple<string, int>("r8", 8),
+            new Tuple<string, int>("r9", 8),
+            new Tuple<string, int>("r10", 8),
+            new Tuple<string, int>("r11", 8),
+            new Tuple<string, int>("r12", 8),
+            new Tuple<string, int>("r13", 8),
+            new Tuple<string, int>("r14", 8),
+            new Tuple<string, int>("r15", 8),
+            new Tuple<string, int>("rip", 8),
+            new Tuple<string, int>("rflags", 8), 
+            
+            new Tuple<string, int>("dr0", 8),
+            new Tuple<string, int>("dr1", 8),
+            new Tuple<string, int>("dr2", 8),
+            new Tuple<string, int>("dr3", 8),
+            new Tuple<string, int>("dr6", 8),
+            new Tuple<string, int>("dr7", 8),
+
+            new Tuple<string, int>("xmm0", 16),
+            new Tuple<string, int>("xmm1", 16),
+            new Tuple<string, int>("xmm2", 16),
+            new Tuple<string, int>("xmm3", 16),
+            new Tuple<string, int>("xmm4", 16),
+            new Tuple<string, int>("xmm5", 16),
+            new Tuple<string, int>("xmm6", 16),
+            new Tuple<string, int>("xmm7", 16),
+            new Tuple<string, int>("xmm8", 16),
+            new Tuple<string, int>("xmm9", 16),
+            new Tuple<string, int>("xmm10", 16),
+            new Tuple<string, int>("xmm11", 16),
+            new Tuple<string, int>("xmm12", 16),
+            new Tuple<string, int>("xmm13", 16),
+            new Tuple<string, int>("xmm14", 16),
+            new Tuple<string, int>("xmm15", 16),
+
+            new Tuple<string, int>("ymm0", 32),
+            new Tuple<string, int>("ymm1", 32),
+            new Tuple<string, int>("ymm2", 32),
+            new Tuple<string, int>("ymm3", 32),
+            new Tuple<string, int>("ymm4", 32),
+            new Tuple<string, int>("ymm5", 32),
+            new Tuple<string, int>("ymm6", 32),
+            new Tuple<string, int>("ymm7", 32),
+            new Tuple<string, int>("ymm8", 32),
+            new Tuple<string, int>("ymm9", 32),
+            new Tuple<string, int>("ymm10", 32),
+            new Tuple<string, int>("ymm11", 32),
+            new Tuple<string, int>("ymm12", 32),
+            new Tuple<string, int>("ymm13", 32),
+            new Tuple<string, int>("ymm14", 32),
+            new Tuple<string, int>("ymm15", 32),
+        };
     }
 
     public class TraceData
@@ -272,7 +330,7 @@ namespace TraceViewer.Core
                     throw new Exception($"Error parsing JSON header: {jsonEx.Message}", jsonEx);
                 }
 
-                List<Tuple<string, int>> regs = prefs.X64_REGS;
+                List<Tuple<string, int>> regs = REGDUMP.X64_REGS_PARSING;
                 string ipReg;
                 int pointerSize;
                 if (arch == "x64")
@@ -503,15 +561,68 @@ namespace TraceViewer.Core
                             }
 
 
-                            List<byte[]> cloned_regValues = new List<byte[]>();
-                            List<Tuple<string, int>> namedRegistersCloned = new List<Tuple<string, int>>();
+                            List<byte[]> initialClonedValues = new List<byte[]>();
+                            List<Tuple<string, int>> initialClonedNames = new List<Tuple<string, int>>();
                             for (int i = 0; i < regs.Count; i++)
                             {
-                                if (!string.IsNullOrEmpty(regs[i].Item1))
+                                if (regValues != null && i < regValues.Count && regs[i] != null && !string.IsNullOrEmpty(regs[i].Item1))
                                 {
-                                    cloned_regValues.Add((byte[])regValues[i].Clone());
-                                    namedRegistersCloned.Add(regs[i]);
+                                    initialClonedValues.Add((byte[])regValues[i].Clone());
+                                    initialClonedNames.Add(regs[i]);
                                 }
+                            }
+
+                            List<byte[]> processedRegValues = new List<byte[]>();
+                            List<Tuple<string, int>> processedNamedRegisters = new List<Tuple<string, int>>();
+
+                            int currentIndex = 0;
+                            while (currentIndex < initialClonedNames.Count)
+                            {
+                                string regName = initialClonedNames[currentIndex].Item1;
+
+                                if (regName.StartsWith("xmm"))
+                                {
+                                    if (currentIndex + 1 < initialClonedValues.Count)
+                                    {
+                                        byte[] full_xmm = new byte[16];
+                                        Array.Copy(initialClonedValues[currentIndex], 0, full_xmm, 0, 8);
+                                        Array.Copy(initialClonedValues[currentIndex + 1], 0, full_xmm, 8, 8);
+
+                                        processedRegValues.Add(full_xmm);
+                                        processedNamedRegisters.Add(initialClonedNames[currentIndex]);
+
+                                        currentIndex += 2;
+                                    }
+                                }
+                                else if (regName.StartsWith("ymm"))
+                                {
+                                    if (currentIndex + 3 < initialClonedValues.Count)
+                                    {
+                                        byte[] full_ymm = new byte[32];
+
+                                        Array.Copy(initialClonedValues[currentIndex], 0, full_ymm, 0, 8);    
+                                        Array.Copy(initialClonedValues[currentIndex + 1], 0, full_ymm, 8, 8);
+                                        Array.Copy(initialClonedValues[currentIndex + 2], 0, full_ymm, 16, 8); 
+                                        Array.Copy(initialClonedValues[currentIndex + 3], 0, full_ymm, 24, 8); 
+
+                                        processedRegValues.Add(full_ymm);
+                                        processedNamedRegisters.Add(initialClonedNames[currentIndex]);
+
+                                        currentIndex += 4;
+                                    }
+                                }
+                                else
+                                {
+                                    processedRegValues.Add(initialClonedValues[currentIndex]);
+                                    processedNamedRegisters.Add(initialClonedNames[currentIndex]);
+                                    currentIndex++;
+                                }
+                            }
+
+
+                            if(REGDUMP.X64_REGS.Count != processedNamedRegisters.Count)
+                            {
+                                throw new Exception("Processed registers don't match the final X64_REGS.");
                             }
 
                             TraceRow traceRow = new TraceRow
@@ -519,7 +630,7 @@ namespace TraceViewer.Core
                                 Id = rowId,
                                 Ip = ip,
                                 Disasm = disasm.Trim(),
-                                Regs = cloned_regValues,
+                                Regs = processedRegValues,
                                 Opcodes = BitConverter.ToString(opcodes).Replace("-", ""),
                                 Mem = mems,
                                 Regchanges = new List<string>()
@@ -542,7 +653,7 @@ namespace TraceViewer.Core
 
             if (traceData.Trace.Count > 0)
             {
-                var namedRegistersForComparison = prefs.X64_REGS.Where(reg => !string.IsNullOrEmpty(reg.Item1)).ToList();
+                var namedRegistersForComparison = REGDUMP.X64_REGS.Where(reg => !string.IsNullOrEmpty(reg.Item1)).ToList();
 
                 for (int i = 0; i < traceData.Trace.Count - 1; i++)
                 {

@@ -63,7 +63,7 @@ namespace TraceViewer.Core
             else
                 throw new InvalidOperationException("JSON root was null or the target dicts weren't found");
 
-            var x64Regs = prefs.X64_REGS;
+            var x64Regs = REGDUMP.X64_REGS;
 
             for (int i = 0; i < x64Regs.Count; i++)
             {
@@ -172,15 +172,15 @@ namespace TraceViewer.Core
                     return RegisterType.GeneralPurpose;
                 case 17:
                     return RegisterType.Flags;
-                case 25:
-                case 26:
-                case 27:
-                case 28:
-                case 29:
-                case 30:
+                case 18:
+                case 19:
+                case 20:
+                case 21:
+                case 22:
+                case 23:
                     return RegisterType.Debug;
                 default:
-                    return i >= 35 ? RegisterType.FPU : RegisterType.GeneralPurpose; // Simplified FPU check
+                    return i >= 24 ? RegisterType.FPU : RegisterType.GeneralPurpose; // Simplified FPU check
             }
         }
 

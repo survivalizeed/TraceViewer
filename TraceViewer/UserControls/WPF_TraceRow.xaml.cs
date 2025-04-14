@@ -54,8 +54,7 @@ namespace TraceViewer
             InitializeComponent();
             window = System.Windows.Application.Current.MainWindow as MainWindow ?? throw new Exception("Main window not found");
 
-            regs = prefs.X64_REGS.ToList();
-            regs.RemoveAll(reg => string.IsNullOrEmpty(reg.Item1));
+            regs = REGDUMP.X64_REGS;
             
             mnemonicBrief.Text = mnemonicBriefText;
             mnemonic = mnemonicText;
