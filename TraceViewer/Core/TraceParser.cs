@@ -548,7 +548,9 @@ namespace TraceViewer.Core
                                 byte flag = memoryAccessFlags[i];
                                 string access = ((flag & 1) == 0) ? "WRITE" : "READ";
                                 ulong value = (access == "WRITE") ? memoryAccessNewData[newDataCounter++] : memoryAccessOldData[i];
-                                if (disasm.Contains("qword")) value &= 0xFFFFFFFFFFFFFFFF;
+                                if (disasm.Contains("ymmword")) value &= 0xFFFFFFFFFFFFFFFF;
+                                else if (disasm.Contains("xmmword")) value &= 0xFFFFFFFFFFFFFFFF;
+                                else if (disasm.Contains("qword")) value &= 0xFFFFFFFFFFFFFFFF;
                                 else if (disasm.Contains("dword")) value &= 0xFFFFFFFF;
                                 else if (disasm.Contains("word")) value &= 0xFFFF;
                                 else if (disasm.Contains("byte")) value &= 0xFF;
