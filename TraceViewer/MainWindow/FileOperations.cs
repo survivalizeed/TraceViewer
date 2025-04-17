@@ -73,7 +73,6 @@ namespace TraceViewer
             GraphHandler.Clear();
             GraphViewClear();
             TraceHandler.Clear(); // Clear trace data
-            BlocksViewItemControl.Items.Clear(); // Clear blocks view items
             BlocksHandler.BlocksItems.Clear(); // Clear blocks items
 
             GC.Collect();
