@@ -804,6 +804,7 @@ namespace TraceViewer
         {
             if (e.LeftButton != MouseButtonState.Pressed) return;
 
+            window.BookmarkViewItems.Add(new WPF_Bookmark(traceRow.Id.ToString(), traceRow.Ip.ToString(), traceRow.Disasm));
         }
 
         private void ShowOrRemove_PreviewMouseDown(object sender, MouseButtonEventArgs e)

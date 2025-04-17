@@ -26,6 +26,7 @@ namespace TraceViewer
             InstructionsView.Loaded += InstructionsView_Loaded;
             InstructionsView.ItemsSource = InstructionViewItems;
             RegistersView.ItemsSource = RegisterViewItems;
+            BookmarksViewItemControl.ItemsSource = BookmarkViewItems;
             PreviewKeyDown += MainWindow_PreviewKeyDown;
             SourceInitialized += MainWindow_SourceInitialized;
 

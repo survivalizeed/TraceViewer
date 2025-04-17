@@ -49,6 +49,8 @@ namespace TraceViewer
         public ObservableCollection<WPF_TraceRow> InstructionViewItems = new();
         public ObservableCollection<WPF_RegisterRow> RegisterViewItems = new();
 
+        // BookmarksView
+        public ObservableCollection<WPF_Bookmark> BookmarkViewItems = new();
 
         // InstructionsView
         public int index = TraceHandler.load_count; // Initial index for trace loading
