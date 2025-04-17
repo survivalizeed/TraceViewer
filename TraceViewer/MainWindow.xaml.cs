@@ -41,7 +41,7 @@ namespace TraceViewer
 
         }
 
-    private void SetTitle(string text, bool append)
+        private void SetTitle(string text, bool append)
         {
             Dispatcher.Invoke(() => { this.Title = append ? Title + text : text; ; });
         }
@@ -54,5 +54,6 @@ namespace TraceViewer
             GC.WaitForPendingFinalizers();
             GC.Collect(); // Here needed. Otherwise the GC will wait too long to collect the data leading to a strong memory consumption increase
         }
+
     }
 }

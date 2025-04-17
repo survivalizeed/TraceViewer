@@ -9,7 +9,7 @@ namespace TraceViewer.Core.Analysis
 {
     internal class BlocksHandler
     {
-        private static ObservableCollection<WPF_BlockRow> BlocksItems = new ObservableCollection<WPF_BlockRow>();
+        public static ObservableCollection<WPF_BlockRow> BlocksItems = new ObservableCollection<WPF_BlockRow>();
 
         public static void FillBlocks()
         {

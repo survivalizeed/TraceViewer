@@ -42,6 +42,7 @@
                                 <MenuItem x:Name="OpenProject_" Header="Open Project" Click="OpenProject_Click"/>
                                 <MenuItem x:Name="SaveProject" Header="Save Project" Click="SaveProject_Click"/>
                                 <MenuItem x:Name="SaveProjectAs" Header="Save Project As" Click="SaveProjectAs_Click"/>
+                                <MenuItem x:Name="RenewTrace" Header="Renew Trace" Click="RenewTrace_Click"/>
                                 <MenuItem x:Name="CloseProject" Header="Quit Project/Trace" Click="CloseProject_Click"/>
                             </MenuItem>
                             <MenuItem Header="ANALYZER">

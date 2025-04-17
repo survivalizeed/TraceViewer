@@ -9,13 +9,14 @@ namespace TraceViewer
 {
     public partial class MainWindow : Window
     {
-        private CancellationTokenSource _cancellationTokenSource;
+        private CancellationTokenSource _saveCancellationTokenSource;
+        private CancellationTokenSource _periodicCancellationTokenSource;
 
 
         private async void SaveBackgroundWorker()
         {
-            _cancellationTokenSource = new CancellationTokenSource();
-            CancellationToken cancellationToken = _cancellationTokenSource.Token;
+            _saveCancellationTokenSource = new CancellationTokenSource();
+            CancellationToken cancellationToken = _saveCancellationTokenSource.Token;
 
             try
             {
@@ -29,29 +30,61 @@ namespace TraceViewer
                         }
                     }, cancellationToken);
 
-                    await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+                    await Task.Delay(TimeSpan.FromSeconds(60), cancellationToken);
                 }
             }
             catch (TaskCanceledException)
             {
-                _cancellationTokenSource.Dispose();
-                _cancellationTokenSource = null;
+                _saveCancellationTokenSource.Dispose();
+                _saveCancellationTokenSource = null;
             }
         }
 
-        private void StopBackgroundTask()
+        private void StopSaveBackgroundTask()
         {
-            _cancellationTokenSource?.Cancel();
+            _saveCancellationTokenSource?.Cancel();
+        }
+
+        private async void PeriodicBackgroundWorker()
+        {
+            _periodicCancellationTokenSource = new CancellationTokenSource();
+            CancellationToken cancellationToken = _periodicCancellationTokenSource.Token;
+
+            try
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    await Task.Run(() =>
+                    {
+                        CreateBackUp("periodic_backup", true);
+                    }, cancellationToken);
+
+                    await Task.Delay(TimeSpan.FromMinutes(10), cancellationToken);
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                _periodicCancellationTokenSource.Dispose();
+                _periodicCancellationTokenSource = null;
+            }
+        }
+
+        private void StopPeriodicBackgroundTask()
+        {
+            _periodicCancellationTokenSource?.Cancel();
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             SaveBackgroundWorker();
+            PeriodicBackgroundWorker();
         }
 
         private void MainWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            StopBackgroundTask();
+            StopSaveBackgroundTask();
+            StopPeriodicBackgroundTask();
         }
+
     }
 }

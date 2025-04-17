@@ -5,6 +5,7 @@ using static System.Net.WebRequestMethods;
 using TraceViewer.Core.Analysis;
 using TraceViewer.Core;
 using TraceViewer.UserWindows;
+using TraceViewer.UserControls;
 
 namespace TraceViewer
 {
@@ -72,6 +73,8 @@ namespace TraceViewer
             GraphHandler.Clear();
             GraphViewClear();
             TraceHandler.Clear(); // Clear trace data
+            BlocksViewItemControl.Items.Clear(); // Clear blocks view items
+            BlocksHandler.BlocksItems.Clear(); // Clear blocks items
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -155,7 +158,8 @@ namespace TraceViewer
                 else
                     return; // Do not save if dialog is cancelled
             }
-
+            _current_project_path = filename;
+            SetTitle(original_title + "  -   " + filename, false);
             SaveProjectToFile(filename); // Save project to file
         }
 
@@ -167,6 +171,8 @@ namespace TraceViewer
             SaveFileDialog saveFileDialog = CreateSaveFileDialog(); // Create SaveFileDialog instance
             if (saveFileDialog.ShowDialog() == true)
             {
+                _current_project_path = saveFileDialog.FileName;
+                SetTitle(original_title + "  -   " + saveFileDialog.FileName, false);
                 SaveProjectToFile(saveFileDialog.FileName); // Save project to the newly selected file
             }
         }
@@ -185,11 +191,6 @@ namespace TraceViewer
 
         private void SaveProjectToFile(string filename)
         {
-            Dispatcher.Invoke(() =>
-            {
-                _current_project_path = filename;
-                SetTitle(original_title + "  -   " + filename, false);
-            });
 
             Project project = new Project
             {
@@ -207,6 +208,114 @@ namespace TraceViewer
             }
 
             ProjectWriter.SaveProject(project, filename);
+        }
+
+
+
+        private void RenewTrace_Click(object sender, RoutedEventArgs e)
+        {
+            if (TraceHandler.Trace == null)
+                return;
+
+            if(_current_project_path == "")
+            {
+                ConfirmDialog con = new ConfirmDialog("You need to save your project first.\r\nWould you like to do this now?");
+                con.ShowDialog();
+                if (con.GetResult())
+                {
+                    SaveProject_Click(sender, e);
+                }
+                else
+                    return;
+            }
+            else
+            {
+                SaveProject_Click(sender, e);
+            }
+
+            MessageDialog messageDialog = new MessageDialog("This option will load a new trace while trying to keep as much progress you have as possible!\r\n" +
+                "Shifts in IDs and additional control flows will very likely end up in a lot of lost progress.\r\n" +
+                "For your own safety, a backup of your project will be created!\r\n" +
+                "Make sure to use the same base instruction in both traces!", 900, 210);
+
+
+            messageDialog.ShowDialog();
+
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "Trace Files (*.trace64)|*.trace64",
+                FilterIndex = 1,
+                Multiselect = false
+            };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                CreateBackUp("before_renew", true);
+
+                Dictionary<int, string> disasm = new Dictionary<int, string>();
+                Dictionary<int, string> comments = new Dictionary<int, string>();
+                Dictionary<int, string> blocks = new Dictionary<int, string>();
+                List<int> blockStarts = new List<int>();
+                foreach (var item in TraceHandler.Trace.Trace)
+                {
+                    bool any = false;
+                    if(item.comments != "")
+                    {
+                        comments[item.Id] = item.comments;
+                        any = true;
+                    }
+                    if (item.isBlockStart)
+                    {
+                        blocks[item.Id] = item.block;
+                        blockStarts.Add(item.Id);
+                        any = true;
+                    }
+                    if (any)
+                        disasm[item.Id] = item.Disasm;
+                }
+
+                // Partially delete the data
+                TraceHandler.Clear(); // Clear trace data
+                MemoryHandler.Clear();
+                GraphHandler.Clear();
+                GraphViewClear();
+                BlocksHandler.BlocksItems.Clear(); // Clear blocks items
+                StackView.Document.Blocks.Clear();
+                HeapView.Document.Blocks.Clear();
+                Stats.Content = "";
+                InstructionViewItems.Clear();
+                RegisterViewItems.Clear();
+                TraceHandler.OpenAndLoad(openFileDialog.FileName);
+                if (TraceHandler.Trace != null) {
+                    // Restore the data. Double check if the ID is still valid by comparing the disasm
+                    foreach (var item in TraceHandler.Trace.Trace)
+                    {
+                        if (comments.ContainsKey(item.Id) && item.Disasm == disasm[item.Id])
+                        {
+                            item.comments = comments[item.Id];
+                        }
+                        if (blocks.ContainsKey(item.Id) && item.Disasm == disasm[item.Id])
+                        {
+                            item.block = blocks[item.Id];
+                            item.isBlockStart = true;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        public void CreateBackUp(string message = "", bool timestamp = true)
+        {
+            if (_current_project_path == "")
+                return;
+            string projectName = Path.GetFileNameWithoutExtension(_current_project_path);
+            string backupPath = Path.Combine(Path.GetDirectoryName(_current_project_path), projectName + "_backup");
+            Directory.CreateDirectory(backupPath);
+            string backupFilename = timestamp ? 
+                $"{Path.GetFileNameWithoutExtension(_current_project_path)}_{DateTime.Now:dd.MM.yy_HH.mm.ss}{message}.tvproj" : 
+                $"{Path.GetFileNameWithoutExtension(_current_project_path)}{message}.tvproj";
+            string backupFullPath = Path.Combine(backupPath, backupFilename);
+            SaveProjectToFile(backupFullPath); // Save project to file
         }
 
 
