@@ -22,7 +22,7 @@ namespace TraceViewer
 
     public partial class WPF_Bookmark : UserControl
     {
-        public WPF_Bookmark(string id, string address, string disasm)
+        public WPF_Bookmark(string id, string address, string disasm, string comment)
         {
             InitializeComponent();
             this.id.Text = id;
@@ -38,6 +38,8 @@ namespace TraceViewer
             {
                 this.disasm.Inlines.Add(new Run(singleInstruction) { Foreground = SyntaxHighlighter.Check_Type(singleInstruction) });
             }
+
+            this.comment.Text = comment;
         }
 
         private void OnMouseDown(object sender, MouseButtonEventArgs e)

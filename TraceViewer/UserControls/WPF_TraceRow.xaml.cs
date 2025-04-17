@@ -800,11 +800,17 @@ namespace TraceViewer
             }
         }
 
-        private void AddBookmark_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        private void AddOrRemoveBookmark_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton != MouseButtonState.Pressed) return;
-
-            window.BookmarkViewItems.Add(new WPF_Bookmark(traceRow.Id.ToString(), traceRow.Ip.ToString(), traceRow.Disasm));
+            if(window.BookmarkViewItems.Any(x => x.id.Text == traceRow.Id.ToString()))
+            {
+                window.BookmarkViewItems.Remove(window.BookmarkViewItems.First(x => x.id.Text == traceRow.Id.ToString()));
+            }
+            else
+            {
+                window.BookmarkViewItems.Add(new WPF_Bookmark(traceRow.Id.ToString(), traceRow.Ip.ToString(), traceRow.Disasm, traceRow.comments));
+            }         
         }
 
         private void ShowOrRemove_PreviewMouseDown(object sender, MouseButtonEventArgs e)

@@ -13,7 +13,7 @@
             <MenuItem Name="Copy" Header="Copy" PreviewMouseDown="Copy_PreviewMouseDown"/>
             <MenuItem Name="CopyRow" Header="Copy Row" PreviewMouseDown="CopyRow_PreviewMouseDown"/>
             <MenuItem Name="MarkUnmarkAsBlockStart" Header="Mark/Unmark As Block Start" PreviewMouseDown="MarkUnmarkAsBlockStart_PreviewMouseDown"/>
-            <MenuItem Name="AddBookmark" Header="Add Bookmark" PreviewMouseDown="AddBookmark_PreviewMouseDown"/>
+            <MenuItem Name="AddOrRemoveBookmark" Header="Add/Remove Bookmark" PreviewMouseDown="AddOrRemoveBookmark_PreviewMouseDown"/>
         </ContextMenu>
     </UserControl.Resources>
     <Grid Margin="0,0,0,0" >
