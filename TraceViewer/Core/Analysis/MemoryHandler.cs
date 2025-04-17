@@ -40,11 +40,15 @@ namespace TraceViewer.Core.Analysis
                 Dictionary<ulong, byte> currentStackDelta = new Dictionary<ulong, byte>();
                 Dictionary<ulong, byte> currentHeapDelta = new Dictionary<ulong, byte>();
 
-                foreach (var access in row.Mem)
+                for(int j = 0; j < row.Mem.Count; j++)
                 {
-                    bool isStackAccess = Math.Abs((long)(access.Addr - init_rsp)) < (long)region_size || Math.Abs((long)(access.Addr - updated_rsp)) < (long)region_size;
+                    var access = row.Mem[j];
+
+                    bool isStackAccess = Math.Abs((long)(access.Address - init_rsp)) < (long)region_size || Math.Abs((long)(access.Address - updated_rsp)) < (long)region_size;
 
                     (byte[] bytes, int diff) = GetAccessBytesAndSize(access, row, current_rsp, updated_rsp, isStackAccess);
+
+                    access.size = diff;
 
                     if (bytes.Length == 0 || diff == 0) continue;
 
@@ -52,7 +56,7 @@ namespace TraceViewer.Core.Analysis
 
                     for (int k = 0; k < diff; k++)
                     {
-                        targetDeltaDictionary[access.Addr + (ulong)k] = bytes[k];
+                        targetDeltaDictionary[access.Address + (ulong)k] = bytes[k];
                     }
                 }
 

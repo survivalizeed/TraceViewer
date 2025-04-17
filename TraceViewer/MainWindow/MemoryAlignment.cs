@@ -159,5 +159,6 @@ namespace TraceViewer
                 HeapBorderParent.Visibility = Visibility.Visible;
             }
         }
+
     }
 }

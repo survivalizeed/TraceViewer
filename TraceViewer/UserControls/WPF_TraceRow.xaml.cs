@@ -176,12 +176,16 @@ namespace TraceViewer
 
         void UpdateStack()
         {
+            var currentScroll = window.StackView.VerticalOffset;
+
             FlowDocument flowDoc = new FlowDocument();
             Paragraph paragraph = new Paragraph();
             flowDoc.Blocks.Add(paragraph);
 
             if (traceRow.Id - 1 < 0)
                 return;
+            
+            var memAccesses = traceRow.Mem;
 
             int alignment_counter = 0;
             string composed = "";
@@ -190,26 +194,58 @@ namespace TraceViewer
 
             int rsp_index = 0;
 
+            TextPointer? scrollTarget = null;
+
             Action<ulong, string> WriteLine = (address, data) => {
-                Run addressRun = new Run($"{HexPrefix}{address:X} : ");
-                addressRun.Foreground = System.Windows.Media.Brushes.DarkGoldenrod;
+                ulong startAddr = address - (ulong)(alignment_counter - 1);
+
+                bool isAccessLine = memAccesses.Any(m =>
+                    m.Address >= startAddr &&
+                    m.Address < address + 1);
+
+                var addrBrush = isAccessLine
+                    ? System.Windows.Media.Brushes.Red
+                    : System.Windows.Media.Brushes.DarkGoldenrod;
+                var dataBrush = isAccessLine
+                    ? System.Windows.Media.Brushes.Red
+                    : System.Windows.Media.Brushes.White;
+
+                Run addressRun = new Run($"{HexPrefix}{address:X} : ")
+                {
+                    Foreground = addrBrush
+                };
                 paragraph.Inlines.Add(addressRun);
-                Run run = new Run($"{HexPrefix}{data}");
-                run.Foreground = System.Windows.Media.Brushes.White;
+
+                Run run = new Run($"{HexPrefix}{data}")
+                {
+                    Foreground = dataBrush
+                };
                 paragraph.Inlines.Add(run);
+
                 if (address == stack_alignment_base)
                 {
-                    Run baseMark = new Run($" (BASE)");
-                    baseMark.Foreground = System.Windows.Media.Brushes.Red;
+                    Run baseMark = new Run(" (BASE)")
+                    {
+                        Foreground = System.Windows.Media.Brushes.Red
+                    };
                     paragraph.Inlines.Add(baseMark);
                 }
+
                 if (rsp_index != 0)
                 {
-                    Run rspRun = new Run($"  <--- RSP (past {rsp_index}th byte)");
-                    rspRun.Foreground = System.Windows.Media.Brushes.Coral;
+                    Run rspRun = new Run($"  <--- RSP (past {rsp_index}th byte)")
+                    {
+                        Foreground = System.Windows.Media.Brushes.Coral
+                    };
                     paragraph.Inlines.Add(rspRun);
                 }
+
+
+                if (isAccessLine)
+                    scrollTarget = addressRun.ContentStart;
+
                 paragraph.Inlines.Add(new LineBreak());
+
                 composed = "";
                 alignment_counter = 0;
                 rsp_index = 0;
@@ -290,11 +326,21 @@ namespace TraceViewer
                 WriteLine(blockEndAddress.Value, composed);
             }
             window.StackView.Document = flowDoc;
+
+            if (scrollTarget != null)
+            {
+                window.StackView.ScrollToVerticalOffset(scrollTarget.GetCharacterRect(LogicalDirection.Backward).Top);
+            }
+            else
+            {
+                window.StackView.ScrollToVerticalOffset(currentScroll);
+            }
         }
 
 
         void UpdateHeap()
         {
+            var currentScroll = window.HeapView.VerticalOffset;
 
             FlowDocument flowDoc = new FlowDocument();
             Paragraph paragraph = new Paragraph();
@@ -303,25 +349,55 @@ namespace TraceViewer
             if (traceRow.Id - 1 < 0)
                 return;
 
+            var memAccesses = traceRow.Mem;
+
             int alignment_counter = 0;
             string composed = "";
             ulong? blockStartAddress = null;
             ulong? blockEndAddress = null;
 
+            TextPointer? scrollTarget = null;
+
             Action<ulong, string> WriteLine = (address, data) => {
-                Run addressRun = new Run($"{HexPrefix}{address:X} : ");
-                addressRun.Foreground = System.Windows.Media.Brushes.DarkGoldenrod;
-                Run dataRun = new Run($"{HexPrefix}{data}");
-                dataRun.Foreground = System.Windows.Media.Brushes.White;
-                paragraph.Inlines.Add(addressRun);
-                paragraph.Inlines.Add(dataRun);
-                if (address == heap_alignment_base)
+                ulong startAddr = address - (ulong)(alignment_counter - 1);
+
+                bool isAccessLine = memAccesses.Any(m =>
+                    m.Address >= startAddr &&
+                    m.Address < address + 1);
+
+                var addrBrush = isAccessLine
+                    ? System.Windows.Media.Brushes.Red
+                    : System.Windows.Media.Brushes.DarkGoldenrod;
+                var dataBrush = isAccessLine
+                    ? System.Windows.Media.Brushes.Red
+                    : System.Windows.Media.Brushes.White;
+
+                Run addressRun = new Run($"{HexPrefix}{address:X} : ")
                 {
-                    Run baseMark = new Run($" (BASE)");
-                    baseMark.Foreground = System.Windows.Media.Brushes.Red;
+                    Foreground = addrBrush
+                };
+                paragraph.Inlines.Add(addressRun);
+
+                Run run = new Run($"{HexPrefix}{data}")
+                {
+                    Foreground = dataBrush
+                };
+                paragraph.Inlines.Add(run);
+
+                if (address == stack_alignment_base)
+                {
+                    Run baseMark = new Run(" (BASE)")
+                    {
+                        Foreground = System.Windows.Media.Brushes.Red
+                    };
                     paragraph.Inlines.Add(baseMark);
                 }
+
+                if (isAccessLine)
+                    scrollTarget = addressRun.ContentStart;
+
                 paragraph.Inlines.Add(new LineBreak());
+
                 composed = "";
                 alignment_counter = 0;
             };
@@ -391,6 +467,15 @@ namespace TraceViewer
             }
 
             window.HeapView.Document = flowDoc;
+
+            if (scrollTarget != null)
+            {
+                window.HeapView.ScrollToVerticalOffset(scrollTarget.GetCharacterRect(LogicalDirection.Backward).Top);
+            }
+            else
+            {
+                window.HeapView.ScrollToVerticalOffset(currentScroll);
+            }
         }
 
         private void UpdateRegisterDisplay(WPF_RegisterRow registerRow, int registerIndex, bool isHighlighted)

@@ -285,9 +285,9 @@ namespace TraceViewer.Core
 
     public class MemoryAccess
     {
-        public string Access { get; set; }
-        public ulong Addr { get; set; }
+        public ulong Address { get; set; }
         public ulong Value { get; set; }
+        public int size { get; set; } // Set by the MemoryHandler
     }
 
     public static class TraceLoader
@@ -554,7 +554,7 @@ namespace TraceViewer.Core
                                 else if (disasm.Contains("dword")) value &= 0xFFFFFFFF;
                                 else if (disasm.Contains("word")) value &= 0xFFFF;
                                 else if (disasm.Contains("byte")) value &= 0xFF;
-                                mems.Add(new MemoryAccess { Access = access, Addr = memoryAccessAddresses[i], Value = value });
+                                mems.Add(new MemoryAccess {Address = memoryAccessAddresses[i], Value = value });
                             }
 
 
