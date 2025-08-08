@@ -47,6 +47,11 @@ This Repository is an early stage so bugs are expected
 
 # And tons of other useful stuff!
 
+## Crackmes.one
+
+This tool was used to crack the challenging lol_vm: https://crackmes.one/crackme/669a1f9990c4c2830c820b86
+An example of a TraceViewer project used to crack lol_vm can be found in the examples folder  
+
 ## Contributing
 
 I welcome contributions from the community! If you have ideas for new features, bug fixes, or improvements, please feel free to:
