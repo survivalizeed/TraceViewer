@@ -19,6 +19,19 @@ This Repository is an early stage so bugs are expected
 
 ![Trace](.github/res/DeOb.png)
 
+### Blocks
+
+![Trace](.github/res/Block_slicing.png)
+![Trace](.github/res/Block_slicing_overview.png)
+
+### Bookmarks
+
+![Trace](.github/res/Bookmarks.png)
+
+### Execution Graph
+
+![Trace](.github/res/Execution_graph.png)
+
 ### Highlighting
 
 ![Trace](.github/res/Highlighting.png)
@@ -32,6 +45,7 @@ This Repository is an early stage so bugs are expected
 ![Trace](.github/res/QWORD.png)
 ![Trace](.github/res/YMM.png)
 
+## And tons of other stuff!
 
 ## Contributing
 
