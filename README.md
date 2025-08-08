@@ -45,7 +45,7 @@ This Repository is an early stage so bugs are expected
 ![Trace](.github/res/QWORD.png)
 ![Trace](.github/res/YMM.png)
 
-## And tons of other stuff!
+# And tons of other useful stuff!
 
 ## Contributing
 
