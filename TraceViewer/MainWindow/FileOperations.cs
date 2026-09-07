@@ -75,6 +75,14 @@ namespace TraceViewer
             TraceHandler.Clear(); // Clear trace data
             BlocksHandler.BlocksItems.Clear(); // Clear blocks items
 
+            if (TraceScrollBar != null)
+            {
+                TraceScrollBar.Maximum = 0;
+                TraceScrollBar.Value = 0;
+            }
+            CurrentTopIndex = 0;
+            CurrentHoveredRow = null;
+
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect(); // Here needed. Otherwise the GC will wait too long to collect big unloaded traces
@@ -122,24 +130,31 @@ namespace TraceViewer
             {
                 foreach (var item in project.Comments)
                 {
-                    TraceHandler.Trace.Trace[item.Id].comments = item.Text; // Apply loaded comments
+                    if (item.Id >= 0 && item.Id < TraceHandler.Trace.Trace.Count)
+                        TraceHandler.Trace.Trace[item.Id].comments = item.Text;
                 }
             }
             NotesContent.Text = project.Notes ?? ""; // Load notes, handle null
-            WPF_TraceRow.hiddenRows = project.HiddenRows; // Load hidden rows
-            DeObfus.deObHiddenRows = project.DeObHiddenRows; // Load deobfuscated hidden rows
+            WPF_TraceRow.hiddenRows = project.HiddenRows ?? new(); // Load hidden rows
+            DeObfus.deObHiddenRows = project.DeObHiddenRows ?? new(); // Load deobfuscated hidden rows
 
-            foreach(var block in project.Blocks)
+            if (project.Blocks != null)
             {
-                var row = TraceHandler.Trace.Trace[block.Id];
-                if (row != null)
+                foreach (var block in project.Blocks)
                 {
-                    row.block = block.Name; // Apply loaded block information
-                    row.isBlockStart = true;
+                    if (block.Id >= 0 && block.Id < TraceHandler.Trace.Trace.Count)
+                    {
+                        var row = TraceHandler.Trace.Trace[block.Id];
+                        if (row != null)
+                        {
+                            row.block = string.IsNullOrWhiteSpace(block.Name) ? $"Block_{block.Id}" : block.Name;
+                            row.isBlockStart = true;
+                        }
+                    }
                 }
             }
 
-            RefreshView(); // Refresh view after loading project
+            TraceHandler.InitializeLoadedTrace(TraceHandler.Trace, this);
         }
 
         private void SaveProject_Click(object sender, RoutedEventArgs e)
@@ -298,6 +313,7 @@ namespace TraceViewer
                             item.isBlockStart = true;
                         }
                     }
+                    RefreshView();
                 }
             }
         }

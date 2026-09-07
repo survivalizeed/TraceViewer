@@ -1,4 +1,4 @@
-﻿using System.Windows.Controls;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Effects;
 using System.Windows.Media;
@@ -18,7 +18,7 @@ namespace TraceViewer
     public partial class MainWindow : Window
     {
        
-        public void DisasmViewButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        public void DisasmViewButton_MouseDown(object? sender = null, System.Windows.Input.MouseButtonEventArgs? e = null)
         {
             if (e != null)
                 if (e.LeftButton != MouseButtonState.Pressed) return;

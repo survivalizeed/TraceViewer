@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="TraceViewer.WPF_BlockRow"
+<UserControl x:Class="TraceViewer.WPF_BlockRow"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -15,9 +15,9 @@
             <Border x:Name="address_border" Style="{StaticResource DisasmTextBlockBorder}" Width="200" DockPanel.Dock="Left" MouseDown="OnMouseDown">
                 <TextBlock x:Name="address" Width="200" Style="{StaticResource DisasmTextBlock}" HorizontalAlignment="Left" FontSize="15" DockPanel.Dock="Left" />
             </Border>
-            <Border x:Name="block_border" Style="{StaticResource DisasmTextBlockBorder}" DockPanel.Dock="Left" MouseDown="OnMouseDown">
-                <TextBlock x:Name="block" Style="{StaticResource DisasmTextBlock}" HorizontalAlignment="Left" FontSize="15" DockPanel.Dock="Left" />
-            </Border>
+            <TextBox x:Name="block" Style="{StaticResource CommentsTextBox}" HorizontalAlignment="Stretch" FontSize="15" DockPanel.Dock="Left"
+                     CaretBrush="{StaticResource PrimaryForegroundBrush}"
+                     TextChanged="block_TextChanged" PreviewKeyDown="block_PreviewKeyDown" MouseDoubleClick="block_MouseDoubleClick"/>
         </DockPanel>
     </Grid>
 </UserControl>

@@ -1,25 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+using System;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace TraceViewer.UserControls
 {
-
     public partial class InputDialog : Window
     {
         private string result = "";
+        public bool IsSuccess { get; private set; } = false;
 
         public InputDialog(string Prompt, double? width = null, double? height = null)
         {
@@ -27,6 +16,7 @@ namespace TraceViewer.UserControls
             this.PromptText.Text = Prompt;
             this.Owner = Application.Current.MainWindow;
             this.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            this.Input.CaretBrush = Brushes.White;
             this.Input.Focus();
             if (width != null)
                 this.Width = (double)width;
@@ -34,20 +24,33 @@ namespace TraceViewer.UserControls
                 this.Height = (double)height;
         }
 
+        public InputDialog(string Prompt, string defaultText, double? width = null, double? height = null)
+            : this(Prompt, width, height)
+        {
+            if (!string.IsNullOrEmpty(defaultText))
+            {
+                this.Input.Text = defaultText;
+                this.Input.SelectAll();
+            }
+        }
+
         private void Ok_MouseDown(object sender, MouseButtonEventArgs e)
         {
-
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 result = Input.Text;
+                IsSuccess = true;
                 this.Close();
             }
         }
 
         private void Cancel_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if(e.LeftButton == MouseButtonState.Pressed)
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                IsSuccess = false;
                 this.Close();
+            }
         }
 
         public string GetResult()
@@ -59,13 +62,15 @@ namespace TraceViewer.UserControls
 
         private void Input_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if(e.Key == Key.Enter)
+            if (e.Key == Key.Enter)
             {
                 result = Input.Text;
+                IsSuccess = true;
                 this.Close();
             }
             if (e.Key == Key.Escape)
             {
+                IsSuccess = false;
                 this.Close();
             }
         }

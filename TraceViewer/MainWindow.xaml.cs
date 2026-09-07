@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -49,11 +49,8 @@ namespace TraceViewer
 
         public void RefreshView()
         {
-            ScrollControl(-TraceHandler.load_count);
-            ScrollControl(TraceHandler.load_count);
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect(); // Here needed. Otherwise the GC will wait too long to collect the data leading to a strong memory consumption increase
+            if (TraceHandler.Trace == null) return;
+            ScrollTo(CurrentTopIndex);
         }
 
     }

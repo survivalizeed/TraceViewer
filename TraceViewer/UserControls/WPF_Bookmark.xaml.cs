@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -50,8 +50,7 @@ namespace TraceViewer
             var window = System.Windows.Application.Current.MainWindow as MainWindow ?? throw new Exception("Main window not found");
 
             window.DisasmViewButton_MouseDown(null, null);
-
-            window.ScrollControl(-Convert.ToInt32(id.Text), true);
+            window.ScrollTo(Convert.ToInt32(id.Text));
         }
     }
 }

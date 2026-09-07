@@ -1,4 +1,4 @@
-﻿<Window x:Class="TraceViewer.UserControls.InputDialog"
+<Window x:Class="TraceViewer.UserControls.InputDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -29,7 +29,7 @@
                     <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
                 </Label.Effect>
             </Label>
-            <TextBox Style="{StaticResource CommentsTextBox}" x:Name="Input" Grid.Row="1" FontSize="15" HorizontalContentAlignment="Center" BorderBrush="White" Padding="0,2,0,2" PreviewKeyDown="Input_PreviewKeyDown">
+            <TextBox Style="{StaticResource CommentsTextBox}" x:Name="Input" Grid.Row="1" FontSize="15" HorizontalContentAlignment="Center" BorderBrush="White" CaretBrush="White" Padding="0,2,0,2" PreviewKeyDown="Input_PreviewKeyDown">
                 <TextBox.Effect>
                     <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
                 </TextBox.Effect>

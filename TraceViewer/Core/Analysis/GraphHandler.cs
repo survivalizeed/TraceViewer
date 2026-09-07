@@ -16,6 +16,8 @@ namespace TraceViewer.Core.Analysis
             var window = Application.Current.MainWindow as MainWindow
                 ?? throw new InvalidOperationException("Main window not found");
 
+            window.GraphViewClear();
+
             var traceRows = TraceHandler.Trace.Trace;
 
             // Build IP occurrence map using TryAdd pattern

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -45,7 +45,9 @@ namespace TraceViewer
 
         private string _current_project_path = "";
         private string original_title = "survivalizeed's Trace Viewer";
-        public ScrollViewer InstructionsScrollViewer { get; private set; }
+        public ScrollViewer InstructionsScrollViewer { get; set; }
+        public WPF_TraceRow? CurrentHoveredRow;
+        public int CurrentTopIndex = 0;
         public ObservableCollection<WPF_TraceRow> InstructionViewItems = new();
         public ObservableCollection<WPF_RegisterRow> RegisterViewItems = new();
 
@@ -53,7 +55,7 @@ namespace TraceViewer
         public ObservableCollection<WPF_Bookmark> BookmarkViewItems = new();
 
         // InstructionsView
-        public int index = TraceHandler.load_count; // Initial index for trace loading
+        public int index = TraceHandler.load_count; // Maintained for backwards compatibility
 
         // Appearance
         private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;

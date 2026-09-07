@@ -1,6 +1,8 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using TraceViewer.Core;
 
@@ -10,7 +12,6 @@ namespace TraceViewer
     {
         private void InstructionsView_Loaded(object sender, RoutedEventArgs e)
         {
-            // Find the ScrollViewer within the InstructionsView template
             if (sender is ItemsControl itemsControl &&
                 itemsControl.Template.FindName("InstructionsViewScrollViewer", itemsControl) is ScrollViewer scrollViewer)
             {
@@ -20,137 +21,209 @@ namespace TraceViewer
             {
                 throw new InvalidOperationException("ScrollViewer not found in template");
             }
+            SetInstructionsViewWidth();
         }
 
         private void TitleLabel_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if (sender is System.Windows.Controls.Label label)
+            if (sender is Label label)
             {
                 UpdateInstructionViewColumnWidth(label.Name, e.NewSize.Width);
             }
         }
 
-        private void UpdateInstructionViewColumnWidth(string columnName, double newWidth)
+        private void ColumnSplitter_DragDelta(object sender, DragDeltaEventArgs e)
         {
-            InstructionsView.BeginInit();
-            try
+            if (sender is GridSplitter splitter && splitter.Parent is Grid grid)
             {
-                foreach (var item in InstructionViewItems)
+                int colIndex = Grid.GetColumn(splitter);
+                if (colIndex >= 0 && colIndex < grid.ColumnDefinitions.Count)
                 {
-                    // Update column widths based on label name
-                    switch (columnName)
-                    {
+                    var colDef = grid.ColumnDefinitions[colIndex];
+                    double currentWidth = colDef.ActualWidth > 0 ? colDef.ActualWidth : colDef.Width.Value;
+                    double newWidth = Math.Clamp(currentWidth + e.HorizontalChange, colDef.MinWidth, colDef.MaxWidth);
+                    colDef.Width = new GridLength(newWidth);
 
-                        case "Id":
-                            item.id.Width = newWidth;
-                            item.id_border.Width = newWidth;
-                            break;
-                        case "Address":
-                            item.address.Width = newWidth;
-                            item.address_border.Width = newWidth;
-                            break;
-                        case "Disasm":
-                            item.disasm.Width = newWidth;
-                            item.disasm_border.Width = newWidth;
-                            break;
-                        case "Changes":
-                            item.changes.Width = newWidth;
-                            item.changes_border.Width = newWidth;
-                            break;
-                        case "Comments":
-                            item.comments.Width = newWidth;
-                            item.mnemonicBrief.Width = newWidth; // Assuming comments and mnemonicBrief share column width
-                            break;
+                    string colName = colIndex switch
+                    {
+                        0 => "Id",
+                        1 => "Address",
+                        2 => "Disasm",
+                        3 => "Changes",
+                        4 => "Comments",
+                        _ => ""
+                    };
+                    if (!string.IsNullOrEmpty(colName))
+                    {
+                        UpdateInstructionViewColumnWidth(colName, newWidth);
                     }
                 }
             }
-            finally
-            {
-                InstructionsView.EndInit();
-                SetInstructionsViewWidth();
-            }
         }
 
-        private void SetInstructionsViewWidth()
+        public void UpdateInstructionViewColumnWidth(string columnName, double newWidth)
         {
-            // Calculate and set the minimum and maximum width of InstructionsView based on column widths
-            double totalWidth = Cd0.Width.Value + Cd1.Width.Value + Cd2.Width.Value + Cd3.Width.Value + Cd4.Width.Value + Cd5.Width.Value; // Add a small buffer
+            if (newWidth <= 0) return;
+            var gridLen = new GridLength(newWidth);
+            foreach (var item in InstructionViewItems)
+            {
+                switch (columnName)
+                {
+                    case "Id":
+                        item.col0.Width = gridLen;
+                        break;
+                    case "Address":
+                        item.col1.Width = gridLen;
+                        break;
+                    case "Disasm":
+                        item.col2.Width = gridLen;
+                        break;
+                    case "Changes":
+                        item.col3.Width = gridLen;
+                        break;
+                    case "Comments":
+                        item.col4.Width = gridLen;
+                        break;
+                }
+            }
+            SetInstructionsViewWidth();
+        }
+
+        public void SetInstructionsViewWidth()
+        {
+            if (InstructionsView == null || Cd0 == null || Cd1 == null || Cd2 == null || Cd3 == null || Cd4 == null)
+                return;
+
+            double w0 = Cd0.ActualWidth > 0 ? Cd0.ActualWidth : Cd0.Width.Value;
+            double w1 = Cd1.ActualWidth > 0 ? Cd1.ActualWidth : Cd1.Width.Value;
+            double w2 = Cd2.ActualWidth > 0 ? Cd2.ActualWidth : Cd2.Width.Value;
+            double w3 = Cd3.ActualWidth > 0 ? Cd3.ActualWidth : Cd3.Width.Value;
+            double w4 = Cd4.ActualWidth > 0 ? Cd4.ActualWidth : Cd4.Width.Value;
+            double totalWidth = w0 + w1 + w2 + w3 + w4;
             if (totalWidth > 0)
             {
-                InstructionsView.MinWidth = totalWidth;
-                InstructionsView.MaxWidth = totalWidth;
+                InstructionsView.Width = totalWidth;
             }
         }
 
         private void InstructionsScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            // Handle mouse wheel scrolling, with Ctrl key for faster scrolling
             int scrollStep = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl) ? 15 : 3;
             int delta = e.Delta > 0 ? scrollStep : -scrollStep;
             ScrollControl(delta);
+            e.Handled = true;
         }
 
-        
+        private void TraceScrollBar_Scroll(object sender, ScrollEventArgs e)
+        {
+            ScrollTo((int)e.NewValue);
+        }
 
+        /// <summary>
+        /// Initializes the reusable pool of WPF_TraceRow controls and configures the vertical scrollbar.
+        /// </summary>
+        public void InitTraceView()
+        {
+            if (TraceHandler.Trace == null) return;
+
+            int total = TraceHandler.Trace.Trace.Count;
+            int visibleCount = Math.Min(TraceHandler.load_count, total);
+
+            // Pool: maintain exactly 'visibleCount' controls in InstructionViewItems
+            while (InstructionViewItems.Count < visibleCount)
+            {
+                InstructionViewItems.Add(new WPF_TraceRow());
+            }
+            while (InstructionViewItems.Count > visibleCount)
+            {
+                InstructionViewItems.RemoveAt(InstructionViewItems.Count - 1);
+            }
+
+            double w0 = Cd0.ActualWidth > 0 ? Cd0.ActualWidth : Cd0.Width.Value;
+            double w1 = Cd1.ActualWidth > 0 ? Cd1.ActualWidth : Cd1.Width.Value;
+            double w2 = Cd2.ActualWidth > 0 ? Cd2.ActualWidth : Cd2.Width.Value;
+            double w3 = Cd3.ActualWidth > 0 ? Cd3.ActualWidth : Cd3.Width.Value;
+            double w4 = Cd4.ActualWidth > 0 ? Cd4.ActualWidth : Cd4.Width.Value;
+            foreach (var item in InstructionViewItems)
+            {
+                item.SetColumnWidths(w0, w1, w2, w3, w4);
+            }
+
+            if (TraceScrollBar != null)
+            {
+                TraceScrollBar.Minimum = 0;
+                TraceScrollBar.Maximum = Math.Max(0, total - visibleCount);
+                TraceScrollBar.ViewportSize = visibleCount;
+                TraceScrollBar.SmallChange = 1;
+                TraceScrollBar.LargeChange = Math.Max(1, visibleCount / 2);
+                TraceScrollBar.Value = 0;
+            }
+
+            SetInstructionsViewWidth();
+
+            CurrentTopIndex = 0;
+            ScrollTo(0);
+        }
+
+        /// <summary>
+        /// Navigates smoothly to the specified row index by updating existing controls in-place.
+        /// No UserControls are destroyed or recreated.
+        /// </summary>
+        public bool ScrollTo(int targetTopIndex)
+        {
+            if (TraceHandler.Trace == null || InstructionViewItems.Count == 0)
+                return false;
+
+            int total = TraceHandler.Trace.Trace.Count;
+            int visibleCount = InstructionViewItems.Count;
+            int maxTop = Math.Max(0, total - visibleCount);
+            int clamped = Math.Clamp(targetTopIndex, 0, maxTop);
+
+            CurrentTopIndex = clamped;
+            index = clamped + visibleCount; // Maintained for backwards compatibility
+
+            if (TraceScrollBar != null && Math.Abs(TraceScrollBar.Value - clamped) > 0.01)
+            {
+                TraceScrollBar.Value = clamped;
+            }
+
+            var briefLookup = TraceHandler.BriefLookup;
+            var fullLookup = TraceHandler.FullLookup;
+
+            for (int i = 0; i < visibleCount; i++)
+            {
+                int traceIdx = clamped + i;
+                if (traceIdx < total)
+                {
+                    var row = TraceHandler.Trace.Trace[traceIdx];
+                    string instructionMnemonic = row.Disasm.AsSpan().SliceToFirstSpace();
+                    string brief = briefLookup?.GetValueOrDefault(instructionMnemonic) ?? "";
+                    string full = fullLookup?.GetValueOrDefault(instructionMnemonic) ?? "";
+                    InstructionViewItems[i].Bind(row, brief, full);
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Relative or absolute scroll handler.
+        /// When 'set' is true, steps is treated as -targetIndex.
+        /// When 'set' is false, steps > 0 is scroll up, steps < 0 is scroll down.
+        /// </summary>
         public bool ScrollControl(int steps, bool set = false)
         {
             if (TraceHandler.Trace == null)
                 return false;
 
             if (set)
-                index = TraceHandler.load_count;
-
-            int absSteps = Math.Abs(steps);
-            if (absSteps > TraceHandler.load_count)
             {
-                int fullPageSteps = absSteps / TraceHandler.load_count - 1; // Calculate full page jumps
-                int increment = (steps < 0) ? TraceHandler.load_count : -TraceHandler.load_count; // Determine increment direction
-                index += increment * fullPageSteps; // Adjust index by full pages
-
-                // Ensure index stays within bounds
-                if (index < TraceHandler.load_count) index = TraceHandler.load_count * 2;
-                if (index > TraceHandler.Trace.Trace.Count)
-                    index = TraceHandler.Trace.Trace.Count - TraceHandler.load_count;
-
-                steps %= TraceHandler.load_count; // Remaining steps after full page jumps
-                steps -= increment; // Load one new page for refresh
+                int target = -steps;
+                return ScrollTo(target);
             }
 
-            bool returnValue = false;
-            if (steps > 0) // Scroll Up
-            {
-                for (int i = 0; i < steps; i++)
-                {
-                    if (InstructionViewItems.Count > 0 && index - TraceHandler.load_count - 1 >= 0)
-                    {
-                        InstructionViewItems.RemoveAt(InstructionViewItems.Count - 1); // Remove last item
-                        TraceHandler.LoadRange(index - TraceHandler.load_count - 1, index - TraceHandler.load_count, true); // Load new item at top
-                        index--;
-                        returnValue = true;
-                    }
-                }
-            }
-            else if (steps < 0) // Scroll Down
-            {
-                for (int i = 0; i < Math.Abs(steps); i++)
-                {
-                    if (InstructionViewItems.Count > 0 && index < TraceHandler.Trace.Trace.Count)
-                    {
-                        InstructionViewItems.RemoveAt(0); // Remove first item
-                        TraceHandler.LoadRange(index, index + 1, false); // Load new item at bottom
-                        index++;
-                        returnValue = true;
-                    }
-                }
-            }
-
-            // Refresh view after setting index directly if no scroll happened within load_count range
-            if (absSteps < TraceHandler.load_count && set)
-            {
-                RefreshView();
-            }
-
-            return returnValue; // Indicate if scroll action was possible
+            int targetTop = CurrentTopIndex - steps;
+            return ScrollTo(targetTop);
         }
     }
 }

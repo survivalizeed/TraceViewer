@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="TraceViewer.WPF_TraceRow"
+<UserControl x:Class="TraceViewer.WPF_TraceRow"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -6,43 +6,68 @@
              xmlns:local="clr-namespace:TraceViewer"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
+             MouseEnter="OnRowMouseEnter"
              >
     <UserControl.Resources>
         <ContextMenu x:Key="ContextMenu" Style="{StaticResource DisasmContextMenu}" Opened="ContextMenu_Opened" Closed="ContextMenu_Closed" StaysOpen="False">
-            <MenuItem Name="ShowOrRemove" Header="Show/Remove" PreviewMouseDown="ShowOrRemove_PreviewMouseDown"/>
-            <MenuItem Name="Copy" Header="Copy" PreviewMouseDown="Copy_PreviewMouseDown"/>
-            <MenuItem Name="CopyRow" Header="Copy Row" PreviewMouseDown="CopyRow_PreviewMouseDown"/>
-            <MenuItem Name="MarkUnmarkAsBlockStart" Header="Mark/Unmark As Block Start" PreviewMouseDown="MarkUnmarkAsBlockStart_PreviewMouseDown"/>
-            <MenuItem Name="AddOrRemoveBookmark" Header="Add/Remove Bookmark" PreviewMouseDown="AddOrRemoveBookmark_PreviewMouseDown"/>
+            <MenuItem Name="ShowOrRemove" Header="Show/Remove" Click="ShowOrRemove_Click"/>
+            <MenuItem Name="Copy" Header="Copy" Click="Copy_Click"/>
+            <MenuItem Name="CopyRow" Header="Copy Row" Click="CopyRow_Click"/>
+            <MenuItem Name="MarkUnmarkAsBlockStart" Header="Mark As Block Start..." Click="MarkUnmarkAsBlockStart_Click"/>
+            <MenuItem Name="RenameBlockMenuItem" Header="Rename Block..." Click="RenameBlock_Click" Visibility="Collapsed"/>
+            <MenuItem Name="AddOrRemoveBookmark" Header="Add/Remove Bookmark" Click="AddOrRemoveBookmark_Click"/>
         </ContextMenu>
     </UserControl.Resources>
-    <Grid Margin="0,0,0,0" >
+    <Grid Margin="0,0,0,0" ContextMenu="{StaticResource ContextMenu}">
         <StackPanel Orientation="Vertical">
-            <StackPanel x:Name="block_panel" Orientation="Vertical" Visibility="Collapsed">
-                <TextBox x:Name="block" Style="{StaticResource CommentsTextBox}" HorizontalAlignment="Center" 
-                         HorizontalContentAlignment="Center" FontSize="15" Padding="50,5,50,5" 
-                         BorderThickness="0" FontWeight="Bold"
+            <StackPanel x:Name="block_panel" Orientation="Vertical" Visibility="Collapsed" Margin="0,5,0,3">
+                <TextBox x:Name="block" 
+                         Style="{StaticResource CommentsTextBox}" 
+                         HorizontalAlignment="Center" 
+                         HorizontalContentAlignment="Center" 
+                         FontSize="14" 
+                         FontWeight="Bold" 
+                         FontFamily="Consolas" 
+                         Padding="40,3,40,3" 
+                         BorderThickness="0.5" 
+                         BorderBrush="{StaticResource ViewBorderBrighterBrush}"
+                         CaretBrush="{StaticResource PrimaryForegroundBrush}"
+                         ContextMenu="{StaticResource ContextMenu}"
+                         MouseDoubleClick="block_MouseDoubleClick"
+                         PreviewKeyDown="block_PreviewKeyDown"
+                         GotFocus="block_GotFocus"
+                         LostFocus="block_LostFocus"
                          TextChanged="block_TextChanged"/>
-                <Line Margin="0,0,0,5" X1="0" Y1="0" X2="10000" Y2="0" Stroke="{StaticResource ViewBorderHoverBrush}" StrokeThickness="1"/>
+                <Rectangle Height="1" HorizontalAlignment="Stretch" Fill="{StaticResource ViewBorderHoverBrush}" Margin="0,4,0,4"/>
             </StackPanel>
-            <DockPanel x:Name="parent_panel" LastChildFill="False">
-                <Border x:Name="id_border" Style="{StaticResource DisasmTextBlockBorder}" Width="50" DockPanel.Dock="Left">
-                    <TextBlock x:Name="id" Width="50" Style="{StaticResource DisasmTextBlock}" DockPanel.Dock="Left" MouseEnter="OnHover" ContextMenu="{StaticResource ContextMenu}"/>
+            <Grid x:Name="parent_panel">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="col0" Width="45"/>
+                    <ColumnDefinition x:Name="col1" Width="110"/>
+                    <ColumnDefinition x:Name="col2" Width="320"/>
+                    <ColumnDefinition x:Name="col3" Width="320"/>
+                    <ColumnDefinition x:Name="col4" Width="320"/>
+                </Grid.ColumnDefinitions>
+
+                <Border x:Name="id_border" Grid.Column="0" Style="{StaticResource DisasmTextBlockBorder}">
+                    <TextBlock x:Name="id" Style="{StaticResource DisasmTextBlock}"/>
                 </Border>
-                <Border x:Name="address_border" Style="{StaticResource DisasmTextBlockBorder}" Width="100" DockPanel.Dock="Left">
-                    <TextBlock x:Name="address" Width="100" Style="{StaticResource DisasmTextBlock}" DockPanel.Dock="Left" MouseEnter="OnHover" ContextMenu="{StaticResource ContextMenu}"/>
+                <Border x:Name="address_border" Grid.Column="1" Style="{StaticResource DisasmTextBlockBorder}">
+                    <TextBlock x:Name="address" Style="{StaticResource DisasmTextBlock}"/>
                 </Border>
-                <Border x:Name="disasm_border" Style="{StaticResource DisasmTextBlockBorder}" Width="300" DockPanel.Dock="Left">
-                    <TextBlock x:Name="disasm" Width="300" Style="{StaticResource DisasmTextBlock}" DockPanel.Dock="Left" MouseEnter="OnHover" MouseDown="disasm_MouseDown" ContextMenu="{StaticResource ContextMenu}"/>
+                <Border x:Name="disasm_border" Grid.Column="2" Style="{StaticResource DisasmTextBlockBorder}">
+                    <TextBlock x:Name="disasm" Style="{StaticResource DisasmTextBlock}" MouseDown="disasm_MouseDown"/>
                 </Border>
-                <Border x:Name="changes_border" Style="{StaticResource DisasmTextBlockBorder}" Width="300" DockPanel.Dock="Left">
-                    <TextBlock x:Name="changes" Width="300" Style="{StaticResource DisasmTextBlock}" DockPanel.Dock="Left" MouseEnter="OnHover" ContextMenu="{StaticResource ContextMenu}"/>
+                <Border x:Name="changes_border" Grid.Column="3" Style="{StaticResource DisasmTextBlockBorder}">
+                    <TextBlock x:Name="changes" Style="{StaticResource DisasmTextBlock}"/>
                 </Border>
-                <TextBox Visibility="Collapsed" Style="{StaticResource CommentsTextBox}" x:Name="mnemonicBrief" HorizontalContentAlignment="Center" Width="300" DockPanel.Dock="Left" MouseEnter="OnHover" IsReadOnly="True"
-                     MouseDoubleClick="OnDoubleClickMnemonic" KeyDown="OnKeyPressMnemonic"/>
-                <TextBox Style="{StaticResource CommentsTextBox}" x:Name="comments" HorizontalContentAlignment="Center" Width="300" DockPanel.Dock="Left" MouseEnter="OnHover" 
-                     PreviewKeyDown="PreviewOnKeyPressComments" TextChanged="TextChangedComments"/>
-            </DockPanel>
+                <Grid Grid.Column="4">
+                    <TextBox Visibility="Collapsed" Style="{StaticResource CommentsTextBox}" x:Name="mnemonicBrief" HorizontalContentAlignment="Center" IsReadOnly="True"
+                             MouseDoubleClick="OnDoubleClickMnemonic" KeyDown="OnKeyPressMnemonic"/>
+                    <TextBox Style="{StaticResource CommentsTextBox}" x:Name="comments" HorizontalContentAlignment="Center" 
+                             PreviewKeyDown="PreviewOnKeyPressComments" TextChanged="TextChangedComments"/>
+                </Grid>
+            </Grid>
         </StackPanel>
     </Grid>
 </UserControl>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -153,13 +153,15 @@ namespace TraceViewer
 
             if (GraphViewCanvas != null)
             {
-                double requiredHeight = node.Y + node.Height + 20;
-                if (requiredHeight > GraphViewCanvas.Height)
+                double requiredHeight = node.Y + node.Height + 100;
+                double currentHeight = double.IsNaN(GraphViewCanvas.Height) ? 0 : GraphViewCanvas.Height;
+                if (requiredHeight > currentHeight)
                 {
                     GraphViewCanvas.Height = requiredHeight;
                 }
-                double requiredWidth = node.X + node.Width + 20;
-                if (requiredWidth > GraphViewCanvas.Width)
+                double requiredWidth = node.X + node.Width + 100;
+                double currentWidth = double.IsNaN(GraphViewCanvas.Width) ? 0 : GraphViewCanvas.Width;
+                if (requiredWidth > currentWidth)
                 {
                     GraphViewCanvas.Width = requiredWidth;
                 }
@@ -191,6 +193,7 @@ namespace TraceViewer
             Timeline.TickFrequency = 1;
             Timeline.Value = 0;
 
+            Timeline.ValueChanged -= Timeline_ValueChanged;
             Timeline.ValueChanged += Timeline_ValueChanged;
         }
 
@@ -272,6 +275,26 @@ namespace TraceViewer
         {
             if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement element && element.DataContext is Node node)
             {
+                if (e.ClickCount == 2)
+                {
+                    int nodeIdx = nodes.IndexOf(node);
+                    if (nodeIdx >= 0 && GraphHandler.blocks != null && nodeIdx < GraphHandler.blocks.Count && GraphHandler.uniqueIPAccesses != null)
+                    {
+                        var block = GraphHandler.blocks[nodeIdx];
+                        if (block.startIndex < GraphHandler.uniqueIPAccesses.Count)
+                        {
+                            var ids = GraphHandler.uniqueIPAccesses[block.startIndex].Value;
+                            if (ids.Count > 0)
+                            {
+                                DisasmViewButton_MouseDown(null, null);
+                                ScrollTo(ids[0]);
+                                e.Handled = true;
+                                return;
+                            }
+                        }
+                    }
+                }
+
                 if (selectedNode != null)
                 {
                     ResetNodeAndConnectionStyles(selectedNode);
@@ -297,7 +320,7 @@ namespace TraceViewer
             {
                 if (child is Grid nodeGrid)
                 {
-                    var border = nodeGrid.Children.OfType<Rectangle>().FirstOrDefault(r => r.Tag == "NodeBorder");
+                    var border = nodeGrid.Children.OfType<Rectangle>().FirstOrDefault(r => (string?)r.Tag == "NodeBorder");
                     if (border != null)
                     {
                         border.Stroke = (SolidColorBrush)FindResource("ViewBorderHoverBrush");
@@ -330,7 +353,7 @@ namespace TraceViewer
             if (nodeElement is Grid nodeGrid)
             {
                 // Change node border to coral
-                var border = nodeGrid.Children.OfType<Rectangle>().FirstOrDefault(r => r.Tag == "NodeBorder");
+                var border = nodeGrid.Children.OfType<Rectangle>().FirstOrDefault(r => (string?)r.Tag == "NodeBorder");
                 if (border != null)
                 {
                     border.Stroke = highlightBrush;
@@ -370,10 +393,17 @@ namespace TraceViewer
 
                 newX = Math.Max(0, newX);
                 newY = Math.Max(0, newY);
-                if (GraphViewCanvas != null && GraphViewCanvas.ActualWidth > 0 && GraphViewCanvas.ActualHeight > 0)
+                double canvasW = (GraphViewCanvas != null && !double.IsNaN(GraphViewCanvas.Width) && GraphViewCanvas.Width > 0)
+                    ? GraphViewCanvas.Width
+                    : (GraphViewCanvas?.ActualWidth ?? 0);
+                double canvasH = (GraphViewCanvas != null && !double.IsNaN(GraphViewCanvas.Height) && GraphViewCanvas.Height > 0)
+                    ? GraphViewCanvas.Height
+                    : (GraphViewCanvas?.ActualHeight ?? 0);
+
+                if (canvasW > 0 && canvasH > 0)
                 {
-                    newX = Math.Min(GraphViewCanvas.ActualWidth - currentlyDraggingNode.Width, newX);
-                    newY = Math.Min(GraphViewCanvas.ActualHeight - currentlyDraggingNode.Height, newY);
+                    newX = Math.Min(canvasW - currentlyDraggingNode.Width, newX);
+                    newY = Math.Min(canvasH - currentlyDraggingNode.Height, newY);
                 }
 
                 currentlyDraggingNode.X = newX;
@@ -523,6 +553,8 @@ namespace TraceViewer
             ConnectionInfo connectionInfo = new ConnectionInfo(node1, node2);
 
             Vector direction = endPoint - startPoint;
+            if (direction.Length < Epsilon) return;
+
             Vector normal = new Vector(-direction.Y, direction.X);
             normal.Normalize();
 
@@ -645,7 +677,7 @@ namespace TraceViewer
             {
                 if (child is Grid nodeGrid)
                 {
-                    var border = nodeGrid.Children.OfType<Rectangle>().FirstOrDefault(r => r.Tag == "NodeBorder");
+                    var border = nodeGrid.Children.OfType<Rectangle>().FirstOrDefault(r => (string?)r.Tag == "NodeBorder");
                     if (border != null)
                     {
                         border.Stroke = highlightBrush;
@@ -677,7 +709,7 @@ namespace TraceViewer
             {
                 if (child.Tag is Node node)
                 {
-                    var border = child.Children.OfType<Rectangle>().FirstOrDefault(r => r.Tag == "NodeBorder");
+                    var border = child.Children.OfType<Rectangle>().FirstOrDefault(r => (string?)r.Tag == "NodeBorder");
                     if (border != null)
                     {
                         border.Stroke = (SolidColorBrush)FindResource("ViewBorderHoverBrush");

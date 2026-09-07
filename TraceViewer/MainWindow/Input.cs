@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Input;
 using TraceViewer.Core;
@@ -23,7 +23,7 @@ namespace TraceViewer
                     try
                     {
                         int goto_row = Convert.ToInt32(res);
-                        ScrollControl(-goto_row, true);
+                        ScrollTo(goto_row);
                     }
                     catch (FormatException)
                     {
@@ -31,6 +31,13 @@ namespace TraceViewer
                         messageDialog.ShowDialog();
                     }
                 }
+            }
+
+            // Handle F2 shortcut for "Rename Block" on current row
+            if (e.Key == Key.F2 && CurrentHoveredRow != null)
+            {
+                CurrentHoveredRow.PromptRenameBlock();
+                e.Handled = true;
             }
         }
     }
