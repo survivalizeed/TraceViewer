@@ -93,6 +93,7 @@ namespace TraceViewer
         public Option uselessAssignmentsAnalysis = true;
         public Option commentKnownObfuscations = true;
         public Option blockSlicing = true;
+        public Option constantFolding = true;
 
         // EditorSettings
         public Option addressBasedCommenting = false;

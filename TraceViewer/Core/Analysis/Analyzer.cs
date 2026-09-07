@@ -16,6 +16,9 @@ namespace TraceViewer.Core.Analysis
 
             DeObfus.DeObfuscate();
 
+            if (window.constantFolding)
+                ConstantFolder.FoldConstants(TraceHandler.Trace);
+
             if (window.blockSlicing)
                 BlockSlicing();
 
@@ -32,6 +35,7 @@ namespace TraceViewer.Core.Analysis
 
             if (TraceHandler.Trace is null) return;
 
+            ConstantFolder.RemoveFoldedConstants(TraceHandler.Trace);
             DeObfus.deObHiddenRows.Clear();
 
             foreach (var id in BlockIDs)

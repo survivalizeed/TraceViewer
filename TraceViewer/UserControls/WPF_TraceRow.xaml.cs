@@ -10,6 +10,7 @@ using System.Windows.Media;
 using TraceViewer.Core;
 using TraceViewer.Core.Analysis;
 using TraceViewer.UserControls;
+using TraceViewer.UserWindows;
 
 namespace TraceViewer
 {
@@ -92,15 +93,41 @@ namespace TraceViewer
                 block.Text = "";
             }
 
-            if (hiddenRows.Contains(traceRow.Id) || DeObfus.deObHiddenRows.Contains(traceRow.Id))
+            if (BackwardSlicer.IsActive)
             {
-                parent_panel.Opacity = hiddenOpacity;
-                hidden = true;
+                if (BackwardSlicer.IncludedRows.Contains(traceRow.Id))
+                {
+                    parent_panel.Opacity = 1.0;
+                    hidden = false;
+                    if (traceRow.Id == BackwardSlicer.TargetRowId)
+                    {
+                        disasm_border.BorderBrush = Brushes.Cyan;
+                    }
+                    else
+                    {
+                        disasm_border.ClearValue(Border.BorderBrushProperty);
+                    }
+                }
+                else
+                {
+                    parent_panel.Opacity = hiddenOpacity;
+                    hidden = true;
+                    disasm_border.ClearValue(Border.BorderBrushProperty);
+                }
             }
             else
             {
-                parent_panel.Opacity = 1.0;
-                hidden = false;
+                disasm_border.ClearValue(Border.BorderBrushProperty);
+                if (hiddenRows.Contains(traceRow.Id) || DeObfus.deObHiddenRows.Contains(traceRow.Id) || ConstantFolder.FoldedHiddenRows.Contains(traceRow.Id))
+                {
+                    parent_panel.Opacity = hiddenOpacity;
+                    hidden = true;
+                }
+                else
+                {
+                    parent_panel.Opacity = 1.0;
+                    hidden = false;
+                }
             }
         }
 
@@ -884,6 +911,8 @@ namespace TraceViewer
             {
                 var markItem = cm.Items.OfType<MenuItem>().FirstOrDefault(x => x.Name == "MarkUnmarkAsBlockStart");
                 var renameItem = cm.Items.OfType<MenuItem>().FirstOrDefault(x => x.Name == "RenameBlockMenuItem");
+                var sliceItem = cm.Items.OfType<MenuItem>().FirstOrDefault(x => x.Name == "BackwardSlice");
+                var clearSliceItem = cm.Items.OfType<MenuItem>().FirstOrDefault(x => x.Name == "ClearSliceFilter");
 
                 if (markItem != null)
                 {
@@ -893,7 +922,39 @@ namespace TraceViewer
                 {
                     renameItem.Visibility = traceRow.isBlockStart ? Visibility.Visible : Visibility.Collapsed;
                 }
+                if (sliceItem != null)
+                {
+                    sliceItem.Header = $"Backward Slice from #{traceRow.Id}";
+                }
+                if (clearSliceItem != null)
+                {
+                    clearSliceItem.Visibility = BackwardSlicer.IsActive ? Visibility.Visible : Visibility.Collapsed;
+                }
             }
+        }
+
+        private void BackwardSlice_Click(object sender, RoutedEventArgs e)
+        {
+            if (traceRow == null || TraceHandler.Trace == null) return;
+
+            var result = BackwardSlicer.RunSlice(TraceHandler.Trace, traceRow.Id);
+            if (result.Success)
+            {
+                window.RefreshView();
+                var msg = new MessageDialog($"Backward Slice Active!\n\nTarget: {result.TargetDesc}\n\nIsolated {result.SlicedCount} contributing instructions.\nAll unrelated instructions are dimmed.\n\nUse right-click -> 'Clear Slice Filter' or ANALYZER -> 'Clear Backward Slice' to restore full view.");
+                msg.ShowDialog();
+            }
+            else
+            {
+                var msg = new MessageDialog($"Could not compute slice: {result.TargetDesc}");
+                msg.ShowDialog();
+            }
+        }
+
+        private void ClearSliceFilter_Click(object sender, RoutedEventArgs e)
+        {
+            BackwardSlicer.ClearSlice();
+            window.RefreshView();
         }
 
         private void ContextMenu_Closed(object sender, RoutedEventArgs e)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -29,7 +29,10 @@ namespace TraceViewer.UserWindows
             if (width != null)
                 this.Width = (double)width;
             if (height != null)
+            {
+                this.SizeToContent = SizeToContent.Manual;
                 this.Height = (double)height;
+            }
         }
 
         private void MessageDialog_PreviewKeyDown(object sender, KeyEventArgs e)

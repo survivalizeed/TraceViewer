@@ -17,6 +17,8 @@
             <MenuItem Name="MarkUnmarkAsBlockStart" Header="Mark As Block Start..." Click="MarkUnmarkAsBlockStart_Click"/>
             <MenuItem Name="RenameBlockMenuItem" Header="Rename Block..." Click="RenameBlock_Click" Visibility="Collapsed"/>
             <MenuItem Name="AddOrRemoveBookmark" Header="Add/Remove Bookmark" Click="AddOrRemoveBookmark_Click"/>
+            <MenuItem Name="BackwardSlice" Header="Backward Slice (Isolate Dependencies)" Click="BackwardSlice_Click"/>
+            <MenuItem Name="ClearSliceFilter" Header="Clear Slice Filter" Click="ClearSliceFilter_Click" Visibility="Collapsed"/>
         </ContextMenu>
     </UserControl.Resources>
     <Grid Margin="0,0,0,0" ContextMenu="{StaticResource ContextMenu}">

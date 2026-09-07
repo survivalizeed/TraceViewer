@@ -50,6 +50,8 @@
                                 <MenuItem x:Name="AnalyzerSettings" Header="Settings" Click="AnalyzerSettings_Click"/>
                                 <MenuItem x:Name="Diff" Header="Diff" Click="Diff_Click"/>
                                 <MenuItem x:Name="RemoveAnalysis" Header="Remove Analysis" Click="RemoveAnalysis_Click"/>
+                                <Separator/>
+                                <MenuItem x:Name="ClearSlice" Header="Clear Backward Slice" Click="ClearSlice_Click"/>
                             </MenuItem>
                             <MenuItem Header="MEMORY">
                                 <MenuItem x:Name="StackAlignmentBase" Header="Stack Alignment Base Address" Click="StackAlignmentBase_Click"/>
@@ -262,7 +264,7 @@
                 </Grid.RowDefinitions>
 
                 <DockPanel Grid.Row="0" LastChildFill="True" Height="Auto" Margin="10,0,10,0">
-                    <Label x:Name="StepLeftTimeline" DockPanel.Dock="Left" Style="{StaticResource InstructionsViewTitlesSelectable}" Content=" &lt; " MouseDown="StepLeftTimeline_MouseDown"/>
+<Label x:Name="StepLeftTimeline" DockPanel.Dock="Left" Style="{StaticResource InstructionsViewTitlesSelectable}" Content=" &lt; " MouseDown="StepLeftTimeline_MouseDown"/>
                     <Label x:Name="StepRightTimeline" DockPanel.Dock="Right" Style="{StaticResource InstructionsViewTitlesSelectable}" Content=" &gt; " MouseDown="StepRightTimeline_MouseDown"/>
                     <Slider x:Name="Timeline" Margin="10,0,10,0" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
                 </DockPanel>

@@ -70,8 +70,8 @@ namespace TraceViewer.Core.Analysis
 
         public static FrozenDictionary<string, string[]> registerFamiliesSSE => registerFamilies;
 
-        private static readonly FrozenDictionary<string, string> _regToFamily;
-        private static readonly FrozenDictionary<string, int> _regToFamilyIndex;
+        internal static readonly FrozenDictionary<string, string> _regToFamily;
+        internal static readonly FrozenDictionary<string, int> _regToFamilyIndex;
 
         // Classification sets
         private static readonly FrozenSet<string> _setters = new HashSet<string>
@@ -1036,7 +1036,7 @@ namespace TraceViewer.Core.Analysis
             return DisasmType.Other;
         }
 
-        private static DisasmDescriptor SliceASM(TraceRow traceRow)
+        internal static DisasmDescriptor SliceASM(TraceRow traceRow)
         {
             string[] disasmParts = ParseDisassembly(traceRow.Disasm);
             if (disasmParts.Length == 0)

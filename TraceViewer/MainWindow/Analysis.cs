@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using System.Windows;
 using TraceViewer.Core;
 using TraceViewer.Core.Analysis;
@@ -25,6 +25,7 @@ namespace TraceViewer
         {
             List<(string, Option)> options = new List<(string, Option)>();
             options.Add(("Hide Useless Assignments", uselessAssignmentsAnalysis));
+            options.Add(("Constant Folding", constantFolding));
             options.Add(("Comment Known Obfuscations", commentKnownObfuscations));
             options.Add(("Block Slicing", blockSlicing));
             OptionsDialog dialog = new OptionsDialog("Analyzer Settings", options, 680, 170);
@@ -52,6 +53,12 @@ namespace TraceViewer
         private void RemoveAnalysis_Click(object sender, RoutedEventArgs e)
         {
             Analyzer.RemoveAnalysis();
+        }
+
+        private void ClearSlice_Click(object sender, RoutedEventArgs e)
+        {
+            BackwardSlicer.ClearSlice();
+            RefreshView();
         }
 
     }
