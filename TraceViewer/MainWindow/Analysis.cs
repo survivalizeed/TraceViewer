@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using Microsoft.Win32;
+using System.Windows;
 using TraceViewer.Core;
 using TraceViewer.Core.Analysis;
 using TraceViewer.UserControls;
@@ -28,6 +29,24 @@ namespace TraceViewer
             options.Add(("Block Slicing", blockSlicing));
             OptionsDialog dialog = new OptionsDialog("Analyzer Settings", options, 680, 170);
             dialog.ShowDialog();
+        }
+
+        private void Diff_Click(object sender, RoutedEventArgs e)
+        {
+            if(TraceHandler.Trace == null)
+                return;
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "Trace Files (*.trace64)|*.trace64",
+                FilterIndex = 1,
+                Multiselect = false
+            };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                var diffTrace = TraceLoader.OpenX64dbgTrace(openFileDialog.FileName);
+                Analyzer.DiffTraces(diffTrace);
+
+            }
         }
 
         private void RemoveAnalysis_Click(object sender, RoutedEventArgs e)

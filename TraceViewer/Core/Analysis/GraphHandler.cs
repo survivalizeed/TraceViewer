@@ -1,62 +1,53 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.NetworkInformation;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-
 
 namespace TraceViewer.Core.Analysis
 {
     internal class GraphHandler
     {
-
         public static List<KeyValuePair<ulong, List<int>>>? uniqueIPAccesses;
         public static List<(int startIndex, int endIndex)>? blocks;
 
         public static bool GenerateGraph()
         {
-            if (TraceHandler.Trace == null)
-                return false;
-            var window = System.Windows.Application.Current.MainWindow as MainWindow ?? throw new Exception("Main window not found");
+            if (TraceHandler.Trace is null) return false;
+            var window = Application.Current.MainWindow as MainWindow
+                ?? throw new InvalidOperationException("Main window not found");
 
             var traceRows = TraceHandler.Trace.Trace;
-            var ipOccurrences = new Dictionary<ulong, List<int>>();
 
+            // Build IP occurrence map using TryAdd pattern
+            var ipOccurrences = new Dictionary<ulong, List<int>>(capacity: traceRows.Count / 4);
             for (int i = 0; i < traceRows.Count; i++)
             {
                 var row = traceRows[i];
-                if (!ipOccurrences.ContainsKey(row.Ip))
+                if (!ipOccurrences.TryGetValue(row.Ip, out var list))
                 {
-                    ipOccurrences[row.Ip] = new List<int>();
+                    list = new List<int>(4);
+                    ipOccurrences[row.Ip] = list;
                 }
-                ipOccurrences[row.Ip].Add(row.Id);
+                list.Add(row.Id);
             }
 
             uniqueIPAccesses = ipOccurrences.ToList();
 
-            SortedSet<int> slice_locations = new SortedSet<int>();
+            var sliceLocations = new SortedSet<int>();
 
-            foreach (var kvp in uniqueIPAccesses.Select((Value, Index) => new { Value, Index }))
+            // Detect slice points where execution count changes
+            for (int idx = 0; idx < uniqueIPAccesses.Count - 1; idx++)
             {
-                var occ = kvp.Value;
-                var currentIndex = kvp.Index;
-
-                if (currentIndex < uniqueIPAccesses.Count - 1)
-                {
-                    var next = uniqueIPAccesses[currentIndex + 1];
-                    if (occ.Value.Count != next.Value.Count)
-                    {
-                        slice_locations.Add(currentIndex);
-                    }
-                }
+                var current = uniqueIPAccesses[idx];
+                var next = uniqueIPAccesses[idx + 1];
+                if (current.Value.Count != next.Value.Count)
+                    sliceLocations.Add(idx);
             }
 
-            // Split based on execution flow
+            // Split based on non-sequential execution flow
             for (int i = 0; i < uniqueIPAccesses.Count - 1; i++)
             {
-                if (slice_locations.Contains(i) || slice_locations.Contains(i + 1)) 
+                if (sliceLocations.Contains(i) || sliceLocations.Contains(i + 1))
                     continue;
 
                 var currentEntry = uniqueIPAccesses[i];
@@ -68,83 +59,67 @@ namespace TraceViewer.Core.Analysis
                     {
                         if (nextEntry.Value[k] - currentEntry.Value[k] != 1)
                         {
-                            slice_locations.Add(i);
+                            sliceLocations.Add(i);
                             break;
                         }
                     }
-                }                
+                }
             }
-            
 
-            blocks = new List<(int startIndex, int endIndex)>();
-
-            int currentBlockStartIndex = 0;
-            var finalSlicePoints = slice_locations.ToList();
-            finalSlicePoints.Add(uniqueIPAccesses.Count - 1);
-            finalSlicePoints.Sort(); 
+            // Build blocks from slice points
+            blocks = new List<(int, int)>();
+            int currentBlockStart = 0;
+            var finalSlicePoints = new List<int>(sliceLocations) { uniqueIPAccesses.Count - 1 };
+            finalSlicePoints.Sort();
 
             foreach (int sliceIndex in finalSlicePoints.Distinct())
             {
-                if (sliceIndex < currentBlockStartIndex) 
-                    continue; 
-
-                blocks.Add((currentBlockStartIndex, sliceIndex));
-                currentBlockStartIndex = sliceIndex + 1;
+                if (sliceIndex < currentBlockStart) continue;
+                blocks.Add((currentBlockStart, sliceIndex));
+                currentBlockStart = sliceIndex + 1;
             }
 
             blocks = blocks.Where(b => b.startIndex <= b.endIndex).ToList();
 
-
-            var ipToBlockIndexMap = new Dictionary<ulong, int>();
+            // Map IP → block index
+            var ipToBlockIndex = new Dictionary<ulong, int>(uniqueIPAccesses.Count);
             for (int blockIndex = 0; blockIndex < blocks.Count; blockIndex++)
             {
                 var block = blocks[blockIndex];
                 for (int i = block.startIndex; i <= block.endIndex; i++)
-                {
-                    ipToBlockIndexMap[uniqueIPAccesses[i].Key] = blockIndex;
-                }
+                    ipToBlockIndex[uniqueIPAccesses[i].Key] = blockIndex;
             }
 
-            // Likely uneccessary but still here if there is ever a change to the indices of the trace rows
-            var traceIdToRowIndexMap = new Dictionary<int, int>(traceRows.Count);
+            // Map trace ID → row index (for connection resolution)
+            var traceIdToRowIndex = new Dictionary<int, int>(traceRows.Count);
             for (int i = 0; i < traceRows.Count; i++)
-            {
-                traceIdToRowIndexMap[traceRows[i].Id] = i;
-            }
+                traceIdToRowIndex[traceRows[i].Id] = i;
 
-
+            // Find connections between blocks
             var connections = new List<(int, int)>();
-
             for (int currentBlockIndex = 0; currentBlockIndex < blocks.Count; currentBlockIndex++)
             {
                 var currentBlock = blocks[currentBlockIndex];
-                int lastEntryIndexInBlock = currentBlock.endIndex;
+                var lastIpEntry = uniqueIPAccesses[currentBlock.endIndex];
 
-                var lastIpEntry = uniqueIPAccesses[lastEntryIndexInBlock];
-                List<int> lastIpTraceIds = lastIpEntry.Value;
-
-                foreach (int traceId in lastIpTraceIds)
+                foreach (int traceId in lastIpEntry.Value)
                 {
-                    if (traceIdToRowIndexMap.TryGetValue(traceId, out int currentRowIndex))
+                    if (traceIdToRowIndex.TryGetValue(traceId, out int currentRowIndex))
                     {
                         int nextRowIndex = currentRowIndex + 1;
                         if (nextRowIndex < traceRows.Count)
                         {
-                            TraceRow nextTraceRow = traceRows[nextRowIndex];
-                            ulong nextIp = nextTraceRow.Ip;
-                            if (ipToBlockIndexMap.TryGetValue(nextIp, out int targetBlockIndex))
-                                if (targetBlockIndex != currentBlockIndex)
-                                    connections.Add((currentBlockIndex, targetBlockIndex));
-
+                            ulong nextIp = traceRows[nextRowIndex].Ip;
+                            if (ipToBlockIndex.TryGetValue(nextIp, out int targetBlockIndex) && targetBlockIndex != currentBlockIndex)
+                                connections.Add((currentBlockIndex, targetBlockIndex));
                         }
                     }
                 }
             }
 
-
-            List<Node> nodes = new List<Node>(blocks.Count);
-            int y = 0;
-            int x = 0;
+            // Create graph nodes
+            var nodes = new List<Node>(blocks.Count);
+            int y = 0, x = 0;
             const int horizontalThreshold = 1500;
             const int nodeHeight = 40;
             const int nodeWidth = 110;
@@ -154,10 +129,6 @@ namespace TraceViewer.Core.Analysis
             for (int i = 0; i < blocks.Count; i++)
             {
                 var block = blocks[i];
-                ulong startIp = uniqueIPAccesses[block.startIndex].Key;
-                ulong endIp = uniqueIPAccesses[block.endIndex].Key;
-                int instructionCount = block.endIndex - block.startIndex + 1;
-
                 if (x > horizontalThreshold)
                 {
                     y += verticalSpacing;
@@ -175,80 +146,56 @@ namespace TraceViewer.Core.Analysis
 
                 nodes.Add(node);
                 window.AddNode(node);
-
                 x += horizontalSpacing;
             }
 
-            foreach (var connection in connections.OrderBy(c => c.Item1).ThenBy(c => c.Item2))
+            foreach (var (from, to) in connections.OrderBy(c => c.Item1).ThenBy(c => c.Item2))
+                window.ConnectNodes(nodes[from], nodes[to]);
+
+            if (connections.Count == 0) return false;
+
+            // Build control-flow ordered connections for timeline
+            var cfConnections = new List<(int, int)> { connections[0] };
+            var nodeIndex = new int[nodes.Count];
+            var maxNodeIndex = new int[nodes.Count];
+
+            // Count outgoing connections per node (using indexed access instead of ElementAt)
+            for (int j = 0; j < connections.Count; j++)
+                maxNodeIndex[connections[j].Item1]++;
+
+            bool addedNew = true;
+            while (addedNew)
             {
-                window.ConnectNodes(nodes[connection.Item1], nodes[connection.Item2]);
-            }
+                addedNew = false;
+                var lastConn = cfConnections[^1];
+                int fromNode = lastConn.Item2;
+                int outgoing = 0;
 
-
-            if(connections.Count == 0)
-            {
-                return false;
-            }
-            // Sort the connections by controlflow
-            var cf_connections = new List<(int, int)>();
-
-            cf_connections.Add(connections.First());
-
-            var node_index = new List<int>(nodes.Count);
-            var max_node_index = new List<int>(nodes.Count);
-            for (int i = 0; i < nodes.Count; i++)
-            {
-                node_index.Add(0);
-                max_node_index.Add(0);
-            }
-
-            for (int i = 0; i < nodes.Count; i++)
-            {
-                for(int j = 0; j < connections.Count; j++)
+                for (int j = 0; j < connections.Count; j++)
                 {
-                    if (connections.ElementAt(j).Item1 == i)
+                    if (connections[j].Item1 == fromNode)
                     {
-                        max_node_index[i]++;
-                    }
-                }
-            }
-
-
-            bool addedNewConnection = true;
-            while (addedNewConnection)
-            {
-                addedNewConnection = false;
-                var lastConnection = cf_connections.Last();
-                var from_node = lastConnection.Item2;
-                int outgoingConnectionCount = 0;
-
-                foreach (var connection in connections)
-                {
-                    if (connection.Item1 == from_node)
-                    {
-                        if (outgoingConnectionCount == node_index[from_node])
+                        if (outgoing == nodeIndex[fromNode])
                         {
-                            cf_connections.Add(connection);
-                            if(node_index[from_node] < max_node_index[from_node])
-                                node_index[from_node]++;
-                            addedNewConnection = true;
+                            cfConnections.Add(connections[j]);
+                            if (nodeIndex[fromNode] < maxNodeIndex[fromNode])
+                                nodeIndex[fromNode]++;
+                            addedNew = true;
                             break;
                         }
-                        outgoingConnectionCount++;
+                        outgoing++;
                     }
                 }
-            }        
+            }
 
-            window.InitializeTimeline(cf_connections);
-
+            window.InitializeTimeline(cfConnections);
             return true;
-        } 
+        }
 
         public static void Clear()
         {
             uniqueIPAccesses?.Clear();
             blocks?.Clear();
         }
-
     }
 }

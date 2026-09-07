@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using System.IO;
 using System.Windows;
 using static System.Net.WebRequestMethods;
@@ -122,7 +122,7 @@ namespace TraceViewer
             {
                 foreach (var item in project.Comments)
                 {
-                    TraceHandler.Trace.Trace[item.Item1].comments = item.Item2; // Apply loaded comments
+                    TraceHandler.Trace.Trace[item.Id].comments = item.Text; // Apply loaded comments
                 }
             }
             NotesContent.Text = project.Notes ?? ""; // Load notes, handle null
@@ -131,10 +131,10 @@ namespace TraceViewer
 
             foreach(var block in project.Blocks)
             {
-                var row = TraceHandler.Trace.Trace[block.Item1];
+                var row = TraceHandler.Trace.Trace[block.Id];
                 if (row != null)
                 {
-                    row.block = block.Item2; // Apply loaded block information
+                    row.block = block.Name; // Apply loaded block information
                     row.isBlockStart = true;
                 }
             }
@@ -196,14 +196,14 @@ namespace TraceViewer
                 TraceData = TraceHandler.Trace,
                 HiddenRows = WPF_TraceRow.hiddenRows,
                 DeObHiddenRows = DeObfus.deObHiddenRows,
-                Comments = new List<Tuple<int, string>>(), 
+                Comments = new List<(int Id, string Text)>(), 
                 Notes = Dispatcher.Invoke(() => NotesContent.Text) 
             };
 
             foreach (var item in TraceHandler.Trace.Trace)
             {
                 if (!string.IsNullOrEmpty(item.comments))
-                    project.Comments.Add(new Tuple<int, string>(Convert.ToInt32(item.Id), item.comments)); 
+                    project.Comments.Add((Convert.ToInt32(item.Id), item.comments)); 
             }
 
             ProjectWriter.SaveProject(project, filename);
@@ -316,7 +316,6 @@ namespace TraceViewer
             string backupFullPath = Path.Combine(backupPath, backupFilename);
             SaveProjectToFile(backupFullPath); // Save project to file
         }
-
 
         private void CloseProject_Click(object sender, RoutedEventArgs e)
         {

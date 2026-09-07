@@ -1,19 +1,18 @@
-﻿using System;
+using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
 using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Linq;
+using System.Text.Json;
+using System.Windows;
 using TraceViewer.Core.Analysis;
 
 namespace TraceViewer.Core
 {
     public class MnemObject
     {
-        public string Mnem { get; set; }
-
-        public string Description { get; set; }
+        public string Mnem { get; set; } = "";
+        public string Description { get; set; } = "";
     }
 
     class TraceHandler
@@ -21,176 +20,209 @@ namespace TraceViewer.Core
         public static TraceData? Trace { get; set; }
         public static MainWindow window { get; set; }
 
-        private static Dictionary<string, object> root;
-
-        private static List<MnemObject> dataBrief;
-
-        private static List<MnemObject> data;
+        // Mnemonic data — loaded once on first use (lazy), then cached via FrozenDictionary for O(1) lookup
+        private static FrozenDictionary<string, string>? _briefLookup;
+        private static FrozenDictionary<string, string>? _fullLookup;
+        private static bool _mnemonicsLoaded;
 
         public static int load_count = 40;
 
+        /// <summary>
+        /// Loads the mnemonic database once from the embedded resource.
+        /// Subsequent calls are no-ops. Uses System.Text.Json instead of Newtonsoft.
+        /// </summary>
+        private static void EnsureMnemonicsLoaded()
+        {
+            if (_mnemonicsLoaded) return;
+
+            var uri = new Uri("pack://application:,,,/mnemdb.json");
+            var stream = Application.GetResourceStream(uri)?.Stream
+                ?? throw new InvalidOperationException("mnemdb.json resource stream not found");
+
+            using var reader = new StreamReader(stream);
+            string json = reader.ReadToEnd();
+
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            // Build brief lookup
+            var briefDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (root.TryGetProperty("x86-64-brief", out var briefArray))
+            {
+                foreach (var item in briefArray.EnumerateArray())
+                {
+                    string mnem = GetJsonString(item, "mnem", "Mnem");
+                    string desc = GetJsonString(item, "description", "Description");
+                    if (!string.IsNullOrEmpty(mnem))
+                    {
+                        briefDict.TryAdd(mnem, desc);
+                    }
+                }
+            }
+            _briefLookup = briefDict.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+
+            // Build full lookup with redirect resolution
+            var rawDict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (root.TryGetProperty("x86-64", out var fullArray))
+            {
+                foreach (var item in fullArray.EnumerateArray())
+                {
+                    string mnem = GetJsonString(item, "mnem", "Mnem");
+                    string desc = GetJsonString(item, "description", "Description");
+                    if (!string.IsNullOrEmpty(mnem))
+                    {
+                        rawDict.TryAdd(mnem, desc);
+                    }
+                }
+            }
+
+            // Resolve -R: redirects into a flat dictionary
+            var resolvedDict = new Dictionary<string, string>(rawDict.Count, StringComparer.OrdinalIgnoreCase);
+            foreach (var kvp in rawDict)
+            {
+                resolvedDict[kvp.Key] = ResolveRedirect(rawDict, kvp.Key, kvp.Value, maxDepth: 10);
+            }
+            _fullLookup = resolvedDict.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+
+            _mnemonicsLoaded = true;
+        }
+
+        private static string GetJsonString(JsonElement elem, string propLower, string propUpper)
+        {
+            if (elem.TryGetProperty(propLower, out var p) || elem.TryGetProperty(propUpper, out p))
+            {
+                return p.GetString() ?? "";
+            }
+            return "";
+        }
+
+        private static string ResolveRedirect(Dictionary<string, string> raw, string key, string value, int maxDepth)
+        {
+            int depth = 0;
+            string current = value;
+            while (current.StartsWith("-R:") && depth < maxDepth)
+            {
+                string target = current[3..];
+                if (!raw.TryGetValue(target, out string? resolved))
+                    return "";
+                current = resolved;
+                depth++;
+            }
+            return current;
+        }
+
         public static void OpenAndLoad(string path)
         {
-            window = Application.Current.MainWindow as MainWindow;
-            if (window == null)
-                throw new InvalidOperationException("Main window not found");
+            window = Application.Current.MainWindow as MainWindow
+                ?? throw new InvalidOperationException("Main window not found");
+
+            // Ensure mnemonics are loaded (one-time operation)
+            EnsureMnemonicsLoaded();
 
             Trace = TraceLoader.OpenX64dbgTrace(path);
 
-            if(Trace.Trace.Count == 0)
+            if (Trace.Trace.Count == 0)
                 throw new InvalidOperationException("Trace was empty");
 
-            if (Trace.Trace.Count < load_count)
-                load_count = Trace.Trace.Count;
-            else
-                load_count = 40;
-
-            var uri = new Uri("pack://application:,,,/mnemdb.json");
-            var stream = Application.GetResourceStream(uri)?.Stream;
-            var reader = stream != null ? new StreamReader(stream) : null;
-            if(reader == null)
-                throw new InvalidOperationException("Stream reader was null");
-
-            root = JsonConvert.DeserializeObject<Dictionary<string, object>>(reader.ReadToEnd());
-
-            if (root != null && // Null check for root
-                    root.TryGetValue("x86-64-brief", out var x86_64DataBrief) && x86_64DataBrief is JArray jsonArrayBrief &&
-                    root.TryGetValue("x86-64", out var x86_64Data) && x86_64Data is JArray jsonArray)
-            {
-                dataBrief = jsonArrayBrief.ToObject<List<MnemObject>>();
-                data = jsonArray.ToObject<List<MnemObject>>();
-            }
-            else
-                throw new InvalidOperationException("JSON root was null or the target dicts weren't found");
+            load_count = Trace.Trace.Count < 40 ? Trace.Trace.Count : 40;
 
             var x64Regs = REGDUMP.X64_REGS;
 
-            for (int i = 0; i < x64Regs.Count; i++)
+            for (int i = 0; i < x64Regs.Length; i++)
             {
-                var regName = x64Regs[i].Item1;
+                var regName = x64Regs[i].Name;
                 if (string.IsNullOrEmpty(regName))
-                {
                     continue;
-                }
-                if(i == 1)
+
+                // Handle register reordering (rbx↔rcx↔rdx display order)
+                string displayName;
+                int regTypeIndex = i;
+                if (i == 1)
                 {
-                    var rbx_wpfRow = new WPF_RegisterRow(x64Regs[3].Item1.ToUpper(), "0", GetRegisterType(i));
-                    window.RegisterViewItems.Add(rbx_wpfRow);
-                    continue;
+                    displayName = x64Regs[3].Name.ToUpper();
                 }
-                if (i == 2)
+                else if (i == 2)
                 {
-                    var rcx_wpfRow = new WPF_RegisterRow(x64Regs[1].Item1.ToUpper(), "0", GetRegisterType(i));
-                    window.RegisterViewItems.Add(rcx_wpfRow);
-                    continue;
+                    displayName = x64Regs[1].Name.ToUpper();
                 }
-                if (i == 3)
+                else if (i == 3)
                 {
-                    var rdx_wpfRow = new WPF_RegisterRow(x64Regs[2].Item1.ToUpper(), "0", GetRegisterType(i));
-                    window.RegisterViewItems.Add(rdx_wpfRow);
-                    continue;
+                    displayName = x64Regs[2].Name.ToUpper();
                 }
-                var wpfRow = new WPF_RegisterRow(regName.ToUpper(), "0", GetRegisterType(i));
+                else
+                {
+                    displayName = regName.ToUpper();
+                }
+
+                var wpfRow = new WPF_RegisterRow(displayName, "0", GetRegisterType(i));
                 window.RegisterViewItems.Add(wpfRow);
             }
 
             MemoryHandler.ComposeMemory(Trace);
-
             GraphHandler.GenerateGraph();
 
-            window.Stats.Content = $"IDs: {Trace.Trace.Count}  -  Unique Addresses: {GraphHandler.uniqueIPAccesses.Count}";
-
+            window.Stats.Content = $"IDs: {Trace.Trace.Count}  -  Unique Addresses: {GraphHandler.uniqueIPAccesses?.Count ?? 0}";
             window.index = load_count;
-
             LoadRange(0, load_count, false);
         }
 
         public static void LoadRange(int low, int high, bool prepend)
         {
-            if(Trace == null)
+            if (Trace is null)
                 throw new InvalidOperationException("Trace was null");
 
             var traceData = Trace;
+            int traceCount = traceData.Trace.Count;
 
-            var traceCount = traceData.Trace.Count;
-
-            if(low < 0 || high > traceCount)
+            if (low < 0 || high > traceCount)
                 throw new InvalidOperationException("low or high value out of bounds");
-
 
             for (int i = low; i < high; i++)
             {
-                var instructionMnemonic = traceData.Trace[i].Disasm.Split(' ').First();
-            
-                var mnemonicBrief = dataBrief.FirstOrDefault(m => m.Mnem == instructionMnemonic)?.Description ?? ""; // Using LINQ for brief mnemonic lookup
-            
-                var mnemonic = FindMnemonic(data, instructionMnemonic.ToUpper()); // Extracting mnemonic finding logic
-            
+                var row = traceData.Trace[i];
+                string instructionMnemonic = row.Disasm.AsSpan().SliceToFirstSpace();
+
+                // O(1) dictionary lookup instead of linear search
+                string mnemonicBrief = _briefLookup?.GetValueOrDefault(instructionMnemonic) ?? "";
+                string mnemonic = _fullLookup?.GetValueOrDefault(instructionMnemonic) ?? "";
+
                 if (string.IsNullOrEmpty(mnemonic))
-                {
-                    mnemonic = $"{mnemonicBrief}\nSadly thats it...\n\nMaybe this link can be helpful: https://faydoc.tripod.com/cpu/index.htm"; // String interpolation
-                }
-            
-                var wpfRow = new WPF_TraceRow(
-                    traceData.Trace[i],
-                    mnemonicBrief,
-                    mnemonic
-                );
-                
+                    mnemonic = $"{mnemonicBrief}\nSadly thats it...\n\nMaybe this link can be helpful: https://faydoc.tripod.com/cpu/index.htm";
+
+                var wpfRow = new WPF_TraceRow(row, mnemonicBrief, mnemonic);
+
                 if (prepend)
                     window.InstructionViewItems.Insert(0, wpfRow);
                 else
                     window.InstructionViewItems.Add(wpfRow);
             }
-            
         }
 
-
-        private static string FindMnemonic(List<MnemObject> data, string instructionMnemonic)
+        private static RegisterType GetRegisterType(int i) => i switch
         {
-            foreach (var mnemObj in data)
-            {
-                if (mnemObj.Mnem == instructionMnemonic)
-                {
-                    if (mnemObj.Description.StartsWith("-R:"))
-                    {
-                        return FindMnemonic(data, mnemObj.Description.Substring(3)); // Recursive call for -R: prefixed mnemonics
-                    }
-                    return mnemObj.Description;
-                }
-            }
-            return "";
-        }
-
-        private static RegisterType GetRegisterType(int i)
-        {
-            switch (i)
-            {
-                case 1:
-                case 2:
-                case 3:
-                    return RegisterType.GeneralPurpose;
-                case 17:
-                    return RegisterType.Flags;
-                case 18:
-                case 19:
-                case 20:
-                case 21:
-                case 22:
-                case 23:
-                    return RegisterType.Debug;
-                default:
-                    return i >= 24 ? RegisterType.FPU : RegisterType.GeneralPurpose; // Simplified FPU check
-            }
-        }
+            1 or 2 or 3 => RegisterType.GeneralPurpose,
+            17 => RegisterType.Flags,
+            >= 18 and <= 23 => RegisterType.Debug,
+            >= 24 => RegisterType.FPU,
+            _ => RegisterType.GeneralPurpose,
+        };
 
         public static void Clear()
         {
-            if (Trace == null)
-                return;
+            if (Trace is null) return;
             Trace.Trace.Clear();
-            Trace.Regs.Clear();
             Trace = null;
+        }
+    }
+
+    /// <summary>Extension methods for span-based string operations.</summary>
+    internal static class SpanStringExtensions
+    {
+        /// <summary>Extracts the substring before the first space. Returns the full string if no space found.</summary>
+        public static string SliceToFirstSpace(this ReadOnlySpan<char> span)
+        {
+            int idx = span.IndexOf(' ');
+            return idx < 0 ? span.ToString() : span[..idx].ToString();
         }
     }
 }

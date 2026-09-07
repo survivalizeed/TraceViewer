@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -40,7 +40,7 @@ namespace TraceViewer
         private const string ZeroHexValue = "00";
 
         private List<byte[]> registers_x64;
-        private List<Tuple<string, int>> regs; // Stores register names and sizes, without padding.
+        private RegisterDef[] regs; // Stores register names and sizes.
         private List<string> highlights = new List<string>(); // Registers that have changed in this row.
         private List<MemoryAccess> memoryAccesses = new List<MemoryAccess>(); // Memory accesses in this row.
 
@@ -87,11 +87,11 @@ namespace TraceViewer
 
             registers_x64 = traceRow.Regs;
 
-            if (!traceRow.already_swaped)
+            if (!traceRow.alreadySwapped)
             {
                 SwapRegisters(registers_x64, 2, 3);
                 SwapRegisters(registers_x64, 1, 2);
-                traceRow.already_swaped = true;
+                traceRow.alreadySwapped = true;
             }
 
             id.Text = traceRow.Id.ToString();
@@ -490,7 +490,7 @@ namespace TraceViewer
                 registerRow.register.Foreground = Brushes.Coral;
                 registerRow.value.Foreground = Brushes.White;
             }
-            registerRow.value.Text = $"{HexPrefix}{ByteArrayToHexString(registers_x64[registerIndex], false)}";
+            registerRow.value.Text = $"{HexPrefix}{HexUtils.ByteArrayToHexString(registers_x64[registerIndex], false)}";
         }
 
         public string ByteArrayToHexString(byte[] bytes, bool zeroRemoval)

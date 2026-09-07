@@ -48,6 +48,7 @@
                             <MenuItem Header="ANALYZER">
                                 <MenuItem x:Name="StartAnalysis" Header="Start Analysis" Click="StartAnalysis_Click"/>
                                 <MenuItem x:Name="AnalyzerSettings" Header="Settings" Click="AnalyzerSettings_Click"/>
+                                <MenuItem x:Name="Diff" Header="Diff" Click="Diff_Click"/>
                                 <MenuItem x:Name="RemoveAnalysis" Header="Remove Analysis" Click="RemoveAnalysis_Click"/>
                             </MenuItem>
                             <MenuItem Header="MEMORY">

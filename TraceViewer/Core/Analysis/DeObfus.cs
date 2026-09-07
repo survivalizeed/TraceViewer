@@ -1,18 +1,12 @@
-﻿using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
-using TraceViewer.UserControls;
-using TraceViewer.UserWindows;
 
 namespace TraceViewer.Core.Analysis
 {
-
     public enum DisasmType
     {
         Setter,
@@ -24,394 +18,352 @@ namespace TraceViewer.Core.Analysis
     public class DisasmDescriptor
     {
         public DisasmType type;
-
         public string write_to = "";
-        public List<string> read_from = new List<string>();
+        public List<string> read_from = [];
+        public bool useless = false;
 
-        public bool useless = false; // Will be set by the analyzer
-
-        public DisasmDescriptor(DisasmType type)
-        {
-            this.type = type;
-        }
-
+        public DisasmDescriptor(DisasmType type) => this.type = type;
         public DisasmDescriptor() { }
     }
 
-
     class DeObfus
     {
-        public static HashSet<int> deObHiddenRows = new HashSet<int>();
+        public static HashSet<int> deObHiddenRows = [];
 
-        public static readonly Dictionary<string, string[]> registerFamilies = new Dictionary<string, string[]>
+        // Unified register families — single source of truth (previously duplicated as registerFamilies + registerFamiliesSSE)
+        public static readonly FrozenDictionary<string, string[]> registerFamilies = new Dictionary<string, string[]>
         {
-            { "raxx", new[] { "rax", "eax", "ax", "ah", "al" } },
-            { "rbxx", new[] { "rbx", "ebx", "bx", "bh", "bl" } },
-            { "rcxx", new[] { "rcx", "ecx", "cx", "ch", "cl" } },
-            { "rdxx", new[] { "rdx", "edx", "dx", "dh", "dl" } },
-            { "rspx", new[] { "rsp", "esp", "sp", "spl" } },
-            { "rbpx", new[] { "rbp", "ebp", "bp", "bpl" } },
-            { "rsix", new[] { "rsi", "esi", "si", "sil" } },
-            { "rdix", new[] { "rdi", "edi", "di", "dil" } },
-            { "r8x",  new[] { "r8",  "r8d", "r8w", "r8b" } },
-            { "r9x",  new[] { "r9",  "r9d", "r9w", "r9b" } },
-            { "r10x", new[] { "r10", "r10d", "r10w", "r10b" } },
-            { "r11x", new[] { "r11", "r11d", "r11w", "r11b" } },
-            { "r12x", new[] { "r12", "r12d", "r12w", "r12b" } },
-            { "r13x", new[] { "r13", "r13d", "r13w", "r13b" } },
-            { "r14x", new[] { "r14", "r14d", "r14w", "r14b" } },
-            { "r15x", new[] { "r15", "r15d", "r15w", "r15b" } },
-            { "ripx", new[] { "rip", "eip" } }
-        };
+            { "raxx", ["rax", "eax", "ax", "ah", "al"] },
+            { "rbxx", ["rbx", "ebx", "bx", "bh", "bl"] },
+            { "rcxx", ["rcx", "ecx", "cx", "ch", "cl"] },
+            { "rdxx", ["rdx", "edx", "dx", "dh", "dl"] },
+            { "rspx", ["rsp", "esp", "sp", "spl"] },
+            { "rbpx", ["rbp", "ebp", "bp", "bpl"] },
+            { "rsix", ["rsi", "esi", "si", "sil"] },
+            { "rdix", ["rdi", "edi", "di", "dil"] },
+            { "r8x",  ["r8",  "r8d", "r8w", "r8b"] },
+            { "r9x",  ["r9",  "r9d", "r9w", "r9b"] },
+            { "r10x", ["r10", "r10d", "r10w", "r10b"] },
+            { "r11x", ["r11", "r11d", "r11w", "r11b"] },
+            { "r12x", ["r12", "r12d", "r12w", "r12b"] },
+            { "r13x", ["r13", "r13d", "r13w", "r13b"] },
+            { "r14x", ["r14", "r14d", "r14w", "r14b"] },
+            { "r15x", ["r15", "r15d", "r15w", "r15b"] },
+            { "ripx", ["rip", "eip"] },
+            { "xmm0x", ["xmm0"] }, { "xmm1x", ["xmm1"] },
+            { "xmm2x", ["xmm2"] }, { "xmm3x", ["xmm3"] },
+            { "xmm4x", ["xmm4"] }, { "xmm5x", ["xmm5"] },
+            { "xmm6x", ["xmm6"] }, { "xmm7x", ["xmm7"] },
+            { "xmm8x", ["xmm8"] }, { "xmm9x", ["xmm9"] },
+            { "xmm10x", ["xmm10"] }, { "xmm11x", ["xmm11"] },
+            { "xmm12x", ["xmm12"] }, { "xmm13x", ["xmm13"] },
+            { "xmm14x", ["xmm14"] }, { "xmm15x", ["xmm15"] },
+            { "ymm0x", ["ymm0"] }, { "ymm1x", ["ymm1"] },
+            { "ymm2x", ["ymm2"] }, { "ymm3x", ["ymm3"] },
+            { "ymm4x", ["ymm4"] }, { "ymm5x", ["ymm5"] },
+            { "ymm6x", ["ymm6"] }, { "ymm7x", ["ymm7"] },
+            { "ymm8x", ["ymm8"] }, { "ymm9x", ["ymm9"] },
+            { "ymm10x", ["ymm10"] }, { "ymm11x", ["ymm11"] },
+            { "ymm12x", ["ymm12"] }, { "ymm13x", ["ymm13"] },
+            { "ymm14x", ["ymm14"] }, { "ymm15x", ["ymm15"] },
+        }.ToFrozenDictionary();
 
-        public static readonly Dictionary<string, string[]> registerFamiliesSSE = new Dictionary<string, string[]>
+        // Alias for backward compatibility — the old registerFamiliesSSE is now the same as registerFamilies
+        public static FrozenDictionary<string, string[]> registerFamiliesSSE => registerFamilies;
+
+        // Pre-computed reverse lookup: register name → family key (O(1) instead of O(n*m))
+        private static readonly FrozenDictionary<string, string> _regToFamily;
+
+        // Pre-computed: register name → index within its family
+        private static readonly FrozenDictionary<string, int> _regToFamilyIndex;
+
+        // Instruction classification sets — FrozenSet for O(1) lookup
+        private static readonly FrozenSet<string> _setters = new HashSet<string>
         {
-            { "raxx", new[] { "rax", "eax", "ax", "ah", "al" } },
-            { "rbxx", new[] { "rbx", "ebx", "bx", "bh", "bl" } },
-            { "rcxx", new[] { "rcx", "ecx", "cx", "ch", "cl" } },
-            { "rdxx", new[] { "rdx", "edx", "dx", "dh", "dl" } },
-            { "rspx", new[] { "rsp", "esp", "sp", "spl" } },
-            { "rbpx", new[] { "rbp", "ebp", "bp", "bpl" } },
-            { "rsix", new[] { "rsi", "esi", "si", "sil" } },
-            { "rdix", new[] { "rdi", "edi", "di", "dil" } },
-            { "r8x",  new[] { "r8",  "r8d", "r8w", "r8b" } },
-            { "r9x",  new[] { "r9",  "r9d", "r9w", "r9b" } },
-            { "r10x", new[] { "r10", "r10d", "r10w", "r10b" } },
-            { "r11x", new[] { "r11", "r11d", "r11w", "r11b" } },
-            { "r12x", new[] { "r12", "r12d", "r12w", "r12b" } },
-            { "r13x", new[] { "r13", "r13d", "r13w", "r13b" } },
-            { "r14x", new[] { "r14", "r14d", "r14w", "r14b" } },
-            { "r15x", new[] { "r15", "r15d", "r15w", "r15b" } },
-            { "ripx", new[] { "rip", "eip" } },
-            { "xmm0x", new [] { "xmm0"} },
-            { "xmm1x", new [] { "xmm1"} },
-            { "xmm2x", new [] { "xmm2"} },
-            { "xmm3x", new [] { "xmm3"} },
-            { "xmm4x", new [] { "xmm4"} },
-            { "xmm5x", new [] { "xmm5"} },
-            { "xmm6x", new [] { "xmm6"} },
-            { "xmm7x", new [] { "xmm7"} },
-            { "xmm8x", new [] { "xmm8"} },
-            { "xmm9x", new [] { "xmm9"} },
-            { "xmm10x", new [] { "xmm10"} },
-            { "xmm11x", new [] { "xmm11"} },
-            { "xmm12x", new [] { "xmm12"} },
-            { "xmm13x", new [] { "xmm13"} },
-            { "xmm14x", new [] { "xmm14"} },
-            { "xmm15x", new [] { "xmm15"} },
-            { "ymm0x", new [] { "ymm0"} },
-            { "ymm1x", new [] { "ymm1"} },
-            { "ymm2x", new [] { "ymm2"} },
-            { "ymm3x", new [] { "ymm3"} },
-            { "ymm4x", new [] { "ymm4"} },
-            { "ymm5x", new [] { "ymm5"} },
-            { "ymm6x", new [] { "ymm6"} },
-            { "ymm7x", new [] { "ymm7"} },
-            { "ymm8x", new [] { "ymm8"} },
-            { "ymm9x", new [] { "ymm9"} },
-            { "ymm10x", new [] { "ymm10"} },
-            { "ymm11x", new [] { "ymm11"} },
-            { "ymm12x", new [] { "ymm12"} },
-            { "ymm13x", new [] { "ymm13"} },
-            { "ymm14x", new [] { "ymm14"} },
-            { "ymm15x", new [] { "ymm15"} },
+            "mov", "lea", "pop", "movabs", "movsx", "movsxd", "movzx"
+        }.ToFrozenSet();
 
-        };
+        private static readonly FrozenSet<string> _users = new HashSet<string>
+        {
+            "cmp", "test", "jmp", "je", "jz", "jne", "jnz", "jg", "jnle", "jge",
+            "jnl", "jl", "jnge", "jle", "jng", "ja", "jnbe", "jae", "jnb", "jb",
+            "jnae", "jbe", "jna", "jo", "jno", "js", "jns", "jp", "jpe", "jnp",
+            "jpo", "loop", "loope", "loopz", "loopne", "loopnz", "jcxz", "jecxz"
+        }.ToFrozenSet();
+
+        private static readonly FrozenSet<string> _manipulators = new HashSet<string>
+        {
+            "add", "sub", "mul", "div", "inc", "dec", "neg", "not", "and", "or",
+            "xor", "shl", "shr", "sar", "rol", "ror", "rcl", "rcr", "imul", "idiv",
+            "sal", "bswap", "bsf", "bsr", "bt", "btc", "btr", "bts", "set",
+            "xadd", "adc", "sbb", "lahf", "sahf", "setne", "setl", "setae"
+        }.ToFrozenSet();
+
+        // Pre-computed set of all known registers for fast SplitReader lookup
+        private static readonly FrozenSet<string> _allRegisters;
+
+        // Pre-compiled regex patterns (compiled once instead of per-call)
+        private static readonly Regex InstructionRegex = new(@"^(\S+)", RegexOptions.Compiled);
+        private static readonly Regex MemoryAddressRegex = new(@"^\[.*?\]", RegexOptions.Compiled);
+        private static readonly Regex ImmediateRegex = new(@"^0x[0-9a-fA-F]+\b", RegexOptions.Compiled);
+        private static readonly Regex RegisterRegex = new(@"^\b[a-zA-Z0-9]+\b", RegexOptions.Compiled);
+        private static readonly Regex DelimiterRegex = new(@"^[,\s]+", RegexOptions.Compiled);
+
+        static DeObfus()
+        {
+            // Build reverse lookup
+            var regToFamily = new Dictionary<string, string>();
+            var regToIndex = new Dictionary<string, int>();
+            foreach (var family in registerFamilies)
+            {
+                for (int i = 0; i < family.Value.Length; i++)
+                {
+                    regToFamily.TryAdd(family.Value[i], family.Key);
+                    regToIndex.TryAdd(family.Value[i], i);
+                }
+            }
+            _regToFamily = regToFamily.ToFrozenDictionary();
+            _regToFamilyIndex = regToIndex.ToFrozenDictionary();
+
+            _allRegisters = regToFamily.Keys.ToFrozenSet();
+        }
+
         public static void DeObfuscate()
         {
-            if (TraceHandler.Trace == null)
+            if (TraceHandler.Trace is null)
                 return;
-            var window = System.Windows.Application.Current.MainWindow as MainWindow ?? throw new Exception("Main window not found");
+            var window = Application.Current.MainWindow as MainWindow
+                ?? throw new InvalidOperationException("Main window not found");
 
             var TraceRows = TraceHandler.Trace.Trace;
 
             if (window.uselessAssignmentsAnalysis)
-            {
                 HideUselessAssignments(TraceRows);
-                //HideUselessFlagModifications(TraceRows);
-            }
-
-            // Other deobfuscation options
-            
         }
 
         private static void HideUselessAssignments(List<TraceRow> TraceRows)
         {
-            var window = System.Windows.Application.Current.MainWindow as MainWindow ?? throw new Exception("Main window not found");
-            List<DisasmDescriptor> descriptors = new List<DisasmDescriptor>();
+            var descriptors = new DisasmDescriptor[TraceRows.Count];
             for (int i = 0; i < TraceRows.Count; i++)
-            {
-                descriptors.Add(SliceASM(TraceRows[i]));
-            }
+                descriptors[i] = SliceASM(TraceRows[i]);
 
-            bool found_something_useless = false;
+            bool foundSomethingUseless;
             do
             {
-                found_something_useless = false;
-                for (int i = 0; i < descriptors.Count; i++)
+                foundSomethingUseless = false;
+                for (int i = 0; i < descriptors.Length; i++)
                 {
                     var currentDescriptor = descriptors[i];
-
-                    
 
                     if (string.IsNullOrEmpty(currentDescriptor.write_to) || currentDescriptor.useless)
                         continue;
 
-                    if (currentDescriptor.type != DisasmType.Setter && currentDescriptor.type != DisasmType.Manipulator)
-                        continue;                
+                    if (currentDescriptor.type is not (DisasmType.Setter or DisasmType.Manipulator))
+                        continue;
 
-                    bool found = false;
-                    foreach (var rspx in registerFamilies["rspx"]) // rsp won't be touched as its too hard to track
-                    {
-                        if (TraceRows[i].Disasm.Contains(rspx))
-                            found = true;
-                    }
-                    foreach (var ripx in registerFamilies["ripx"]) // rip won't be touched as its too hard to track
-                    {
-                        if (TraceRows[i].Disasm.Contains(ripx))
-                            found = true;
-                    }
+                    // Skip rsp/rip and memory writes
                     if (currentDescriptor.write_to == "memory")
-                    {
-                        found = true;
-                    }
-                    if (found)
+                        continue;
+
+                    string disasm = TraceRows[i].Disasm;
+                    if (ContainsAnyRegister(disasm, "rspx") || ContainsAnyRegister(disasm, "ripx"))
                         continue;
 
                     string writtenRegister = currentDescriptor.write_to;
-
                     bool isUseless = false;
 
-                    for (int j = i + 1; j < descriptors.Count; j++)
+                    for (int j = i + 1; j < descriptors.Length; j++)
                     {
                         var nextDescriptor = descriptors[j];
                         if (nextDescriptor.type == DisasmType.Other)
                             continue;
 
-
-                        foreach (var readReg in nextDescriptor.read_from)
+                        // Check if any read register uses the written register (instruction is useful)
+                        bool isUsed = false;
+                        if (!nextDescriptor.useless)
                         {
-                            // Can't use nextDescriptor as proof that current instruction is useful if nextDescriptor is marked as useless
-                            if (!nextDescriptor.useless)
-                                if (IsSubRegisterOf(writtenRegister, readReg, registerFamilies) || IsSubRegisterOf(readReg, writtenRegister, registerFamilies) || writtenRegister == readReg) // Check if any read register is sub-register or super-register or the same register as writtenRegister
-                                {
-                                    goto leave;
-                                }
-                        }
-
-                        if (nextDescriptor.type == DisasmType.Setter)
-                        {
-                            if (IsSubRegisterOf(writtenRegister, nextDescriptor.write_to, registerFamilies) || IsSubRegisterOf(nextDescriptor.write_to, writtenRegister, registerFamilies) || writtenRegister == nextDescriptor.write_to)
+                            foreach (var readReg in nextDescriptor.read_from)
                             {
-                                // Useless because it was overwritten
-                                isUseless = true;
-                                break;
+                                if (AreRelatedRegisters(writtenRegister, readReg))
+                                {
+                                    isUsed = true;
+                                    break;
+                                }
                             }
                         }
 
+                        if (isUsed)
+                            break; // Register is used — not useless
+
+                        if (nextDescriptor.type == DisasmType.Setter &&
+                            AreRelatedRegisters(writtenRegister, nextDescriptor.write_to))
+                        {
+                            isUseless = true;
+                            break;
+                        }
                     }
-                leave:
+
                     if (isUseless)
                     {
-                        found_something_useless = true;
+                        foundSomethingUseless = true;
                         currentDescriptor.useless = true;
                         deObHiddenRows.Add(i);
                     }
                 }
-            } while (found_something_useless);
+            } while (foundSomethingUseless);
         }
 
-        private static bool IsSubRegisterOf(string widerReg, string narrowerReg, Dictionary<string, string[]> registerFamilies)
+        /// <summary>
+        /// Checks if disassembly contains any register from the given family.
+        /// </summary>
+        private static bool ContainsAnyRegister(string disasm, string familyKey)
         {
-            foreach (var family in registerFamilies)
-            {
-                if (family.Value.Contains(widerReg) && family.Value.Contains(narrowerReg))
-                {
-                    int widerRegIndex = Array.IndexOf(family.Value, widerReg);
-                    int narrowerRegIndex = Array.IndexOf(family.Value, narrowerReg);
-                    return widerRegIndex <= narrowerRegIndex;
-                }
-            }
+            if (!registerFamilies.TryGetValue(familyKey, out var regs))
+                return false;
+            foreach (var reg in regs)
+                if (disasm.Contains(reg))
+                    return true;
             return false;
-        }   
+        }
+
+        /// <summary>
+        /// Checks if two registers are related (same family — either sub-register or same register).
+        /// Uses pre-computed O(1) reverse lookup instead of iterating all families.
+        /// </summary>
+        private static bool AreRelatedRegisters(string reg1, string reg2)
+        {
+            if (reg1 == reg2) return true;
+            if (!_regToFamily.TryGetValue(reg1, out var family1)) return false;
+            if (!_regToFamily.TryGetValue(reg2, out var family2)) return false;
+            return family1 == family2;
+        }
+
+        private static bool IsSubRegisterOf(string widerReg, string narrowerReg)
+        {
+            if (!_regToFamily.TryGetValue(widerReg, out var family1)) return false;
+            if (!_regToFamily.TryGetValue(narrowerReg, out var family2)) return false;
+            if (family1 != family2) return false;
+            return _regToFamilyIndex[widerReg] <= _regToFamilyIndex[narrowerReg];
+        }
 
         public static string[] ParseDisassembly(string rawDisassembly)
         {
-            string[] sizePrefixes = { "qword", "dword", "word", "byte", "ptr" };
-            string sizePrefixStrippedDisassembly = rawDisassembly;
+            string[] sizePrefixes = ["qword", "dword", "word", "byte", "ptr"];
+            string stripped = rawDisassembly;
             foreach (string prefix in sizePrefixes)
-            {
-                sizePrefixStrippedDisassembly = sizePrefixStrippedDisassembly.Replace(prefix, "");
-            }
+                stripped = stripped.Replace(prefix, "");
 
-            List<string> parts = new List<string>();
-            string remainingDisassembly = sizePrefixStrippedDisassembly.Trim();
+            var parts = new List<string>();
+            string remaining = stripped.Trim();
 
-            Match instructionMatch = Regex.Match(remainingDisassembly, @"^(\S+)");
+            Match instructionMatch = InstructionRegex.Match(remaining);
             if (instructionMatch.Success)
             {
                 parts.Add(instructionMatch.Groups[1].Value);
-                remainingDisassembly = remainingDisassembly.Substring(instructionMatch.Length).Trim();
+                remaining = remaining[instructionMatch.Length..].Trim();
             }
-            else if (!string.IsNullOrEmpty(remainingDisassembly))
+            else if (!string.IsNullOrEmpty(remaining))
             {
-                parts.Add(remainingDisassembly);
-                return parts.ToArray();
+                parts.Add(remaining);
+                return [.. parts];
             }
             else
-                return parts.ToArray();
+                return [.. parts];
 
-
-            while (!string.IsNullOrEmpty(remainingDisassembly))
+            while (!string.IsNullOrEmpty(remaining))
             {
-                Match memoryAddressMatch = Regex.Match(remainingDisassembly, @"^\[.*?\]");
-                if (memoryAddressMatch.Success)
-                {
-                    parts.Add(memoryAddressMatch.Value);
-                    remainingDisassembly = remainingDisassembly.Substring(memoryAddressMatch.Length).Trim();
-                    continue;
-                }
+                Match memMatch = MemoryAddressRegex.Match(remaining);
+                if (memMatch.Success) { parts.Add(memMatch.Value); remaining = remaining[memMatch.Length..].Trim(); continue; }
 
-                Match immediateMatch = Regex.Match(remainingDisassembly, @"^0x[0-9a-fA-F]+\b");
-                if (immediateMatch.Success)
-                {
-                    parts.Add(immediateMatch.Value);
-                    remainingDisassembly = remainingDisassembly.Substring(immediateMatch.Length).Trim();
-                    continue;
-                }
+                Match immMatch = ImmediateRegex.Match(remaining);
+                if (immMatch.Success) { parts.Add(immMatch.Value); remaining = remaining[immMatch.Length..].Trim(); continue; }
 
-                Match registerMatch = Regex.Match(remainingDisassembly, @"^\b[a-zA-Z0-9]+\b");
-                if (registerMatch.Success)
-                {
-                    parts.Add(registerMatch.Value);
-                    remainingDisassembly = remainingDisassembly.Substring(registerMatch.Length).Trim();
-                    continue;
-                }
+                Match regMatch = RegisterRegex.Match(remaining);
+                if (regMatch.Success) { parts.Add(regMatch.Value); remaining = remaining[regMatch.Length..].Trim(); continue; }
 
-                Match delimiterMatch = Regex.Match(remainingDisassembly, @"^[,\s]+");
-                if (delimiterMatch.Success)
-                {
-                    remainingDisassembly = remainingDisassembly.Substring(delimiterMatch.Length).Trim();
-                    continue;
-                }
-                remainingDisassembly = remainingDisassembly.Substring(1).Trim();
+                Match delimMatch = DelimiterRegex.Match(remaining);
+                if (delimMatch.Success) { remaining = remaining[delimMatch.Length..].Trim(); continue; }
+
+                remaining = remaining[1..].Trim();
             }
-            return parts.ToArray();
+            return [.. parts];
         }
 
         public static DisasmType ClassifyInstruction(string instruction)
         {
-            string[] setters = { "mov", "lea", "pop", "movabs" , "movsx", "movsxd", "movzx"};
-
-            string[] users = { "cmp", "test", "jmp", "je", "jz", "jne", "jnz", "jg", "jnle", "jge", 
-                "jnl", "jl", "jnge", "jle", "jng", "ja", "jnbe", "jae", "jnb", "jb", "jnae", "jbe", "jna", 
-                "jo", "jno", "js", "jns", "jp", "jpe", "jnp", "jpo", "loop", "loope", "loopz", "loopne", "loopnz", "jcxz", "jecxz" };
-
-            string[] manipulators = { "add", "sub", "mul", "div", "inc", "dec", "neg", "not", "and", "or", 
-                "xor", "shl", "shr", "sar", "rol", "ror", "rcl", "rcr", "imul", "idiv", "sal", "sar", "shl", "shr", 
-                "bswap", "bsf", "bsr", "bt", "btc", "btr", "bts", "set", "xadd", "adc", "sbb", "lahf", "sahf", "setne", "setl", 
-                "setae"};
-
-            if(setters.Contains(instruction))
-                return DisasmType.Setter;
-            if (users.Contains(instruction))
-                return DisasmType.User;
-            if (manipulators.Contains(instruction))
-                return DisasmType.Manipulator;
-
+            if (_setters.Contains(instruction)) return DisasmType.Setter;
+            if (_users.Contains(instruction)) return DisasmType.User;
+            if (_manipulators.Contains(instruction)) return DisasmType.Manipulator;
             return DisasmType.Other;
         }
+
         private static DisasmDescriptor SliceASM(TraceRow traceRow)
         {
-            string rawDisassembly = traceRow.Disasm;
-            string[] disasmParts = ParseDisassembly(rawDisassembly);
+            string[] disasmParts = ParseDisassembly(traceRow.Disasm);
+            var descriptor = new DisasmDescriptor { type = ClassifyInstruction(disasmParts[0]) };
 
-            DisasmDescriptor disasmDescriptor = new DisasmDescriptor();
-
-            disasmDescriptor.type = ClassifyInstruction(disasmParts[0]);
-
-            if (disasmParts.Length > 1 && disasmDescriptor.type != DisasmType.Other)
+            if (disasmParts.Length > 1 && descriptor.type != DisasmType.Other)
             {
-                if (disasmDescriptor.type != DisasmType.User)
+                if (descriptor.type != DisasmType.User)
                 {
-                    if (disasmParts[1].Contains('['))
-                        disasmDescriptor.write_to = "memory";
-                    else
-                        disasmDescriptor.write_to = disasmParts[1];
+                    descriptor.write_to = disasmParts[1].Contains('[') ? "memory" : disasmParts[1];
                 }
-                if (disasmDescriptor.type == DisasmType.User)
+
+                if (descriptor.type == DisasmType.User)
                 {
-                    // Both registers are read from. Aka. cmp or test
-                    disasmDescriptor.read_from.AddRange(SplitReader(disasmParts[1]));
-                    if(disasmParts.Length > 2)
-                        disasmDescriptor.read_from.AddRange(SplitReader(disasmParts[2]));
+                    descriptor.read_from.AddRange(SplitReader(disasmParts[1]));
+                    if (disasmParts.Length > 2)
+                        descriptor.read_from.AddRange(SplitReader(disasmParts[2]));
                 }
                 else
                 {
-                    string read_from = disasmParts[1];
-                    if (disasmParts.Length > 2)
-                            read_from = disasmParts[2];
-
-                    // Extra case for pop, because the read would have been the same as write which would have made it non setting
+                    string readFrom = disasmParts.Length > 2 ? disasmParts[2] : disasmParts[1];
                     if (disasmParts[0] == "pop")
-                        disasmDescriptor.read_from.Add("memory");
+                        descriptor.read_from.Add("memory");
                     else
-                        disasmDescriptor.read_from.AddRange(SplitReader(read_from));
+                        descriptor.read_from.AddRange(SplitReader(readFrom));
                 }
             }
 
-            AdditionalInstructions(disasmParts[0], disasmDescriptor);
-
-            return disasmDescriptor;
+            AdditionalInstructions(disasmParts[0], descriptor);
+            return descriptor;
         }
 
-        private static void AdditionalInstructions(string instruction, DisasmDescriptor disasmDescriptor)
+        private static void AdditionalInstructions(string instruction, DisasmDescriptor descriptor)
         {
-            if (disasmDescriptor.type != DisasmType.Other)
-                return;
+            if (descriptor.type != DisasmType.Other) return;
 
-            if(instruction == "cdqe")
+            if (instruction == "cdqe")
             {
-                disasmDescriptor.type = DisasmType.Manipulator;
-                disasmDescriptor.write_to = "rax";
-                disasmDescriptor.read_from.Add("eax");
+                descriptor.type = DisasmType.Manipulator;
+                descriptor.write_to = "rax";
+                descriptor.read_from.Add("eax");
             }
             else if (instruction == "cwde")
             {
-                disasmDescriptor.type = DisasmType.Manipulator;
-                disasmDescriptor.write_to = "eax";
-                disasmDescriptor.read_from.Add("ax");
+                descriptor.type = DisasmType.Manipulator;
+                descriptor.write_to = "eax";
+                descriptor.read_from.Add("ax");
             }
-
         }
 
-        private static List<string> SplitReader(string read_from)
+        private static List<string> SplitReader(string readFrom)
         {
-            List<string> dD = new List<string>();
-            string[] splitted = read_from.Split(new char[] { '[', ']', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var split in splitted)
+            var result = new List<string>();
+            string[] parts = readFrom.Split(['[', ']', ' '], StringSplitOptions.RemoveEmptyEntries);
+            foreach (var part in parts)
             {
-                foreach (var family in registerFamilies)
-                {
-                    if (family.Value.Contains(split))
-                    {
-                        dD.Add(split);
-                        break;
-                    }
-                }
+                if (_allRegisters.Contains(part))
+                    result.Add(part);
             }
-            return dD;
+            return result;
         }
-
 
         public class RFlags
         {
             private readonly ulong _rflagsValue;
 
-            public RFlags(ulong rflags)
-            {
-                _rflagsValue = rflags;
-            }
+            public RFlags(ulong rflags) => _rflagsValue = rflags;
 
             // Status Flags
             public bool CarryFlag => (_rflagsValue & (1UL << 0)) != 0;
@@ -425,12 +377,11 @@ namespace TraceViewer.Core.Analysis
             public bool TrapFlag => (_rflagsValue & (1UL << 8)) != 0;
             public bool InterruptEnableFlag => (_rflagsValue & (1UL << 9)) != 0;
             public bool DirectionFlag => (_rflagsValue & (1UL << 10)) != 0;
-
         }
 
         private static void HideUselessFlagModifications(List<TraceRow> TraceRows)
         {
-            foreach(var traceRow in TraceRows)
+            foreach (var traceRow in TraceRows)
             {
                 RFlags current_rflags = new RFlags(BitConverter.ToUInt64(traceRow.Regs[17]));
             }
