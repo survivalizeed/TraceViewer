@@ -179,13 +179,19 @@ namespace TraceViewer
             OnHover(sender, e);
         }
 
+        private void OnRowMouseMove(object sender, MouseEventArgs e)
+        {
+            OnHover(sender, e);
+        }
+
         public void OnHover(object? sender, MouseEventArgs? e)
         {
             if (traceRow == null) return;
 
-            // Deduplication: do not recalculate if mouse is still hovering on the same row
-            if (window.CurrentHoveredRow == this) return;
+            // Deduplication: do not recalculate if mouse is still hovering on the same trace row
+            if (window.CurrentHoveredRow == this && window.CurrentHoveredTraceRowId == traceRow.Id) return;
             window.CurrentHoveredRow = this;
+            window.CurrentHoveredTraceRowId = traceRow.Id;
 
             HashSet<string>? highlightSet = traceRow.highlights.Count > 0
                 ? new HashSet<string>(traceRow.highlights, StringComparer.OrdinalIgnoreCase)
@@ -241,30 +247,51 @@ namespace TraceViewer
 
         void UpdateStack()
         {
-            if (traceRow == null || traceRow.Id - 1 < 0 || MemoryHandler.stacks.Count == 0)
-                return;
-
-            var stack = MemoryHandler.GetMemoryStateAt(traceRow.Id - 1, true);
-            if (stack == null || stack.Count == 0)
-                return;
-
-            var flowDoc = new FlowDocument();
-            var paragraph = new Paragraph { Margin = new Thickness(0) };
-            flowDoc.Blocks.Add(paragraph);
-
             ulong updated_rsp = 0;
-            if (TraceHandler.Trace != null && traceRow.Id >= 0 && traceRow.Id < TraceHandler.Trace.Trace.Count)
+            if (TraceHandler.Trace != null && traceRow != null && traceRow.Id >= 0 && traceRow.Id < TraceHandler.Trace.Trace.Count)
             {
                 var regs = TraceHandler.Trace.Trace[traceRow.Id].Regs;
                 if (regs != null && regs.Count > 4)
                     updated_rsp = BitConverter.ToUInt64(regs[4], 0);
             }
 
+            if (traceRow == null || MemoryHandler.stacks.Count == 0 || traceRow.Id - 1 < 0)
+            {
+                var emptyDoc = new FlowDocument();
+                if (updated_rsp != 0)
+                {
+                    var p = new Paragraph { Margin = new Thickness(0) };
+                    p.Inlines.Add(new Run($" <--- RSP (0x{updated_rsp:X})") { Foreground = Brushes.Coral });
+                    emptyDoc.Blocks.Add(p);
+                }
+                window.StackView.Document = emptyDoc;
+                return;
+            }
+
+            var stack = MemoryHandler.GetMemoryStateAt(traceRow.Id - 1, true);
+            if (stack == null || stack.Count == 0)
+            {
+                var emptyDoc = new FlowDocument();
+                if (updated_rsp != 0)
+                {
+                    var p = new Paragraph { Margin = new Thickness(0) };
+                    p.Inlines.Add(new Run($" <--- RSP (0x{updated_rsp:X})") { Foreground = Brushes.Coral });
+                    emptyDoc.Blocks.Add(p);
+                }
+                window.StackView.Document = emptyDoc;
+                return;
+            }
+
+            var flowDoc = new FlowDocument();
+            var paragraph = new Paragraph { Margin = new Thickness(0) };
+            flowDoc.Blocks.Add(paragraph);
+
             var memAccesses = traceRow.Mem;
             int alignment_counter = 0;
             var composedBuilder = new StringBuilder(16);
             ulong? blockStartAddress = null;
             int rsp_index = 0;
+            bool rspRendered = false;
 
             Action<ulong, string> WriteLine = (address, data) =>
             {
@@ -296,6 +323,7 @@ namespace TraceViewer
                 if (rsp_index != 0)
                 {
                     paragraph.Inlines.Add(new Run($"  <--- RSP (past {rsp_index}th byte)") { Foreground = Brushes.Coral });
+                    rspRendered = true;
                 }
 
                 paragraph.Inlines.Add(new LineBreak());
@@ -303,6 +331,21 @@ namespace TraceViewer
                 alignment_counter = 0;
                 rsp_index = 0;
             };
+
+            // If updated_rsp is above the highest address in stack, mark it at the top
+            ulong highestKey = stack.First().Key;
+            if (updated_rsp > highestKey)
+            {
+                paragraph.Inlines.Add(new Run($" <--- RSP (0x{updated_rsp:X})") { Foreground = Brushes.Coral });
+                paragraph.Inlines.Add(new LineBreak());
+                long diff = (long)updated_rsp - (long)highestKey;
+                if (diff > 1)
+                {
+                    paragraph.Inlines.Add(new Run($"PADDING : 0x{diff - 1:X}") { Foreground = Brushes.Gray });
+                    paragraph.Inlines.Add(new LineBreak());
+                }
+                rspRendered = true;
+            }
 
             KeyValuePair<ulong, byte> prev = default;
             bool hasPrev = false;
@@ -318,7 +361,7 @@ namespace TraceViewer
                 {
                     if (composedBuilder.Length > 0)
                     {
-                        WriteLine(prev.Key, composedBuilder.ToString());
+                        WriteLine(blockStartAddress.HasValue ? blockStartAddress.Value : prev.Key, composedBuilder.ToString());
                     }
 
                     long difference = (long)prev.Key - (long)entry.Key;
@@ -326,6 +369,7 @@ namespace TraceViewer
                     if (updated_rsp > entry.Key && updated_rsp < prev.Key)
                     {
                         paragraph.Inlines.Add(new Run($" <--- RSP (past byte 0x{prev.Key - updated_rsp:X})") { Foreground = Brushes.Coral });
+                        rspRendered = true;
                     }
                     paragraph.Inlines.Add(new LineBreak());
                     blockStartAddress = entry.Key;
@@ -337,11 +381,16 @@ namespace TraceViewer
                 composedBuilder.Append(entry.Value.ToString("X2"));
                 alignment_counter++;
 
+                if (entry.Key == updated_rsp)
+                {
+                    rsp_index = alignment_counter;
+                }
+
                 if (stack_alignment_base + (ulong)stack_alignment == entry.Key)
                 {
                     if (alignment_counter > 0)
                     {
-                        WriteLine(entry.Key, composedBuilder.ToString());
+                        WriteLine(blockStartAddress.HasValue ? blockStartAddress.Value : entry.Key, composedBuilder.ToString());
                     }
                     blockStartAddress = null;
                 }
@@ -354,18 +403,27 @@ namespace TraceViewer
                     blockStartAddress = null;
                 }
 
-                if (entry.Key == updated_rsp)
-                {
-                    rsp_index = alignment_counter;
-                }
-
                 prev = entry;
                 hasPrev = true;
             }
 
             if (composedBuilder.Length > 0 && hasPrev)
             {
-                WriteLine(prev.Key, composedBuilder.ToString());
+                WriteLine(blockStartAddress.HasValue ? blockStartAddress.Value : prev.Key, composedBuilder.ToString());
+            }
+
+            // If updated_rsp was below the lowest address in stack, mark it at the bottom
+            if (!rspRendered && updated_rsp != 0 && hasPrev && updated_rsp < prev.Key)
+            {
+                long difference = (long)prev.Key - (long)updated_rsp;
+                if (difference > 1)
+                {
+                    paragraph.Inlines.Add(new Run($"PADDING : 0x{difference - 1:X}") { Foreground = Brushes.Gray });
+                    paragraph.Inlines.Add(new LineBreak());
+                }
+                paragraph.Inlines.Add(new Run($" <--- RSP (0x{updated_rsp:X})") { Foreground = Brushes.Coral });
+                paragraph.Inlines.Add(new LineBreak());
+                rspRendered = true;
             }
 
             window.StackView.Document = flowDoc;
@@ -373,12 +431,18 @@ namespace TraceViewer
 
         void UpdateHeap()
         {
-            if (traceRow == null || traceRow.Id - 1 < 0 || MemoryHandler.heaps.Count == 0)
+            if (traceRow == null || MemoryHandler.heaps.Count == 0 || traceRow.Id - 1 < 0)
+            {
+                window.HeapView.Document = new FlowDocument();
                 return;
+            }
 
             var heap = MemoryHandler.GetMemoryStateAt(traceRow.Id - 1, false);
             if (heap == null || heap.Count == 0)
+            {
+                window.HeapView.Document = new FlowDocument();
                 return;
+            }
 
             var flowDoc = new FlowDocument();
             var paragraph = new Paragraph { Margin = new Thickness(0) };
@@ -435,7 +499,7 @@ namespace TraceViewer
                 {
                     if (composedBuilder.Length > 0)
                     {
-                        WriteLine(prev.Key, composedBuilder.ToString());
+                        WriteLine(blockStartAddress.HasValue ? blockStartAddress.Value : prev.Key, composedBuilder.ToString());
                     }
 
                     long difference = (long)prev.Key - (long)entry.Key;
@@ -453,7 +517,7 @@ namespace TraceViewer
                 {
                     if (alignment_counter > 0)
                     {
-                        WriteLine(entry.Key, composedBuilder.ToString());
+                        WriteLine(blockStartAddress.HasValue ? blockStartAddress.Value : entry.Key, composedBuilder.ToString());
                     }
                     blockStartAddress = null;
                 }
@@ -472,7 +536,7 @@ namespace TraceViewer
 
             if (composedBuilder.Length > 0 && hasPrev)
             {
-                WriteLine(prev.Key, composedBuilder.ToString());
+                WriteLine(blockStartAddress.HasValue ? blockStartAddress.Value : prev.Key, composedBuilder.ToString());
             }
 
             window.HeapView.Document = flowDoc;

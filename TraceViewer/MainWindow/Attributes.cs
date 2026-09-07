@@ -47,6 +47,7 @@ namespace TraceViewer
         private string original_title = "survivalizeed's Trace Viewer";
         public ScrollViewer InstructionsScrollViewer { get; set; }
         public WPF_TraceRow? CurrentHoveredRow;
+        public int CurrentHoveredTraceRowId = -1;
         public int CurrentTopIndex = 0;
         public ObservableCollection<WPF_TraceRow> InstructionViewItems = new();
         public ObservableCollection<WPF_RegisterRow> RegisterViewItems = new();

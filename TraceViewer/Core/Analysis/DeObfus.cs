@@ -198,6 +198,9 @@ namespace TraceViewer.Core.Analysis
                     // Pass 4: Transitive Backward Dead-Store Elimination
                     EliminateDeadStores(traceRows, descriptors);
 
+                    // Pass 5: Discarded Stack Operations (Pushes never read, discarded via add rsp / lea rsp or dead pops)
+                    EliminateDiscardedStackOperations(traceRows, descriptors);
+
                     changed = deObHiddenRows.Count > prevHiddenCount;
                     passIteration++;
                 } while (changed && passIteration < 5);
@@ -255,7 +258,7 @@ namespace TraceViewer.Core.Analysis
                             if (descriptors[k].useless) continue;
 
                             // For push/pop pairs, intermediate stack operations invalidate the cancellation
-                            if (mnem1 == "push")
+                            if (mnem1 is "push" or "pushfq" or "pushf")
                             {
                                 string kDisasm = traceRows[k].Disasm.ToLowerInvariant();
                                 if (kDisasm.StartsWith("call") || kDisasm.StartsWith("ret") ||
@@ -413,8 +416,10 @@ namespace TraceViewer.Core.Analysis
                     return true;
             }
 
-            // 8. push reg / pop reg
-            if (mnem1 == "push" && mnem2 == "pop")
+            // 8. push reg / pop reg or pushfq / popfq
+            if ((mnem1 == "push" && mnem2 == "pop") ||
+                (mnem1 == "pushfq" && mnem2 == "popfq") ||
+                (mnem1 == "pushf" && mnem2 == "popf"))
                 return true;
 
             return false;
@@ -753,6 +758,185 @@ namespace TraceViewer.Core.Analysis
             } while (changed && passCount < maxPasses);
         }
 
+        /// <summary>
+        /// Pass 5: Discarded Stack Operations.
+        /// Identifies pushes whose values are never read and whose stack allocations are simply discarded
+        /// via add rsp / lea rsp or pops into dead registers.
+        /// </summary>
+        private static void EliminateDiscardedStackOperations(List<TraceRow> traceRows, DisasmDescriptor[] descriptors)
+        {
+            int count = traceRows.Count;
+            for (int i = 0; i < count; i++)
+            {
+                if (descriptors[i].useless) continue;
+
+                string disasm1 = traceRows[i].Disasm.ToLowerInvariant();
+                string[] parts1 = ParseDisassembly(disasm1);
+                if (parts1.Length == 0) continue;
+
+                string mnem1 = parts1[0].ToLowerInvariant();
+                if (mnem1 is not ("push" or "pushfq" or "pushf"))
+                    continue;
+
+                int stackDiff = -8;
+                var pushedIndices = new List<int> { i };
+                var cleanupIndices = new List<int>();
+                bool conflict = false;
+
+                int maxLookahead = Math.Min(count, i + 32);
+                for (int j = i + 1; j < maxLookahead; j++)
+                {
+                    if (descriptors[j].useless)
+                    {
+                        // If an intermediate pop was already marked useless, it accounted for +8 stack cleanup!
+                        string uDisasm = traceRows[j].Disasm.ToLowerInvariant();
+                        if (uDisasm.StartsWith("pop ") || uDisasm == "popfq" || uDisasm == "popf")
+                        {
+                            stackDiff += 8;
+                            cleanupIndices.Add(j);
+                            if (stackDiff == 0) break;
+                        }
+                        continue;
+                    }
+
+                    string disasm2 = traceRows[j].Disasm.ToLowerInvariant();
+                    if (disasm2.StartsWith("call") || disasm2.StartsWith("ret") ||
+                        disasm2.StartsWith("syscall") || disasm2.StartsWith("sysenter") ||
+                        disasm2.StartsWith("int ") || _conditionalBranches.Any(b => disasm2.StartsWith(b)))
+                    {
+                        conflict = true;
+                        break;
+                    }
+
+                    string[] parts2 = ParseDisassembly(disasm2);
+                    if (parts2.Length == 0) { conflict = true; break; }
+                    string mnem2 = parts2[0].ToLowerInvariant();
+                    string op2_1 = parts2.Length > 1 ? parts2[1].ToLowerInvariant() : "";
+                    string op2_2 = parts2.Length > 2 ? parts2[2].ToLowerInvariant() : "";
+
+                    // Another push: adds to depth
+                    if (mnem2 is "push" or "pushfq" or "pushf")
+                    {
+                        stackDiff -= 8;
+                        pushedIndices.Add(j);
+                        continue;
+                    }
+
+                    // Stack cleanup via add rsp, imm
+                    if (mnem2 == "add" && op2_1 == "rsp" && TryParseOffset(op2_2, out int addOffset))
+                    {
+                        stackDiff += addOffset;
+                        cleanupIndices.Add(j);
+                        if (stackDiff == 0) break;
+                        if (stackDiff > 0) { conflict = true; break; }
+                        continue;
+                    }
+
+                    // Stack cleanup via lea rsp, [rsp + imm]
+                    if (mnem2 == "lea" && op2_1 == "rsp" && TryParseLeaRspOffset(op2_2, out int leaOffset))
+                    {
+                        stackDiff += leaOffset;
+                        cleanupIndices.Add(j);
+                        if (stackDiff == 0) break;
+                        if (stackDiff > 0) { conflict = true; break; }
+                        continue;
+                    }
+
+                    // Any intermediate instruction referencing rsp (memory read or arithmetic) invalidates discard
+                    if (descriptors[j].read_from.Any(r => AreRelatedRegisters(r, "rsp")) ||
+                        descriptors[j].write_to == "rsp" ||
+                        disasm2.Contains("[rsp") || disasm2.Contains("[esp"))
+                    {
+                        conflict = true;
+                        break;
+                    }
+                }
+
+                if (!conflict && stackDiff == 0)
+                {
+                    bool flagsNeeded = false;
+                    foreach (var cIdx in cleanupIndices)
+                    {
+                        if (descriptors[cIdx].useless) continue;
+                        string cDisasm = traceRows[cIdx].Disasm.ToLowerInvariant();
+                        if (cDisasm.StartsWith("add "))
+                        {
+                            if (AreFlagsConsumedBeforeOverwrite(traceRows, descriptors, cIdx))
+                            {
+                                flagsNeeded = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!flagsNeeded)
+                    {
+                        foreach (var pIdx in pushedIndices)
+                        {
+                            descriptors[pIdx].useless = true;
+                            deObHiddenRows.Add(traceRows[pIdx].Id);
+                        }
+                        foreach (var cIdx in cleanupIndices)
+                        {
+                            descriptors[cIdx].useless = true;
+                            deObHiddenRows.Add(traceRows[cIdx].Id);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static bool TryParseOffset(string op, out int offset)
+        {
+            offset = 0;
+            if (string.IsNullOrEmpty(op)) return false;
+            op = op.Trim();
+            if (op.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                return int.TryParse(op[2..], System.Globalization.NumberStyles.HexNumber, null, out offset);
+            return int.TryParse(op, out offset);
+        }
+
+        private static bool TryParseLeaRspOffset(string op2, out int offset)
+        {
+            offset = 0;
+            if (string.IsNullOrEmpty(op2)) return false;
+            string norm = op2.Replace(" ", "").ToLowerInvariant();
+            if (norm.StartsWith("[rsp+") && norm.EndsWith("]"))
+            {
+                string numPart = norm.Substring(5, norm.Length - 6);
+                return TryParseOffset(numPart, out offset);
+            }
+            return false;
+        }
+
+        private static bool AreFlagsConsumedBeforeOverwrite(List<TraceRow> traceRows, DisasmDescriptor[] descriptors, int cIdx)
+        {
+            int maxLookahead = Math.Min(traceRows.Count, cIdx + 16);
+            for (int k = cIdx + 1; k < maxLookahead; k++)
+            {
+                if (descriptors[k].useless) continue;
+                string d = traceRows[k].Disasm.ToLowerInvariant();
+                string[] p = ParseDisassembly(d);
+                if (p.Length == 0) continue;
+                string m = p[0].ToLowerInvariant();
+
+                if (_conditionalBranches.Contains(m) || _cfOnlyConsumers.Contains(m) ||
+                    _cfAndZfConsumers.Contains(m) || _otherFlagConsumers.Contains(m) ||
+                    m is "pushf" or "pushfq")
+                    return true;
+
+                if (d.StartsWith("call") || d.StartsWith("ret") || d.StartsWith("syscall") || d.StartsWith("int"))
+                    return true;
+
+                // Arithmetic instruction that overwrites flags
+                if (_manipulators.Contains(m) && m is not "not" or "inc" or "dec")
+                    return false;
+                if (m is "cmp" or "test" or "sahf" or "popf" or "popfq")
+                    return false;
+            }
+            return false;
+        }
+
         private static bool IsZeroingIdiom(string mnemonic, string op1, string op2)
         {
             if (string.IsNullOrEmpty(op1) || string.IsNullOrEmpty(op2))
@@ -934,11 +1118,20 @@ namespace TraceViewer.Core.Analysis
             }
 
             // 6. Stack push
-            if (mnemonic == "push")
+            if (mnemonic is "push" or "pushfq" or "pushf")
             {
                 descriptor.type = DisasmType.Manipulator;
                 descriptor.write_to = "memory";
-                descriptor.read_from.AddRange(SplitReader(op1));
+                if (!string.IsNullOrEmpty(op1))
+                    descriptor.read_from.AddRange(SplitReader(op1));
+                return descriptor;
+            }
+
+            if (mnemonic is "popfq" or "popf")
+            {
+                descriptor.type = DisasmType.Manipulator;
+                descriptor.write_to = "";
+                descriptor.read_from.Add("memory");
                 return descriptor;
             }
 

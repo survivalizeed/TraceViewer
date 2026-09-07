@@ -203,6 +203,16 @@ namespace TraceViewer
                 }
             }
 
+            // Refresh hover state for whichever row is now under the mouse cursor
+            for (int i = 0; i < visibleCount; i++)
+            {
+                if (InstructionViewItems[i].IsMouseOver)
+                {
+                    InstructionViewItems[i].OnHover(null, null);
+                    break;
+                }
+            }
+
             return true;
         }
 

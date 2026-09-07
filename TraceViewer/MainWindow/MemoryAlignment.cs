@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Input;
 using TraceViewer.Core;
@@ -157,6 +157,12 @@ namespace TraceViewer
             {
                 StackBorderParent.Visibility = Visibility.Collapsed;
                 HeapBorderParent.Visibility = Visibility.Visible;
+            }
+
+            if (CurrentHoveredRow != null)
+            {
+                CurrentHoveredTraceRowId = -1;
+                CurrentHoveredRow.OnHover(null, null);
             }
         }
 

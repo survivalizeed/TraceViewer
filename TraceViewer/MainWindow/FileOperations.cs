@@ -82,6 +82,7 @@ namespace TraceViewer
             }
             CurrentTopIndex = 0;
             CurrentHoveredRow = null;
+            CurrentHoveredTraceRowId = -1;
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
