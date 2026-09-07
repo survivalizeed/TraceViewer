@@ -30,7 +30,7 @@ namespace TraceViewer.Core.Analysis
     {
         public static HashSet<int> deObHiddenRows = [];
 
-        // Unified register families — single source of truth (previously duplicated as registerFamilies + registerFamiliesSSE)
+        // Unified register families — single source of truth
         public static readonly FrozenDictionary<string, string[]> registerFamilies = new Dictionary<string, string[]>
         {
             { "raxx", ["rax", "eax", "ax", "ah", "al"] },
@@ -68,19 +68,15 @@ namespace TraceViewer.Core.Analysis
             { "ymm14x", ["ymm14"] }, { "ymm15x", ["ymm15"] },
         }.ToFrozenDictionary();
 
-        // Alias for backward compatibility — the old registerFamiliesSSE is now the same as registerFamilies
         public static FrozenDictionary<string, string[]> registerFamiliesSSE => registerFamilies;
 
-        // Pre-computed reverse lookup: register name → family key (O(1) instead of O(n*m))
         private static readonly FrozenDictionary<string, string> _regToFamily;
-
-        // Pre-computed: register name → index within its family
         private static readonly FrozenDictionary<string, int> _regToFamilyIndex;
 
-        // Instruction classification sets — FrozenSet for O(1) lookup
+        // Classification sets
         private static readonly FrozenSet<string> _setters = new HashSet<string>
         {
-            "mov", "lea", "pop", "movabs", "movsx", "movsxd", "movzx"
+            "mov", "lea", "pop", "movabs", "movsx", "movsxd", "movzx", "tzcnt", "lzcnt", "popcnt", "movbe"
         }.ToFrozenSet();
 
         private static readonly FrozenSet<string> _users = new HashSet<string>
@@ -88,30 +84,69 @@ namespace TraceViewer.Core.Analysis
             "cmp", "test", "jmp", "je", "jz", "jne", "jnz", "jg", "jnle", "jge",
             "jnl", "jl", "jnge", "jle", "jng", "ja", "jnbe", "jae", "jnb", "jb",
             "jnae", "jbe", "jna", "jo", "jno", "js", "jns", "jp", "jpe", "jnp",
-            "jpo", "loop", "loope", "loopz", "loopne", "loopnz", "jcxz", "jecxz"
+            "jpo", "loop", "loope", "loopz", "loopne", "loopnz", "jcxz", "jecxz", "jrcxz"
+        }.ToFrozenSet();
+
+        private static readonly FrozenSet<string> _conditionalBranches = new HashSet<string>
+        {
+            "je", "jz", "jne", "jnz", "jg", "jnle", "jge", "jnl", "jl", "jnge",
+            "jle", "jng", "ja", "jnbe", "jae", "jnb", "jb", "jnae", "jbe", "jna",
+            "jo", "jno", "js", "jns", "jp", "jpe", "jnp", "jpo", "loop", "loope",
+            "loopz", "loopne", "loopnz", "jcxz", "jecxz", "jrcxz"
+        }.ToFrozenSet();
+
+        private static readonly FrozenSet<string> _cfOnlyConsumers = new HashSet<string>
+        {
+            "jc", "jnc", "jb", "jnb", "jae", "jnae",
+            "cmovc", "cmovnc", "cmovb", "cmovnb", "cmovae", "cmovnae",
+            "setc", "setnc", "setb", "setnb", "setae", "setnae",
+            "adc", "sbb", "rcl", "rcr"
+        }.ToFrozenSet();
+
+        private static readonly FrozenSet<string> _cfAndZfConsumers = new HashSet<string>
+        {
+            "jbe", "jna", "ja", "jnbe",
+            "cmovbe", "cmovna", "cmova", "cmovnbe",
+            "setbe", "setna", "seta", "setnbe"
+        }.ToFrozenSet();
+
+        private static readonly FrozenSet<string> _otherFlagConsumers = new HashSet<string>
+        {
+            "jz", "je", "jnz", "jne", "js", "jns", "jo", "jno", "jp", "jpe", "jnp", "jpo",
+            "jg", "jnle", "jge", "jnl", "jl", "jnge", "jle", "jng",
+            "loop", "loope", "loopz", "loopne", "loopnz", "jcxz", "jecxz", "jrcxz",
+            "cmove", "cmovz", "cmovne", "cmovnz", "cmovg", "cmovnle", "cmovge", "cmovnl",
+            "cmovl", "cmovnge", "cmovle", "cmovng", "cmovo", "cmovno", "cmovs", "cmovns",
+            "cmovp", "cmovpe", "cmovnp", "cmovpo",
+            "sete", "setz", "setne", "setnz", "setg", "setnle", "setge", "setnl",
+            "setl", "setnge", "setle", "setng", "seto", "setno", "sets", "setns",
+            "setp", "setpe", "setnp", "setpo"
+        }.ToFrozenSet();
+
+        private static readonly FrozenSet<string> _pureFlagSetters = new HashSet<string>
+        {
+            "cmp", "test", "bt", "clc", "stc", "cmc", "cld", "std"
         }.ToFrozenSet();
 
         private static readonly FrozenSet<string> _manipulators = new HashSet<string>
         {
             "add", "sub", "mul", "div", "inc", "dec", "neg", "not", "and", "or",
             "xor", "shl", "shr", "sar", "rol", "ror", "rcl", "rcr", "imul", "idiv",
-            "sal", "bswap", "bsf", "bsr", "bt", "btc", "btr", "bts", "set",
-            "xadd", "adc", "sbb", "lahf", "sahf", "setne", "setl", "setae"
+            "sal", "bswap", "bsf", "bsr", "btc", "btr", "bts",
+            "xadd", "adc", "sbb", "sahf", "shld", "shrd"
         }.ToFrozenSet();
 
-        // Pre-computed set of all known registers for fast SplitReader lookup
         private static readonly FrozenSet<string> _allRegisters;
 
-        // Pre-compiled regex patterns (compiled once instead of per-call)
         private static readonly Regex InstructionRegex = new(@"^(\S+)", RegexOptions.Compiled);
         private static readonly Regex MemoryAddressRegex = new(@"^\[.*?\]", RegexOptions.Compiled);
         private static readonly Regex ImmediateRegex = new(@"^0x[0-9a-fA-F]+\b", RegexOptions.Compiled);
         private static readonly Regex RegisterRegex = new(@"^\b[a-zA-Z0-9]+\b", RegexOptions.Compiled);
         private static readonly Regex DelimiterRegex = new(@"^[,\s]+", RegexOptions.Compiled);
+        private static readonly Regex SizePrefixRegex = new(@"\b(qword|dword|word|byte|xmmword|ymmword|zmmword|tbyte|ptr)\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         static DeObfus()
         {
-            // Build reverse lookup
             var regToFamily = new Dictionary<string, string>();
             var regToIndex = new Dictionary<string, int>();
             foreach (var family in registerFamilies)
@@ -124,55 +159,443 @@ namespace TraceViewer.Core.Analysis
             }
             _regToFamily = regToFamily.ToFrozenDictionary();
             _regToFamilyIndex = regToIndex.ToFrozenDictionary();
-
             _allRegisters = regToFamily.Keys.ToFrozenSet();
         }
 
         public static void DeObfuscate()
         {
-            if (TraceHandler.Trace is null)
+            if (TraceHandler.Trace is null || TraceHandler.Trace.Trace.Count == 0)
                 return;
+
             var window = Application.Current.MainWindow as MainWindow
                 ?? throw new InvalidOperationException("Main window not found");
 
-            var TraceRows = TraceHandler.Trace.Trace;
+            deObHiddenRows.Clear();
+
+            var traceRows = TraceHandler.Trace.Trace;
 
             if (window.uselessAssignmentsAnalysis)
-                HideUselessAssignments(TraceRows);
+            {
+                var descriptors = new DisasmDescriptor[traceRows.Count];
+                for (int i = 0; i < traceRows.Count; i++)
+                    descriptors[i] = SliceASM(traceRows[i]);
+
+                int passIteration = 0;
+                bool changed;
+                do
+                {
+                    int prevHiddenCount = deObHiddenRows.Count;
+
+                    // Pass 1: Peephole Identity & Self-Cancelling Inverses (add/sub, inc/dec, not/not, xor/xor, xchg/xchg, mov rax, rax)
+                    EliminatePeepholeJunk(traceRows, descriptors);
+
+                    // Pass 2: EFLAGS Liveness (Separate CF, Other Flags, and DF tracking)
+                    EliminateDeadFlagModifications(traceRows, descriptors);
+
+                    // Pass 3: Forward Dead-Store Elimination (Useless Overwrites before read)
+                    EliminateForwardUselessAssignments(traceRows, descriptors);
+
+                    // Pass 4: Transitive Backward Dead-Store Elimination
+                    EliminateDeadStores(traceRows, descriptors);
+
+                    changed = deObHiddenRows.Count > prevHiddenCount;
+                    passIteration++;
+                } while (changed && passIteration < 5);
+            }
         }
 
-        private static void HideUselessAssignments(List<TraceRow> TraceRows)
+        /// <summary>
+        /// Pass 1: Detects and eliminates identity instructions and inverse self-cancelling pairs.
+        /// </summary>
+        private static void EliminatePeepholeJunk(List<TraceRow> traceRows, DisasmDescriptor[] descriptors)
         {
-            var descriptors = new DisasmDescriptor[TraceRows.Count];
-            for (int i = 0; i < TraceRows.Count; i++)
-                descriptors[i] = SliceASM(TraceRows[i]);
+            int count = traceRows.Count;
+            for (int i = 0; i < count; i++)
+            {
+                if (descriptors[i].useless) continue;
 
+                string[] parts = ParseDisassembly(traceRows[i].Disasm);
+                if (parts.Length == 0) continue;
+
+                string mnem1 = parts[0].ToLowerInvariant();
+                string op1_1 = parts.Length > 1 ? parts[1].ToLowerInvariant() : "";
+                string op1_2 = parts.Length > 2 ? parts[2].ToLowerInvariant() : "";
+
+                // 1. Identity / NOP-equivalent instructions
+                if (IsIdentityInstruction(mnem1, op1_1, op1_2))
+                {
+                    descriptors[i].useless = true;
+                    deObHiddenRows.Add(traceRows[i].Id);
+                    continue;
+                }
+
+                // 2. Inverse / Self-Cancelling Pairs within a lookahead window
+                int maxLookahead = Math.Min(count, i + 8);
+                for (int j = i + 1; j < maxLookahead; j++)
+                {
+                    if (descriptors[j].useless) continue;
+
+                    string[] parts2 = ParseDisassembly(traceRows[j].Disasm);
+                    if (parts2.Length == 0) break;
+
+                    string mnem2 = parts2[0].ToLowerInvariant();
+                    string op2_1 = parts2.Length > 1 ? parts2[1].ToLowerInvariant() : "";
+                    string op2_2 = parts2.Length > 2 ? parts2[2].ToLowerInvariant() : "";
+
+                    // Stop lookahead if a branch or call is crossed
+                    if (_conditionalBranches.Contains(mnem2) || mnem2.StartsWith("call") || mnem2.StartsWith("ret"))
+                        break;
+
+                    if (AreInversePair(mnem1, op1_1, op1_2, mnem2, op2_1, op2_2))
+                    {
+                        string targetReg = op1_1;
+                        bool intermediateConflict = false;
+                        for (int k = i + 1; k < j; k++)
+                        {
+                            if (descriptors[k].useless) continue;
+
+                            // For push/pop pairs, intermediate stack operations invalidate the cancellation
+                            if (mnem1 == "push")
+                            {
+                                string kDisasm = traceRows[k].Disasm.ToLowerInvariant();
+                                if (kDisasm.StartsWith("call") || kDisasm.StartsWith("ret") ||
+                                    kDisasm.StartsWith("push") || kDisasm.StartsWith("pop") ||
+                                    descriptors[k].write_to == "memory" ||
+                                    descriptors[k].write_to == "rsp" ||
+                                    descriptors[k].read_from.Any(r => AreRelatedRegisters(r, "rsp")))
+                                {
+                                    intermediateConflict = true;
+                                    break;
+                                }
+                            }
+
+                            // For cmc flag pairs, intermediate flag consumers invalidate the cancellation
+                            if (mnem1 == "cmc")
+                            {
+                                string kDisasm = traceRows[k].Disasm.ToLowerInvariant();
+                                var kParts = ParseDisassembly(kDisasm);
+                                string kMnem = kParts.Length > 0 ? kParts[0].ToLowerInvariant() : "";
+                                if (_cfOnlyConsumers.Contains(kMnem) || _cfAndZfConsumers.Contains(kMnem) || kMnem is "pushf" or "pushfq")
+                                {
+                                    intermediateConflict = true;
+                                    break;
+                                }
+                            }
+
+                            if (!string.IsNullOrEmpty(targetReg) &&
+                                (descriptors[k].read_from.Any(r => AreRelatedRegisters(r, targetReg)) ||
+                                 AreRelatedRegisters(descriptors[k].write_to, targetReg)))
+                            {
+                                intermediateConflict = true;
+                                break;
+                            }
+
+                            if (mnem1 == "xchg" && !string.IsNullOrEmpty(op1_2))
+                            {
+                                if (descriptors[k].read_from.Any(r => AreRelatedRegisters(r, op1_2)) ||
+                                    AreRelatedRegisters(descriptors[k].write_to, op1_2))
+                                {
+                                    intermediateConflict = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!intermediateConflict)
+                        {
+                            descriptors[i].useless = true;
+                            descriptors[j].useless = true;
+                            deObHiddenRows.Add(traceRows[i].Id);
+                            deObHiddenRows.Add(traceRows[j].Id);
+                            break;
+                        }
+                    }
+
+                    // If an intermediate instruction touched op1_1, stop searching for inverse of op1_1
+                    if (!string.IsNullOrEmpty(op1_1) &&
+                        (descriptors[j].read_from.Any(r => AreRelatedRegisters(r, op1_1)) ||
+                         AreRelatedRegisters(descriptors[j].write_to, op1_1)))
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        private static bool IsIdentityInstruction(string mnemonic, string op1, string op2)
+        {
+            if (mnemonic is "nop" or "fnop")
+                return true;
+
+            if (mnemonic is "xchg" && op1 == op2 && !string.IsNullOrEmpty(op1))
+                return true;
+
+            // 64-bit identity mov (e.g. mov rax, rax) — only 64-bit preserves all bits without clearing upper 32
+            if (mnemonic is "mov" && op1 == op2 && !string.IsNullOrEmpty(op1) && Is64BitRegister(op1))
+                return true;
+
+            string normalizedOp2 = op2.Replace(" ", "");
+            if (mnemonic is "lea" && (normalizedOp2 == $"[{op1}]" || normalizedOp2 == $"[{op1}+0]" ||
+                                      normalizedOp2 == $"[{op1}-0]" || normalizedOp2 == $"[{op1}+0x0]"))
+                return true;
+
+            // Neutral arithmetic with 0
+            if (mnemonic is "add" or "sub" or "xor" or "or" or "shl" or "shr" or "sar" or "rol" or "ror")
+            {
+                if (op2 is "0" or "0x0" or "0x00" or "0h")
+                    return true;
+            }
+
+            // Multiplication by 1
+            if (mnemonic is "imul" && (op2 is "1" or "0x1" or "0x01" or "1h"))
+                return true;
+
+            // AND with all 1s
+            if (mnemonic is "and" && (op2 is "-1" or "0xffffffff" or "0xffffffffffffffff" or "0ffffffffh"))
+                return true;
+
+            return false;
+        }
+
+        private static bool AreInversePair(string mnem1, string op1_1, string op1_2,
+                                           string mnem2, string op2_1, string op2_2)
+        {
+            // Self-cancelling flag operations
+            if (mnem1 == "cmc" && mnem2 == "cmc")
+                return true;
+
+            if (string.IsNullOrEmpty(op1_1) || string.IsNullOrEmpty(op2_1))
+                return false;
+
+            // 0. xchg reg1, reg2 / xchg reg1, reg2 (or xchg reg2, reg1)
+            if (mnem1 == "xchg" && mnem2 == "xchg")
+            {
+                return (op1_1 == op2_1 && op1_2 == op2_2) || (op1_1 == op2_2 && op1_2 == op2_1);
+            }
+
+            if (op1_1 != op2_1)
+                return false;
+
+            // 1. inc / dec
+            if ((mnem1 == "inc" && mnem2 == "dec") || (mnem1 == "dec" && mnem2 == "inc"))
+                return true;
+
+            // 2. not / not
+            if (mnem1 == "not" && mnem2 == "not")
+                return true;
+
+            // 3. neg / neg
+            if (mnem1 == "neg" && mnem2 == "neg")
+                return true;
+
+            // 4. bswap / bswap
+            if (mnem1 == "bswap" && mnem2 == "bswap")
+                return true;
+
+            // 5. add reg, X / sub reg, X with same operand
+            if ((mnem1 == "add" && mnem2 == "sub") || (mnem1 == "sub" && mnem2 == "add"))
+            {
+                if (!string.IsNullOrEmpty(op1_2) && op1_2 == op2_2)
+                    return true;
+            }
+
+            // 6. xor reg, imm / xor reg, imm with same immediate
+            if (mnem1 == "xor" && mnem2 == "xor")
+            {
+                if (!string.IsNullOrEmpty(op1_2) && op1_2 == op2_2)
+                    return true;
+            }
+
+            // 7. rol reg, X / ror reg, X with same operand
+            if ((mnem1 == "rol" && mnem2 == "ror") || (mnem1 == "ror" && mnem2 == "rol"))
+            {
+                if (!string.IsNullOrEmpty(op1_2) && op1_2 == op2_2)
+                    return true;
+            }
+
+            // 8. push reg / pop reg
+            if (mnem1 == "push" && mnem2 == "pop")
+                return true;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Pass 2: EFLAGS Liveness Analysis.
+        /// Identifies pure flag operations (cmc, clc, stc, cld, std, bt, cmp, test) whose computed flags are never read.
+        /// Distinguishes between Carry Flag (CF), other arithmetic flags (ZF, SF, OF, PF), and Direction Flag (DF).
+        /// </summary>
+        private static void EliminateDeadFlagModifications(List<TraceRow> traceRows, DisasmDescriptor[] descriptors)
+        {
+            bool cfLive = false;
+            bool otherFlagsLive = false;
+            bool dfLive = false;
+
+            for (int i = traceRows.Count - 1; i >= 0; i--)
+            {
+                if (descriptors[i].useless) continue;
+
+                string[] parts = ParseDisassembly(traceRows[i].Disasm);
+                if (parts.Length == 0) continue;
+
+                string mnem = parts[0].ToLowerInvariant();
+
+                // 1. Full flag stack push
+                if (mnem is "pushf" or "pushfq")
+                {
+                    cfLive = true;
+                    otherFlagsLive = true;
+                    dfLive = true;
+                    continue;
+                }
+
+                // 2. Instructions consuming Carry Flag only
+                if (_cfOnlyConsumers.Contains(mnem))
+                {
+                    cfLive = true;
+                    continue;
+                }
+
+                // 3. Instructions consuming both Carry Flag and Zero Flag
+                if (_cfAndZfConsumers.Contains(mnem))
+                {
+                    cfLive = true;
+                    otherFlagsLive = true;
+                    continue;
+                }
+
+                // 4. Instructions consuming other arithmetic flags (ZF, SF, OF, PF)
+                if (_otherFlagConsumers.Contains(mnem))
+                {
+                    otherFlagsLive = true;
+                    continue;
+                }
+
+                // 5. String instructions consume Direction Flag
+                if (mnem.StartsWith("movs") || mnem.StartsWith("stos") || mnem.StartsWith("lods") ||
+                    mnem.StartsWith("scas") || mnem.StartsWith("cmps"))
+                {
+                    dfLive = true;
+                }
+
+                // 6. Flag producers / modifiers
+                if (mnem == "cmc")
+                {
+                    if (!cfLive)
+                    {
+                        // Carry flag is never read before being clobbered or trace end!
+                        descriptors[i].useless = true;
+                        deObHiddenRows.Add(traceRows[i].Id);
+                    }
+                    // cmc reads CF and inverts CF, so if cfLive was true, it remains true before cmc
+                    continue;
+                }
+
+                if (mnem is "clc" or "stc")
+                {
+                    if (!cfLive)
+                    {
+                        descriptors[i].useless = true;
+                        deObHiddenRows.Add(traceRows[i].Id);
+                    }
+                    else
+                    {
+                        cfLive = false; // Satisfied by clc/stc
+                    }
+                    continue;
+                }
+
+                if (mnem is "cld" or "std")
+                {
+                    if (!dfLive)
+                    {
+                        descriptors[i].useless = true;
+                        deObHiddenRows.Add(traceRows[i].Id);
+                    }
+                    else
+                    {
+                        dfLive = false; // Satisfied by cld/std
+                    }
+                    continue;
+                }
+
+                if (mnem is "cmp" or "test" or "bt")
+                {
+                    if (!cfLive && !otherFlagsLive)
+                    {
+                        // Neither CF nor other flags are read!
+                        descriptors[i].useless = true;
+                        deObHiddenRows.Add(traceRows[i].Id);
+                    }
+                    else
+                    {
+                        cfLive = false;
+                        otherFlagsLive = false;
+                    }
+                    continue;
+                }
+
+                if (mnem is "sahf")
+                {
+                    // sahf sets CF, ZF, SF, AF, PF from AH
+                    cfLive = false;
+                    otherFlagsLive = false;
+                    continue;
+                }
+
+                if (mnem is "popf" or "popfq")
+                {
+                    cfLive = false;
+                    otherFlagsLive = false;
+                    dfLive = false;
+                    continue;
+                }
+
+                // 7. Inc and Dec modify ZF, SF, OF, AF, PF, but preserve CF
+                if (mnem is "inc" or "dec")
+                {
+                    otherFlagsLive = false;
+                    continue;
+                }
+
+                // 8. Arithmetic/logic manipulators overwrite all standard flags
+                if (_manipulators.Contains(mnem) && mnem is not "not")
+                {
+                    cfLive = false;
+                    otherFlagsLive = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Pass 3: Forward Dead-Store Elimination.
+        /// Identifies any assignment that is overwritten by a subsequent Setter without any intervening read.
+        /// </summary>
+        private static void EliminateForwardUselessAssignments(List<TraceRow> traceRows, DisasmDescriptor[] descriptors)
+        {
             bool foundSomethingUseless;
             do
             {
                 foundSomethingUseless = false;
-                for (int i = 0; i < descriptors.Length; i++)
+                for (int i = 0; i < traceRows.Count; i++)
                 {
                     var currentDescriptor = descriptors[i];
 
-                    if (string.IsNullOrEmpty(currentDescriptor.write_to) || currentDescriptor.useless)
+                    if (currentDescriptor.useless || string.IsNullOrEmpty(currentDescriptor.write_to) || currentDescriptor.write_to == "memory")
                         continue;
 
                     if (currentDescriptor.type is not (DisasmType.Setter or DisasmType.Manipulator))
                         continue;
 
-                    // Skip rsp/rip and memory writes
-                    if (currentDescriptor.write_to == "memory")
-                        continue;
-
-                    string disasm = TraceRows[i].Disasm;
-                    if (ContainsAnyRegister(disasm, "rspx") || ContainsAnyRegister(disasm, "ripx"))
+                    // Skip direct modifications of RSP or RIP
+                    if (_regToFamily.TryGetValue(currentDescriptor.write_to, out var fam) &&
+                        (fam == "rspx" || fam == "ripx"))
                         continue;
 
                     string writtenRegister = currentDescriptor.write_to;
                     bool isUseless = false;
 
-                    for (int j = i + 1; j < descriptors.Length; j++)
+                    for (int j = i + 1; j < traceRows.Count; j++)
                     {
                         var nextDescriptor = descriptors[j];
                         if (nextDescriptor.type == DisasmType.Other)
@@ -195,8 +618,9 @@ namespace TraceViewer.Core.Analysis
                         if (isUsed)
                             break; // Register is used — not useless
 
+                        // If overwritten by a Setter before being read, it is useless!
                         if (nextDescriptor.type == DisasmType.Setter &&
-                            AreRelatedRegisters(writtenRegister, nextDescriptor.write_to))
+                            OverwritesRegister(writtenRegister, nextDescriptor.write_to))
                         {
                             isUseless = true;
                             break;
@@ -205,17 +629,145 @@ namespace TraceViewer.Core.Analysis
 
                     if (isUseless)
                     {
-                        foundSomethingUseless = true;
                         currentDescriptor.useless = true;
-                        deObHiddenRows.Add(i);
+                        deObHiddenRows.Add(traceRows[i].Id);
+                        foundSomethingUseless = true;
                     }
                 }
             } while (foundSomethingUseless);
         }
 
         /// <summary>
-        /// Checks if disassembly contains any register from the given family.
+        /// Pass 4: Transitive Backward Dead-Store Elimination.
+        /// Performs fast O(N) backward liveness tracking, eliminating calculations whose results are never read.
         /// </summary>
+        private static void EliminateDeadStores(List<TraceRow> traceRows, DisasmDescriptor[] descriptors)
+        {
+            var liveFamilies = new HashSet<string>();
+
+            // Initially assume general-purpose registers are live at trace boundaries
+            foreach (var fam in registerFamilies.Keys)
+                liveFamilies.Add(fam);
+
+            bool changed;
+            int passCount = 0;
+            const int maxPasses = 3;
+
+            do
+            {
+                changed = false;
+                passCount++;
+
+                for (int i = traceRows.Count - 1; i >= 0; i--)
+                {
+                    if (descriptors[i].useless) continue;
+
+                    var desc = descriptors[i];
+                    string disasm = traceRows[i].Disasm.ToLowerInvariant();
+
+                    // Calls, syscalls, returns have external side effects
+                    if (disasm.StartsWith("call") || disasm.StartsWith("syscall") ||
+                        disasm.StartsWith("sysenter") || disasm.StartsWith("int") ||
+                        disasm.StartsWith("ret"))
+                    {
+                        foreach (var readReg in desc.read_from)
+                        {
+                            if (_regToFamily.TryGetValue(readReg, out var fam))
+                                liveFamilies.Add(fam);
+                        }
+                        continue;
+                    }
+
+                    // Memory writes: keep instruction alive
+                    if (desc.write_to == "memory")
+                    {
+                        foreach (var readReg in desc.read_from)
+                        {
+                            if (_regToFamily.TryGetValue(readReg, out var fam))
+                                liveFamilies.Add(fam);
+                        }
+                        continue;
+                    }
+
+                    // Pure users (like cmp, test, or conditional branches): mark read registers as live
+                    if (desc.type == DisasmType.User || string.IsNullOrEmpty(desc.write_to))
+                    {
+                        foreach (var readReg in desc.read_from)
+                        {
+                            if (_regToFamily.TryGetValue(readReg, out var fam))
+                                liveFamilies.Add(fam);
+                        }
+                        continue;
+                    }
+
+                    // Instruction writes to a register
+                    string writtenReg = desc.write_to;
+                    if (!_regToFamily.TryGetValue(writtenReg, out var writtenFamily))
+                    {
+                        foreach (var readReg in desc.read_from)
+                            if (_regToFamily.TryGetValue(readReg, out var fam))
+                                liveFamilies.Add(fam);
+                        continue;
+                    }
+
+                    // NEVER hide writes directly to RSP or RIP (stack frame & control flow management)
+                    if (writtenFamily == "rspx" || writtenFamily == "ripx")
+                    {
+                        liveFamilies.Add(writtenFamily);
+                        foreach (var readReg in desc.read_from)
+                            if (_regToFamily.TryGetValue(readReg, out var fam))
+                                liveFamilies.Add(fam);
+                        continue;
+                    }
+
+                    // Is the written register family live?
+                    if (!liveFamilies.Contains(writtenFamily))
+                    {
+                        // The computed value is NEVER read!
+                        desc.useless = true;
+                        deObHiddenRows.Add(traceRows[i].Id);
+                        changed = true;
+                        // Inputs are NOT marked live, transitively cascading dead-code elimination!
+                    }
+                    else
+                    {
+                        // Value is needed!
+                        // In x86-64, writing to 64-bit (idx 0) or 32-bit (idx 1) completely overwrites the entire family.
+                        // Writing to 16-bit (idx 2) or 8-bit (idx >= 3) preserves the remaining bits, so the family is NOT killed.
+                        bool isFullOverwrite = desc.type == DisasmType.Setter &&
+                                               _regToFamilyIndex.TryGetValue(writtenReg, out int idx) && idx <= 1;
+
+                        if (isFullOverwrite)
+                        {
+                            liveFamilies.Remove(writtenFamily);
+                        }
+
+                        // Mark inputs as live
+                        foreach (var readReg in desc.read_from)
+                        {
+                            if (_regToFamily.TryGetValue(readReg, out var fam))
+                                liveFamilies.Add(fam);
+                        }
+                    }
+                }
+            } while (changed && passCount < maxPasses);
+        }
+
+        private static bool IsZeroingIdiom(string mnemonic, string op1, string op2)
+        {
+            if (string.IsNullOrEmpty(op1) || string.IsNullOrEmpty(op2))
+                return false;
+            if (op1 != op2)
+                return false;
+
+            return mnemonic is "xor" or "sub" or "pxor" or "xorps" or "xorpd" or "vpxor" or "vxorps" or "vxorpd";
+        }
+
+        private static bool Is64BitRegister(string reg)
+        {
+            return _regToFamilyIndex.TryGetValue(reg, out int idx) && idx == 0;
+        }
+
         private static bool ContainsAnyRegister(string disasm, string familyKey)
         {
             if (!registerFamilies.TryGetValue(familyKey, out var regs))
@@ -226,10 +778,6 @@ namespace TraceViewer.Core.Analysis
             return false;
         }
 
-        /// <summary>
-        /// Checks if two registers are related (same family — either sub-register or same register).
-        /// Uses pre-computed O(1) reverse lookup instead of iterating all families.
-        /// </summary>
         private static bool AreRelatedRegisters(string reg1, string reg2)
         {
             if (reg1 == reg2) return true;
@@ -238,21 +786,28 @@ namespace TraceViewer.Core.Analysis
             return family1 == family2;
         }
 
-        private static bool IsSubRegisterOf(string widerReg, string narrowerReg)
+        private static bool OverwritesRegister(string writtenReg, string setterReg)
         {
-            if (!_regToFamily.TryGetValue(widerReg, out var family1)) return false;
-            if (!_regToFamily.TryGetValue(narrowerReg, out var family2)) return false;
-            if (family1 != family2) return false;
-            return _regToFamilyIndex[widerReg] <= _regToFamilyIndex[narrowerReg];
+            if (!_regToFamily.TryGetValue(writtenReg, out var fam1) ||
+                !_regToFamily.TryGetValue(setterReg, out var fam2) ||
+                fam1 != fam2)
+                return false;
+
+            if (!_regToFamilyIndex.TryGetValue(writtenReg, out int writtenIdx) ||
+                !_regToFamilyIndex.TryGetValue(setterReg, out int setterIdx))
+                return writtenReg == setterReg;
+
+            // In x86-64, writes to 64-bit (idx 0) or 32-bit (idx 1, zero-extends to 64-bit) overwrite the entire family!
+            if (setterIdx <= 1)
+                return true;
+
+            // Otherwise, setterIdx must be <= writtenIdx (e.g. 16-bit idx 2 overwrites 16-bit idx 2 or 8-bit idx 3/4)
+            return setterIdx <= writtenIdx;
         }
 
         public static string[] ParseDisassembly(string rawDisassembly)
         {
-            string[] sizePrefixes = ["qword", "dword", "word", "byte", "ptr"];
-            string stripped = rawDisassembly;
-            foreach (string prefix in sizePrefixes)
-                stripped = stripped.Replace(prefix, "");
-
+            string stripped = SizePrefixRegex.Replace(rawDisassembly, "");
             var parts = new List<string>();
             string remaining = stripped.Trim();
 
@@ -300,91 +855,191 @@ namespace TraceViewer.Core.Analysis
         private static DisasmDescriptor SliceASM(TraceRow traceRow)
         {
             string[] disasmParts = ParseDisassembly(traceRow.Disasm);
-            var descriptor = new DisasmDescriptor { type = ClassifyInstruction(disasmParts[0]) };
+            if (disasmParts.Length == 0)
+                return new DisasmDescriptor(DisasmType.Other);
 
-            if (disasmParts.Length > 1 && descriptor.type != DisasmType.Other)
+            string mnemonic = disasmParts[0].ToLowerInvariant();
+            string op1 = disasmParts.Length > 1 ? disasmParts[1].ToLowerInvariant() : "";
+            string op2 = disasmParts.Length > 2 ? disasmParts[2].ToLowerInvariant() : "";
+            string op3 = disasmParts.Length > 3 ? disasmParts[3].ToLowerInvariant() : "";
+
+            var descriptor = new DisasmDescriptor { type = ClassifyInstruction(mnemonic) };
+
+            // 1. Check for Zeroing Idiom: xor reg, reg / sub reg, reg / pxor reg, reg
+            if (IsZeroingIdiom(mnemonic, op1, op2))
             {
-                if (descriptor.type != DisasmType.User)
-                {
-                    descriptor.write_to = disasmParts[1].Contains('[') ? "memory" : disasmParts[1];
-                }
+                descriptor.type = DisasmType.Setter;
+                descriptor.write_to = op1;
+                descriptor.read_from = []; // Zeroing has no input dependencies!
+                return descriptor;
+            }
 
-                if (descriptor.type == DisasmType.User)
+            // 2. Pure flag setters (cmp, test)
+            if (_pureFlagSetters.Contains(mnemonic))
+            {
+                descriptor.type = DisasmType.User;
+                descriptor.write_to = "";
+                descriptor.read_from.AddRange(SplitReader(op1));
+                if (!string.IsNullOrEmpty(op2))
+                    descriptor.read_from.AddRange(SplitReader(op2));
+                return descriptor;
+            }
+
+            // 3. Conditional branches and flag consumers
+            if (_conditionalBranches.Contains(mnemonic))
+            {
+                descriptor.type = DisasmType.User;
+                descriptor.write_to = "";
+                if (!string.IsNullOrEmpty(op1))
+                    descriptor.read_from.AddRange(SplitReader(op1));
+                return descriptor;
+            }
+
+            // 4. Setters (mov, lea, pop, movzx, movsx, movabs)
+            if (_setters.Contains(mnemonic))
+            {
+                descriptor.type = DisasmType.Setter;
+                descriptor.write_to = op1.Contains('[') ? "memory" : op1;
+                if (mnemonic == "pop")
                 {
-                    descriptor.read_from.AddRange(SplitReader(disasmParts[1]));
-                    if (disasmParts.Length > 2)
-                        descriptor.read_from.AddRange(SplitReader(disasmParts[2]));
+                    descriptor.read_from.Add("memory");
+                }
+                else if (mnemonic == "lea")
+                {
+                    descriptor.read_from.AddRange(SplitReader(op2));
                 }
                 else
                 {
-                    string readFrom = disasmParts.Length > 2 ? disasmParts[2] : disasmParts[1];
-                    if (disasmParts[0] == "pop")
-                        descriptor.read_from.Add("memory");
-                    else
-                        descriptor.read_from.AddRange(SplitReader(readFrom));
+                    if (op1.Contains('['))
+                        descriptor.read_from.AddRange(SplitReader(op1));
+                    descriptor.read_from.AddRange(SplitReader(op2));
                 }
+                return descriptor;
             }
 
-            AdditionalInstructions(disasmParts[0], descriptor);
+            // 5. Manipulators (add, sub, inc, dec, not, neg, and, or, xor, shl, etc.)
+            if (_manipulators.Contains(mnemonic))
+            {
+                descriptor.type = DisasmType.Manipulator;
+                descriptor.write_to = op1.Contains('[') ? "memory" : op1;
+
+                // A manipulator ALWAYS reads its destination register!
+                descriptor.read_from.AddRange(SplitReader(op1));
+
+                if (!string.IsNullOrEmpty(op2))
+                    descriptor.read_from.AddRange(SplitReader(op2));
+                if (!string.IsNullOrEmpty(op3))
+                    descriptor.read_from.AddRange(SplitReader(op3));
+                return descriptor;
+            }
+
+            // 6. Stack push
+            if (mnemonic == "push")
+            {
+                descriptor.type = DisasmType.Manipulator;
+                descriptor.write_to = "memory";
+                descriptor.read_from.AddRange(SplitReader(op1));
+                return descriptor;
+            }
+
+            // 7. Exchange
+            if (mnemonic == "xchg")
+            {
+                descriptor.type = DisasmType.Manipulator;
+                descriptor.write_to = op1.Contains('[') ? "memory" : op1;
+                descriptor.read_from.AddRange(SplitReader(op1));
+                descriptor.read_from.AddRange(SplitReader(op2));
+                return descriptor;
+            }
+
+            // 8. Conditional moves (cmovcc)
+            if (mnemonic.StartsWith("cmov") && mnemonic.Length <= 8)
+            {
+                descriptor.type = DisasmType.Manipulator;
+                descriptor.write_to = op1.Contains('[') ? "memory" : op1;
+                descriptor.read_from.AddRange(SplitReader(op1));
+                descriptor.read_from.AddRange(SplitReader(op2));
+                return descriptor;
+            }
+
+            AdditionalInstructions(mnemonic, op1, op2, descriptor);
             return descriptor;
         }
 
-        private static void AdditionalInstructions(string instruction, DisasmDescriptor descriptor)
+        private static void AdditionalInstructions(string instruction, string op1, string op2, DisasmDescriptor descriptor)
         {
             if (descriptor.type != DisasmType.Other) return;
 
-            if (instruction == "cdqe")
+            // SetCC instructions (sete, setne, setz, seta, setb, etc.)
+            if (instruction.StartsWith("set") && instruction.Length <= 6 && instruction != "set")
             {
-                descriptor.type = DisasmType.Manipulator;
-                descriptor.write_to = "rax";
-                descriptor.read_from.Add("eax");
+                descriptor.type = DisasmType.Setter;
+                descriptor.write_to = op1.Contains('[') ? "memory" : op1;
+                if (op1.Contains('[')) descriptor.read_from.AddRange(SplitReader(op1));
+                return;
             }
-            else if (instruction == "cwde")
+
+            // Sign extension / conversion instructions
+            switch (instruction)
             {
-                descriptor.type = DisasmType.Manipulator;
-                descriptor.write_to = "eax";
-                descriptor.read_from.Add("ax");
+                case "cdqe" or "cltq" or "clq":
+                    descriptor.type = DisasmType.Setter;
+                    descriptor.write_to = "rax";
+                    descriptor.read_from.Add("eax");
+                    return;
+                case "cwde" or "cwtl":
+                    descriptor.type = DisasmType.Setter;
+                    descriptor.write_to = "eax";
+                    descriptor.read_from.Add("ax");
+                    return;
+                case "cbw" or "cbtw":
+                    descriptor.type = DisasmType.Setter;
+                    descriptor.write_to = "ax";
+                    descriptor.read_from.Add("al");
+                    return;
+                case "cqo" or "cqto":
+                    descriptor.type = DisasmType.Setter;
+                    descriptor.write_to = "rdx";
+                    descriptor.read_from.Add("rax");
+                    return;
+                case "cdq" or "cltd":
+                    descriptor.type = DisasmType.Setter;
+                    descriptor.write_to = "edx";
+                    descriptor.read_from.Add("eax");
+                    return;
+                case "cwd" or "cwtd":
+                    descriptor.type = DisasmType.Setter;
+                    descriptor.write_to = "dx";
+                    descriptor.read_from.Add("ax");
+                    return;
+                case "lahf":
+                    descriptor.type = DisasmType.Setter;
+                    descriptor.write_to = "ah";
+                    return;
+                case "div" or "idiv":
+                    descriptor.type = DisasmType.Manipulator;
+                    descriptor.write_to = "rax";
+                    descriptor.read_from.AddRange(SplitReader(op1));
+                    descriptor.read_from.Add("rax");
+                    descriptor.read_from.Add("rdx");
+                    return;
             }
         }
 
         private static List<string> SplitReader(string readFrom)
         {
             var result = new List<string>();
-            string[] parts = readFrom.Split(['[', ']', ' '], StringSplitOptions.RemoveEmptyEntries);
+            if (string.IsNullOrEmpty(readFrom))
+                return result;
+
+            string[] parts = readFrom.Split(['[', ']', ' ', '+', '*', '-', ',', ':', '(', ')'], StringSplitOptions.RemoveEmptyEntries);
             foreach (var part in parts)
             {
-                if (_allRegisters.Contains(part))
-                    result.Add(part);
+                string p = part.ToLowerInvariant();
+                if (_allRegisters.Contains(p))
+                    result.Add(p);
             }
             return result;
-        }
-
-        public class RFlags
-        {
-            private readonly ulong _rflagsValue;
-
-            public RFlags(ulong rflags) => _rflagsValue = rflags;
-
-            // Status Flags
-            public bool CarryFlag => (_rflagsValue & (1UL << 0)) != 0;
-            public bool ParityFlag => (_rflagsValue & (1UL << 2)) != 0;
-            public bool AdjustFlag => (_rflagsValue & (1UL << 4)) != 0;
-            public bool ZeroFlag => (_rflagsValue & (1UL << 6)) != 0;
-            public bool SignFlag => (_rflagsValue & (1UL << 7)) != 0;
-            public bool OverflowFlag => (_rflagsValue & (1UL << 11)) != 0;
-
-            // Control Flags
-            public bool TrapFlag => (_rflagsValue & (1UL << 8)) != 0;
-            public bool InterruptEnableFlag => (_rflagsValue & (1UL << 9)) != 0;
-            public bool DirectionFlag => (_rflagsValue & (1UL << 10)) != 0;
-        }
-
-        private static void HideUselessFlagModifications(List<TraceRow> TraceRows)
-        {
-            foreach (var traceRow in TraceRows)
-            {
-                RFlags current_rflags = new RFlags(BitConverter.ToUInt64(traceRow.Regs[17]));
-            }
         }
     }
 }
