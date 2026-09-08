@@ -38,6 +38,8 @@ namespace TraceViewer
             this.Loaded += MainWindow_Loaded;
             this.Closing += MainWindow_Closing;
 
+            DumpulatorViewControl.SetMainWindow(this);
+
             DisasmViewButton_MouseDown(null, null);
 
         }
@@ -52,6 +54,5 @@ namespace TraceViewer
             if (TraceHandler.Trace == null) return;
             ScrollTo(CurrentTopIndex);
         }
-
     }
 }

@@ -171,6 +171,8 @@ namespace TraceViewer.Core
                 throw new InvalidOperationException("Trace was null");
 
             window?.ScrollTo(low);
+            window?.DumpulatorViewControl?.UpdateTraceContextDisplay();
+            window?.DumpulatorViewControl?.TryAutoDetectDumpFile();
         }
 
         private static RegisterType GetRegisterType(int i) => i switch

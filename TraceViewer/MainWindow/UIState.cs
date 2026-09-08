@@ -13,65 +13,70 @@ namespace TraceViewer
         NotesView,
         BlocksView,
         BookmarksView,
-        GraphView
+        GraphView,
+        DumpulatorView
     }
     public partial class MainWindow : Window
     {
-       
+        private void DeactivateAllViewButtons()
+        {
+            SetViewButtonInactive(DisasmViewButtonBorder);
+            SetViewButtonInactive(NotesViewButtonBorder);
+            SetViewButtonInactive(BlocksViewButtonBorder);
+            SetViewButtonInactive(BookmarksViewButtonBorder);
+            SetViewButtonInactive(GraphViewButtonBorder);
+            SetViewButtonInactive(DumpulatorViewButtonBorder);
+        }
+
         public void DisasmViewButton_MouseDown(object? sender = null, System.Windows.Input.MouseButtonEventArgs? e = null)
         {
-            if (e != null)
-                if (e.LeftButton != MouseButtonState.Pressed) return;
-            SetViewButtonActive(DisasmViewButtonBorder); // Set Disassembler view button as active
-            SetViewButtonInactive(NotesViewButtonBorder); // Deactivate Notes view button
-            SetViewButtonInactive(BlocksViewButtonBorder); // Deactivate Blocks view button
-            SetViewButtonInactive(BookmarksViewButtonBorder); // Deactivate Bookmarks view button
-            SetViewButtonInactive(GraphViewButtonBorder);
-            SetCurrentUIState(UIState.DisassemblerView); // Set UI state to Disassembler view
+            if (e != null && e.LeftButton != MouseButtonState.Pressed) return;
+            DeactivateAllViewButtons();
+            SetViewButtonActive(DisasmViewButtonBorder);
+            SetCurrentUIState(UIState.DisassemblerView);
         }
 
         private void NotesViewButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (e.LeftButton != MouseButtonState.Pressed) return;
-            SetViewButtonInactive(DisasmViewButtonBorder); // Deactivate Disassembler view button
-            SetViewButtonActive(NotesViewButtonBorder); // Set Notes view button as active
-            SetViewButtonInactive(BlocksViewButtonBorder); // Deactivate Blocks view button
-            SetViewButtonInactive(BookmarksViewButtonBorder); // Deactivate Bookmarks view button
-            SetViewButtonInactive(GraphViewButtonBorder);
-            SetCurrentUIState(UIState.NotesView); // Set UI state to Notes view
+            DeactivateAllViewButtons();
+            SetViewButtonActive(NotesViewButtonBorder);
+            SetCurrentUIState(UIState.NotesView);
         }
 
         private void BlocksViewButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (e.LeftButton != MouseButtonState.Pressed) return;
-            SetViewButtonInactive(DisasmViewButtonBorder); // Deactivate Disassembler view button
-            SetViewButtonInactive(NotesViewButtonBorder); // Deactivate Notes view button
-            SetViewButtonActive(BlocksViewButtonBorder); // Activate Blocks view button
-            SetViewButtonInactive(BookmarksViewButtonBorder); // Deactivate Bookmarks view button
-            SetViewButtonInactive(GraphViewButtonBorder);
-            SetCurrentUIState(UIState.BlocksView); // Set UI state to Notes view
+            DeactivateAllViewButtons();
+            SetViewButtonActive(BlocksViewButtonBorder);
+            SetCurrentUIState(UIState.BlocksView);
         }
 
         private void BookmarksViewButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (e.LeftButton != MouseButtonState.Pressed) return;
-            SetViewButtonInactive(DisasmViewButtonBorder); // Deactivate Disassembler view button
-            SetViewButtonInactive(NotesViewButtonBorder); // Deactivate Notes view button
-            SetViewButtonInactive(BlocksViewButtonBorder); // Deactivate Blocks view button
-            SetViewButtonActive(BookmarksViewButtonBorder); // Set Bookmarks view button as active
-            SetViewButtonInactive(GraphViewButtonBorder);
-            SetCurrentUIState(UIState.BookmarksView); // Set UI state to Bookmarks view
+            DeactivateAllViewButtons();
+            SetViewButtonActive(BookmarksViewButtonBorder);
+            SetCurrentUIState(UIState.BookmarksView);
         }
 
         private void GraphViewButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (e.LeftButton != MouseButtonState.Pressed) return;
-            SetViewButtonInactive(DisasmViewButtonBorder); // Deactivate Disassembler view button
-            SetViewButtonInactive(NotesViewButtonBorder); // Deactivate Notes view button
-            SetViewButtonInactive(BlocksViewButtonBorder); // Deactivate Blocks view button
-            SetViewButtonInactive(BookmarksViewButtonBorder); // Set Bookmarks view button as active
+            DeactivateAllViewButtons();
             SetViewButtonActive(GraphViewButtonBorder);
-            SetCurrentUIState(UIState.GraphView); // Set UI state to Bookmarks view
+            SetCurrentUIState(UIState.GraphView);
+        }
+
+        private void DumpulatorViewButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
+            DeactivateAllViewButtons();
+            SetViewButtonActive(DumpulatorViewButtonBorder);
+            DumpulatorViewControl.SetMainWindow(this);
+            DumpulatorViewControl.UpdateTraceContextDisplay();
+            DumpulatorViewControl.TryAutoDetectDumpFile();
+            SetCurrentUIState(UIState.DumpulatorView);
         }
 
         private void SetViewButtonActive(Border buttonBorder)
@@ -94,6 +99,7 @@ namespace TraceViewer
             BlocksView.Visibility = uiState == UIState.BlocksView ? Visibility.Visible : Visibility.Collapsed;
             BookmarksView.Visibility = uiState == UIState.BookmarksView ? Visibility.Visible : Visibility.Collapsed;
             GraphView.Visibility = uiState == UIState.GraphView ? Visibility.Visible : Visibility.Collapsed;
+            DumpulatorView.Visibility = uiState == UIState.DumpulatorView ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 }

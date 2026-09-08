@@ -223,6 +223,7 @@ namespace TraceViewer
             if (window.CurrentHoveredRow == this && window.CurrentHoveredTraceRowId == traceRow.Id) return;
             window.CurrentHoveredRow = this;
             window.CurrentHoveredTraceRowId = traceRow.Id;
+            window.DumpulatorViewControl?.UpdateTraceContextDisplay();
 
             HashSet<string>? highlightSet = traceRow.highlights.Count > 0
                 ? new HashSet<string>(traceRow.highlights, StringComparer.OrdinalIgnoreCase)

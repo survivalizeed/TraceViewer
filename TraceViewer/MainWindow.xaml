@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TraceViewer"
+        xmlns:uc="clr-namespace:TraceViewer.UserControls"
         mc:Ignorable="d"
         Title="survivalizeed's Trace Viewer"
         Width="{x:Static SystemParameters.PrimaryScreenWidth}"
@@ -80,6 +81,9 @@
                         </Border>
                         <Border x:Name="GraphViewButtonBorder" Style="{StaticResource ViewTitlesBorder}">
                             <Label x:Name="GraphViewButton" Content="EXECUTION GRAPH" Foreground="{StaticResource PrimaryForegroundBrush}" Style="{StaticResource ViewTitles}" MouseDown="GraphViewButton_MouseDown"/>
+                        </Border>
+                        <Border x:Name="DumpulatorViewButtonBorder" Style="{StaticResource ViewTitlesBorder}">
+                            <Label x:Name="DumpulatorViewButton" Content="DUMPULATOR" Foreground="{StaticResource PrimaryForegroundBrush}" Style="{StaticResource ViewTitles}" MouseDown="DumpulatorViewButton_MouseDown"/>
                         </Border>
                     </DockPanel>
                     <Line Margin="0,0,0,0" X1="0" Y1="0" X2="10000" Y2="0" Stroke="{StaticResource PrimaryForegroundBrush}" StrokeThickness="5"/>
@@ -274,6 +278,12 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                         <Canvas x:Name="GraphViewCanvas" Width="2000" Height="2000" ClipToBounds="True"/>
                     </ScrollViewer>
+                </Border>
+            </Grid>
+
+            <Grid Name="DumpulatorView" Margin="0,104,0,20" Visibility="Collapsed">
+                <Border BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrighterBrush}">
+                    <uc:DumpulatorControl x:Name="DumpulatorViewControl"/>
                 </Border>
             </Grid>
 

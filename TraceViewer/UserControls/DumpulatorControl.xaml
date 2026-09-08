@@ -1,0 +1,124 @@
+<UserControl x:Class="TraceViewer.UserControls.DumpulatorControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="1000"
+             Background="{StaticResource PrimaryBackgroundBrush}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- Toolbar -->
+            <RowDefinition Height="Auto"/>
+            <!-- Editor and Console Split -->
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- TOP TOOLBAR -->
+        <Border Grid.Row="0" Background="#141414" BorderBrush="{StaticResource ViewBorderBrighterBrush}" BorderThickness="0,0,0,1" Padding="8,6,8,6">
+            <DockPanel LastChildFill="True">
+                <!-- Action Buttons on Right -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <!-- RUN BUTTON -->
+                    <Border x:Name="RunButtonBorder" CornerRadius="3" BorderBrush="#4EC9B0" BorderThickness="1" Background="#1E2824" Margin="4,0" Cursor="Hand" MouseDown="RunButton_MouseDown">
+                        <StackPanel Orientation="Horizontal" Margin="10,4">
+                            <TextBlock Text="▶" Foreground="#4EC9B0" FontWeight="Bold" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="RUN (F5)" Foreground="#4EC9B0" FontFamily="Consolas" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- STOP BUTTON -->
+                    <Border x:Name="StopButtonBorder" CornerRadius="3" BorderBrush="#E06C75" BorderThickness="1" Background="#2A1C1D" Margin="4,0" Cursor="Hand" Opacity="0.5" IsEnabled="False" MouseDown="StopButton_MouseDown">
+                        <StackPanel Orientation="Horizontal" Margin="10,4">
+                            <TextBlock Text="■" Foreground="#E06C75" FontWeight="Bold" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="STOP" Foreground="#E06C75" FontFamily="Consolas" FontWeight="Bold" FontSize="13" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- CLEAR CONSOLE BUTTON -->
+                    <Border x:Name="ClearLogButtonBorder" CornerRadius="3" BorderBrush="{StaticResource ViewBorderBrighterBrush}" BorderThickness="1" Background="#202020" Margin="4,0" Cursor="Hand" MouseDown="ClearLogButton_MouseDown">
+                        <TextBlock Text="CLEAR LOG" Foreground="#999999" FontFamily="Consolas" FontWeight="Bold" FontSize="12" Margin="8,4" VerticalAlignment="Center"/>
+                    </Border>
+                </StackPanel>
+
+                <!-- DUMP FILE PICKER (Left side) -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="MINIDUMP:" Foreground="{StaticResource PrimaryForegroundBrush}" FontFamily="Consolas" FontWeight="Bold" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBox x:Name="DmpPathTextBox" Width="380" Height="26" Background="#0C0C0C" Foreground="#E0E0E0" BorderBrush="{StaticResource ViewBorderBrighterBrush}" BorderThickness="1" FontFamily="Consolas" FontSize="12" Padding="4,3" VerticalContentAlignment="Center" ToolTip="Full path to target .dmp file for Dumpulator"/>
+                    <Border CornerRadius="2" BorderBrush="{StaticResource ViewBorderBrighterBrush}" BorderThickness="1" Background="#242424" Margin="4,0,0,0" Cursor="Hand" MouseDown="BrowseDmp_MouseDown">
+                        <TextBlock Text="BROWSE..." Foreground="White" FontFamily="Consolas" FontWeight="Bold" FontSize="11" Margin="8,4" VerticalAlignment="Center"/>
+                    </Border>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- SPLIT VIEW: PYTHON EDITOR & CONSOLE OUTPUT -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" MinWidth="300" Name="EditorColumn"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="2*" MinWidth="200" Name="ConsoleColumn"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- LEFT: PYTHON EDITOR -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="26"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0" Background="#181818" BorderBrush="{StaticResource ViewBorderBrighterBrush}" BorderThickness="0,0,0,1" Padding="8,2">
+                    <DockPanel LastChildFill="True">
+                        <TextBlock Text="PYTHON EDITOR (Ctrl+Space for Autocomplete)" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="CaretPositionText" DockPanel.Dock="Right" HorizontalAlignment="Right" Text="Ln 1, Col 1" Foreground="#777777" FontFamily="Consolas" FontSize="11" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Border>
+                <avalonEdit:TextEditor x:Name="PythonEditor" Grid.Row="1"
+                                       Background="#0E0E0E"
+                                       Foreground="#D4D4D4"
+                                       FontFamily="Consolas"
+                                       FontSize="13"
+                                       ShowLineNumbers="True"
+                                       LineNumbersForeground="#454545"
+                                       HorizontalScrollBarVisibility="Auto"
+                                       VerticalScrollBarVisibility="Auto"
+                                       PreviewKeyDown="PythonEditor_PreviewKeyDown"/>
+            </Grid>
+
+            <!-- SPLITTER -->
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#1A1A1A" Cursor="SizeWE"/>
+
+            <!-- RIGHT: LIVE OUTPUT CONSOLE -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="26"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0" Background="#181818" BorderBrush="{StaticResource ViewBorderBrighterBrush}" BorderThickness="0,0,0,1" Padding="8,2">
+                    <DockPanel LastChildFill="True">
+                        <TextBlock Text="OUTPUT / CONSOLE" Foreground="#AAAAAA" FontFamily="Consolas" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="ProcessStatusText" DockPanel.Dock="Right" HorizontalAlignment="Right" Text="IDLE" Foreground="#4EC9B0" FontFamily="Consolas" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Border>
+                <RichTextBox x:Name="OutputTextBox" Grid.Row="1"
+                             Background="#0A0A0A"
+                             Foreground="#DCDCDC"
+                             FontFamily="Consolas"
+                             FontSize="12"
+                             IsReadOnly="True"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Auto"
+                             BorderThickness="0"
+                             Padding="8">
+                    <FlowDocument PagePadding="0">
+                        <Paragraph Margin="0" LineHeight="18">
+                            <Run Text="[TraceViewer Dumpulator Console]" Foreground="#888888"/>
+                            <LineBreak/>
+                            <Run Text="Ready to emulate. Press RUN (F5) to execute script." Foreground="#666666"/>
+                        </Paragraph>
+                    </FlowDocument>
+                </RichTextBox>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>
