@@ -2,33 +2,400 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using TraceViewer.Core.Analysis;
 
 namespace TraceViewer.Core
 {
     public class Project
     {
+        public int Version { get; set; } = 2;
         public TraceData TraceData { get; set; } = new();
         public List<(int Id, string Text)> Comments { get; set; } = [];
         public HashSet<int> HiddenRows { get; set; } = [];
         public HashSet<int> DeObHiddenRows { get; set; } = [];
         public List<(int Id, string Name)> Blocks { get; set; } = [];
+        public List<int> Bookmarks { get; set; } = [];
         public string Notes { get; set; } = "";
+
+        // Dumpulator integration
+        public string? DumpulatorScript { get; set; }
+        public string? DumpFilePath { get; set; }
+        public string? DumpFileName { get; set; }
+        public bool HasDump => !string.IsNullOrWhiteSpace(DumpFilePath) && File.Exists(DumpFilePath);
+
+        // Extensible metadata slot for future plugins and analyses
+        public Dictionary<string, object> ExtraMetadata { get; set; } = new();
     }
+
+    #region Manifest Data Transfer Objects
+
+    public class ProjectManifest
+    {
+        public int Version { get; set; } = 2;
+        public string AppVersion { get; set; } = "2.0";
+        public string CreatedAt { get; set; } = "";
+        public string LastModifiedAt { get; set; } = "";
+        public string Notes { get; set; } = "";
+        public TraceManifest Trace { get; set; } = new();
+        public DumpulatorManifest Dumpulator { get; set; } = new();
+        public List<CommentEntry> Comments { get; set; } = [];
+        public List<int> HiddenRows { get; set; } = [];
+        public List<int> DeObHiddenRows { get; set; } = [];
+        public List<BlockEntry> Blocks { get; set; } = [];
+        public List<int> Bookmarks { get; set; } = [];
+
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement>? Extensions { get; set; }
+    }
+
+    public class TraceManifest
+    {
+        public string OriginalFileName { get; set; } = "";
+        public string EntryPath { get; set; } = "trace.trace64";
+        public int TotalRows { get; set; }
+        public string Arch { get; set; } = "x64";
+    }
+
+    public class DumpulatorManifest
+    {
+        public bool HasDump { get; set; }
+        public string DumpOriginalFileName { get; set; } = "";
+        public string DumpEntryPath { get; set; } = "dump.dmp";
+        public long DumpSizeBytes { get; set; }
+        public string ScriptEntryPath { get; set; } = "dumpulator/script.py";
+    }
+
+    public class CommentEntry
+    {
+        public int Id { get; set; }
+        public string Text { get; set; } = "";
+    }
+
+    public class BlockEntry
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+    }
+
+    #endregion
+
+    public static class ProjectSessionManager
+    {
+        private static readonly string TempRoot = Path.Combine(Path.GetTempPath(), "TraceViewer");
+        private static readonly string SessionsRoot = Path.Combine(TempRoot, "Sessions");
+
+        public static string CreateSessionDirectory()
+        {
+            string sessionDir = Path.Combine(SessionsRoot, Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(sessionDir);
+            return sessionDir;
+        }
+
+        public static void PurgeTempOnStartup()
+        {
+            try
+            {
+                if (!Directory.Exists(TempRoot)) return;
+                var di = new DirectoryInfo(TempRoot);
+                foreach (var dir in di.GetDirectories())
+                {
+                    try
+                    {
+                        dir.Delete(true);
+                    }
+                    catch { }
+                }
+                foreach (var file in di.GetFiles())
+                {
+                    try
+                    {
+                        file.Delete();
+                    }
+                    catch { }
+                }
+            }
+            catch { }
+        }
+    }
+
+    public static class ProjectLoader
+    {
+        public static Project OpenProject(string filename)
+        {
+            using var fs = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read);
+            byte[] magic = new byte[4];
+            int read = fs.Read(magic, 0, 4);
+            fs.Position = 0;
+
+            // Check if legacy binary TRVI format
+            if (read == 4 && magic[0] == 'T' && magic[1] == 'R' && magic[2] == 'V' && magic[3] == 'I')
+            {
+                return LegacyProjectLoader.OpenProject(fs);
+            }
+
+            // Otherwise load as standard extensible ZIP package
+            return PackageProjectLoader.OpenProject(fs, filename);
+        }
+    }
+
+    public static class ProjectWriter
+    {
+        public static void SaveProject(Project project, string filename)
+        {
+            PackageProjectWriter.SaveProject(project, filename);
+        }
+    }
+
+    #region Package Project Loader & Writer (v2 ZIP-based)
+
+    internal static class PackageProjectWriter
+    {
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            WriteIndented = true,
+            PropertyNameCaseInsensitive = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+
+        public static void SaveProject(Project project, string filename)
+        {
+            string targetDir = Path.GetDirectoryName(filename) ?? "";
+            if (!string.IsNullOrEmpty(targetDir) && !Directory.Exists(targetDir))
+                Directory.CreateDirectory(targetDir);
+
+            string tempFile = filename + ".tmp." + Guid.NewGuid().ToString("N");
+
+            try
+            {
+                using (var fileStream = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None, 65536))
+                using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Create, leaveOpen: false))
+                {
+                    // 1. Build Manifest
+                    string dumpOriginalName = "";
+                    long dumpSize = 0;
+                    if (project.HasDump && !string.IsNullOrEmpty(project.DumpFilePath) && File.Exists(project.DumpFilePath))
+                    {
+                        dumpOriginalName = !string.IsNullOrEmpty(project.DumpFileName)
+                            ? project.DumpFileName
+                            : Path.GetFileName(project.DumpFilePath);
+                        dumpSize = new FileInfo(project.DumpFilePath).Length;
+                    }
+
+                    var manifest = new ProjectManifest
+                    {
+                        Version = 2,
+                        AppVersion = "2.0",
+                        CreatedAt = DateTime.UtcNow.ToString("o"),
+                        LastModifiedAt = DateTime.UtcNow.ToString("o"),
+                        Notes = project.Notes,
+                        HiddenRows = project.HiddenRows.ToList(),
+                        DeObHiddenRows = project.DeObHiddenRows.ToList(),
+                        Bookmarks = project.Bookmarks.ToList(),
+                        Comments = project.Comments.Select(c => new CommentEntry { Id = c.Id, Text = c.Text }).ToList(),
+                        Blocks = project.Blocks.Select(b => new BlockEntry { Id = b.Id, Name = b.Name }).ToList(),
+                        Trace = new TraceManifest
+                        {
+                            OriginalFileName = !string.IsNullOrEmpty(project.TraceData?.Filename) ? Path.GetFileName(project.TraceData.Filename) : "trace.trace64",
+                            EntryPath = "trace.trace64",
+                            TotalRows = project.TraceData?.Trace.Count ?? 0,
+                            Arch = project.TraceData?.Arch ?? "x64"
+                        },
+                        Dumpulator = new DumpulatorManifest
+                        {
+                            HasDump = project.HasDump,
+                            DumpOriginalFileName = dumpOriginalName,
+                            DumpEntryPath = "dump.dmp",
+                            DumpSizeBytes = dumpSize,
+                            ScriptEntryPath = "dumpulator/script.py"
+                        }
+                    };
+
+                    // 2. Write project.json manifest
+                    var manifestEntry = archive.CreateEntry("project.json", CompressionLevel.Optimal);
+                    using (var entryStream = manifestEntry.Open())
+                    {
+                        JsonSerializer.Serialize(entryStream, manifest, JsonOptions);
+                    }
+
+                    // 3. Write trace.trace64 payload
+                    if (!string.IsNullOrEmpty(project.TraceData?.Filename) && File.Exists(project.TraceData.Filename))
+                    {
+                        var traceEntry = archive.CreateEntry("trace.trace64", CompressionLevel.Fastest);
+                        using (var src = new FileStream(project.TraceData.Filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 65536))
+                        using (var dest = traceEntry.Open())
+                        {
+                            src.CopyTo(dest);
+                        }
+                    }
+
+                    // 4. Write dump.dmp if present
+                    if (project.HasDump && !string.IsNullOrEmpty(project.DumpFilePath) && File.Exists(project.DumpFilePath))
+                    {
+                        var dumpEntry = archive.CreateEntry("dump.dmp", CompressionLevel.Fastest);
+                        using (var src = new FileStream(project.DumpFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 65536))
+                        using (var dest = dumpEntry.Open())
+                        {
+                            src.CopyTo(dest);
+                        }
+                    }
+
+                    // 5. Write dumpulator/script.py
+                    if (!string.IsNullOrWhiteSpace(project.DumpulatorScript))
+                    {
+                        var scriptEntry = archive.CreateEntry("dumpulator/script.py", CompressionLevel.Optimal);
+                        using (var dest = scriptEntry.Open())
+                        using (var writer = new StreamWriter(dest, Encoding.UTF8))
+                        {
+                            writer.Write(project.DumpulatorScript);
+                        }
+                    }
+                }
+
+                // Atomic move/replace
+                if (File.Exists(filename))
+                {
+                    File.Move(tempFile, filename, overwrite: true);
+                }
+                else
+                {
+                    File.Move(tempFile, filename);
+                }
+            }
+            catch
+            {
+                try { if (File.Exists(tempFile)) File.Delete(tempFile); } catch { }
+                throw;
+            }
+        }
+    }
+
+    internal static class PackageProjectLoader
+    {
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
+        public static Project OpenProject(Stream stream, string filename)
+        {
+            var project = new Project();
+            string sessionDir = ProjectSessionManager.CreateSessionDirectory();
+
+            using var archive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: true);
+
+            // 1. Read project.json
+            var manifestEntry = archive.GetEntry("project.json");
+            if (manifestEntry == null)
+                throw new InvalidDataException("Invalid .tvproj package: 'project.json' manifest is missing.");
+
+            ProjectManifest? manifest;
+            using (var manifestStream = manifestEntry.Open())
+            {
+                manifest = JsonSerializer.Deserialize<ProjectManifest>(manifestStream, JsonOptions);
+            }
+
+            if (manifest == null)
+                throw new InvalidDataException("Failed to deserialize 'project.json' manifest.");
+
+            project.Version = manifest.Version;
+            project.Notes = manifest.Notes ?? "";
+            project.HiddenRows = manifest.HiddenRows != null ? new HashSet<int>(manifest.HiddenRows) : [];
+            project.DeObHiddenRows = manifest.DeObHiddenRows != null ? new HashSet<int>(manifest.DeObHiddenRows) : [];
+            project.Bookmarks = manifest.Bookmarks ?? [];
+
+            if (manifest.Comments != null)
+            {
+                project.Comments = manifest.Comments.Select(c => (c.Id, c.Text)).ToList();
+            }
+
+            if (manifest.Blocks != null)
+            {
+                project.Blocks = manifest.Blocks.Select(b => (b.Id, b.Name)).ToList();
+            }
+
+            // 2. Extract and Load Trace
+            string traceEntryName = manifest.Trace?.EntryPath ?? "trace.trace64";
+            var traceEntry = archive.GetEntry(traceEntryName)
+                             ?? archive.Entries.FirstOrDefault(e => e.FullName.EndsWith(".trace64", StringComparison.OrdinalIgnoreCase));
+
+            if (traceEntry == null)
+                throw new InvalidDataException("Invalid .tvproj package: trace payload not found.");
+
+            string traceTargetName = !string.IsNullOrWhiteSpace(manifest.Trace?.OriginalFileName)
+                ? manifest.Trace.OriginalFileName
+                : "trace.trace64";
+
+            string extractedTracePath = Path.Combine(sessionDir, traceTargetName);
+            using (var src = traceEntry.Open())
+            using (var dst = new FileStream(extractedTracePath, FileMode.Create, FileAccess.Write, FileShare.None, 65536))
+            {
+                src.CopyTo(dst);
+            }
+
+            TraceHandler.OpenAndLoad(extractedTracePath);
+            project.TraceData = TraceHandler.Trace!;
+
+            // 3. Extract Dump (if present)
+            if (manifest.Dumpulator != null && manifest.Dumpulator.HasDump)
+            {
+                string dumpEntryName = !string.IsNullOrWhiteSpace(manifest.Dumpulator.DumpEntryPath)
+                    ? manifest.Dumpulator.DumpEntryPath
+                    : "dump.dmp";
+
+                var dumpEntry = archive.GetEntry(dumpEntryName)
+                                ?? archive.Entries.FirstOrDefault(e => e.FullName.EndsWith(".dmp", StringComparison.OrdinalIgnoreCase));
+
+                if (dumpEntry != null)
+                {
+                    string dumpTargetName = !string.IsNullOrWhiteSpace(manifest.Dumpulator.DumpOriginalFileName)
+                        ? manifest.Dumpulator.DumpOriginalFileName
+                        : "dump.dmp";
+
+                    string extractedDumpPath = Path.Combine(sessionDir, dumpTargetName);
+                    using (var src = dumpEntry.Open())
+                    using (var dst = new FileStream(extractedDumpPath, FileMode.Create, FileAccess.Write, FileShare.None, 65536))
+                    {
+                        src.CopyTo(dst);
+                    }
+
+                    project.DumpFilePath = extractedDumpPath;
+                    project.DumpFileName = manifest.Dumpulator.DumpOriginalFileName;
+                }
+            }
+
+            // 4. Read Dumpulator script
+            var scriptEntry = archive.GetEntry("dumpulator/script.py")
+                              ?? archive.GetEntry("script.py");
+            if (scriptEntry != null)
+            {
+                using var src = scriptEntry.Open();
+                using var reader = new StreamReader(src, Encoding.UTF8);
+                project.DumpulatorScript = reader.ReadToEnd();
+            }
+
+            return project;
+        }
+    }
+
+    #endregion
+
+    #region Legacy Project Loader (v1 TRVI binary)
 
     internal readonly record struct FileHeader(char[] Magic, int Version, int BlockSize);
     internal readonly record struct BlockDescriptor(char[] SubMagic, int TraceLength);
 
-    public class ProjectLoader
+    internal static class LegacyProjectLoader
     {
-        public static Project OpenProject(string filename)
+        public static Project OpenProject(Stream stream)
         {
             var project = new Project();
+            string sessionDir = ProjectSessionManager.CreateSessionDirectory();
 
-            using var fs = new FileStream(filename, FileMode.Open, FileAccess.Read);
-            using var reader = new BinaryReader(fs);
-
+            using var reader = new BinaryReader(stream, Encoding.UTF8, leaveOpen: true);
             var header = ReadHeader(reader);
 
             if (new string(header.Magic) != "TRVI")
@@ -59,17 +426,10 @@ namespace TraceViewer.Core
                 traceDataBlock = decompressedReader.ReadBytes(descriptor.TraceLength);
             }
 
-            string tempTraceFilename = Path.GetTempFileName();
-            try
-            {
-                File.WriteAllBytes(tempTraceFilename, traceDataBlock);
-                TraceHandler.OpenAndLoad(tempTraceFilename);
-                project.TraceData = TraceHandler.Trace!;
-            }
-            finally
-            {
-                try { File.Delete(tempTraceFilename); } catch { /* best-effort cleanup */ }
-            }
+            string sessionTraceFilename = Path.Combine(sessionDir, "legacy_trace.trace64");
+            File.WriteAllBytes(sessionTraceFilename, traceDataBlock);
+            TraceHandler.OpenAndLoad(sessionTraceFilename);
+            project.TraceData = TraceHandler.Trace!;
 
             using (var decompressedMs = new MemoryStream(decompressedBlock))
             using (var decompressedReader = new BinaryReader(decompressedMs))
@@ -135,103 +495,5 @@ namespace TraceViewer.Core
             Encoding.UTF8.GetString(reader.ReadBytes((int)(reader.BaseStream.Length - reader.BaseStream.Position)));
     }
 
-    public class ProjectWriter
-    {
-        public static void SaveProject(Project project, string filename)
-        {
-            using var fs = new FileStream(filename, FileMode.Create, FileAccess.Write);
-            using var writer = new BinaryWriter(fs);
-
-            byte[] traceData = File.ReadAllBytes(project.TraceData.Filename);
-            byte[] commentsData = WriteComments(project.Comments);
-            byte[] hiddenRowsData = WriteHiddenRows(project.HiddenRows);
-            byte[] deObHiddenRowsData = WriteHiddenRows(project.DeObHiddenRows);
-            byte[] blocks = WriteBlocks(project.TraceData.Trace);
-            byte[] notesData = Encoding.UTF8.GetBytes(project.Notes);
-
-            using var decompressedMs = new MemoryStream();
-            using (var decompressedWriter = new BinaryWriter(decompressedMs, Encoding.UTF8, leaveOpen: true))
-            {
-                WriteDescriptor(decompressedWriter, traceData.Length);
-                decompressedWriter.Write(traceData);
-                decompressedWriter.Write(commentsData);
-                decompressedWriter.Write(hiddenRowsData);
-                decompressedWriter.Write(deObHiddenRowsData);
-                decompressedWriter.Write(blocks);
-                decompressedWriter.Write(notesData);
-            }
-
-            byte[] decompressedBlock = decompressedMs.ToArray();
-
-            byte[] compressedBlock;
-            using (var compressedStream = new MemoryStream())
-            {
-                using (var deflateStream = new DeflateStream(compressedStream, CompressionMode.Compress, leaveOpen: true))
-                    deflateStream.Write(decompressedBlock, 0, decompressedBlock.Length);
-                compressedBlock = compressedStream.ToArray();
-            }
-
-            WriteHeader(writer, compressedBlock.Length);
-            writer.Write(compressedBlock);
-        }
-
-        private static void WriteHeader(BinaryWriter writer, int blockSize)
-        {
-            writer.Write("TRVI".ToCharArray());
-            writer.Write(1); // Version
-            writer.Write(blockSize);
-        }
-
-        private static void WriteDescriptor(BinaryWriter writer, int traceLength)
-        {
-            writer.Write("DESC".ToCharArray());
-            writer.Write(traceLength);
-        }
-
-        private static byte[] WriteComments(List<(int Id, string Text)> comments)
-        {
-            using var ms = new MemoryStream();
-            using var writer = new BinaryWriter(ms);
-            writer.Write(comments.Count);
-            foreach (var (id, text) in comments)
-            {
-                writer.Write(id);
-                writer.Write((short)text.Length);
-                writer.Write(text.ToCharArray());
-            }
-            return ms.ToArray();
-        }
-
-        private static byte[] WriteHiddenRows(HashSet<int> hiddenRows)
-        {
-            using var ms = new MemoryStream();
-            using var writer = new BinaryWriter(ms);
-            writer.Write(hiddenRows.Count);
-            foreach (var hiddenRow in hiddenRows)
-                writer.Write(hiddenRow);
-            return ms.ToArray();
-        }
-
-        private static byte[] WriteBlocks(List<TraceRow> traceRows)
-        {
-            using var ms = new MemoryStream();
-            using var writer = new BinaryWriter(ms);
-
-            var blockRows = new List<TraceRow>();
-            foreach (var row in traceRows)
-            {
-                if (row.isBlockStart)
-                    blockRows.Add(row);
-            }
-
-            writer.Write(blockRows.Count);
-            foreach (var row in blockRows)
-            {
-                writer.Write(row.Id);
-                writer.Write((short)row.block.Length);
-                writer.Write(row.block.ToCharArray());
-            }
-            return ms.ToArray();
-        }
-    }
+    #endregion
 }

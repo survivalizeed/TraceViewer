@@ -22,6 +22,7 @@ namespace TraceViewer
     {
         public MainWindow()
         {
+            ProjectSessionManager.PurgeTempOnStartup();
             InitializeComponent();
             InstructionsView.Loaded += InstructionsView_Loaded;
             InstructionsView.ItemsSource = InstructionViewItems;

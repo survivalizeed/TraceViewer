@@ -1,7 +1,6 @@
 using Microsoft.Win32;
 using System.IO;
 using System.Windows;
-using static System.Net.WebRequestMethods;
 using TraceViewer.Core.Analysis;
 using TraceViewer.Core;
 using TraceViewer.UserWindows;
@@ -57,6 +56,8 @@ namespace TraceViewer
             // Clear all data and reset UI to initial state
             InstructionViewItems.Clear();
             RegisterViewItems.Clear();
+            BookmarkViewItems.Clear();
+            DumpulatorViewControl?.ResetState();
             NotesContent.Text = "";
             StackView.Document.Blocks.Clear();
             HeapView.Document.Blocks.Clear();
@@ -103,6 +104,7 @@ namespace TraceViewer
                 Unload(); // Clear current project data
                 SetTitle("  -  UNSAVED WORK", true); // Set title to indicate unsaved work
                 TraceHandler.OpenAndLoad(openFileDialog.FileName); // Load selected trace file
+                DumpulatorViewControl?.TryAutoDetectDumpFile();
             }
         }
 
@@ -155,7 +157,24 @@ namespace TraceViewer
                 }
             }
 
+            // Restore Bookmarks
+            BookmarkViewItems.Clear();
+            if (project.Bookmarks != null)
+            {
+                foreach (int bmId in project.Bookmarks)
+                {
+                    if (bmId >= 0 && bmId < TraceHandler.Trace.Trace.Count)
+                    {
+                        var row = TraceHandler.Trace.Trace[bmId];
+                        BookmarkViewItems.Add(new WPF_Bookmark(bmId.ToString(), row.Ip.ToString(), row.Disasm, row.comments));
+                    }
+                }
+            }
+
             TraceHandler.InitializeLoadedTrace(TraceHandler.Trace, this);
+
+            // Restore Dumpulator state (script + imported minidump)
+            DumpulatorViewControl?.LoadProjectState(project.DumpulatorScript, project.DumpFilePath, project.DumpFileName);
         }
 
         private void SaveProject_Click(object sender, RoutedEventArgs e)
@@ -206,20 +225,32 @@ namespace TraceViewer
 
         private void SaveProjectToFile(string filename)
         {
-
             Project project = new Project
             {
                 TraceData = TraceHandler.Trace,
                 HiddenRows = WPF_TraceRow.hiddenRows,
                 DeObHiddenRows = DeObfus.deObHiddenRows,
                 Comments = new List<(int Id, string Text)>(), 
-                Notes = Dispatcher.Invoke(() => NotesContent.Text) 
+                Blocks = new List<(int Id, string Name)>(),
+                Bookmarks = new List<int>(),
+                Notes = Dispatcher.Invoke(() => NotesContent.Text),
+                DumpulatorScript = Dispatcher.Invoke(() => DumpulatorViewControl?.GetScriptCode()),
+                DumpFilePath = Dispatcher.Invoke(() => DumpulatorViewControl?.CurrentDumpFilePath ?? (DumpulatorViewControl != null && File.Exists(DumpulatorViewControl.GetDumpPath()) ? DumpulatorViewControl.GetDumpPath() : null)),
+                DumpFileName = Dispatcher.Invoke(() => DumpulatorViewControl?.DumpOriginalFileName)
             };
 
             foreach (var item in TraceHandler.Trace.Trace)
             {
                 if (!string.IsNullOrEmpty(item.comments))
                     project.Comments.Add((Convert.ToInt32(item.Id), item.comments)); 
+                if (item.isBlockStart)
+                    project.Blocks.Add((Convert.ToInt32(item.Id), item.block));
+            }
+
+            foreach (var bm in BookmarkViewItems)
+            {
+                if (int.TryParse(bm.id.Text, out int bmId))
+                    project.Bookmarks.Add(bmId);
             }
 
             ProjectWriter.SaveProject(project, filename);

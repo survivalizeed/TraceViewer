@@ -25,6 +25,10 @@ dp = Dumpulator(DUMP_PATH)
         private CompletionWindow? _completionWindow;
         private MainWindow? _mainWindow;
 
+        public string? CurrentDumpFilePath { get; private set; }
+        public string? DumpOriginalFileName { get; private set; }
+        public bool HasImportedDump => !string.IsNullOrWhiteSpace(CurrentDumpFilePath) && File.Exists(CurrentDumpFilePath);
+
         public DumpulatorControl()
         {
             InitializeComponent();
@@ -69,7 +73,7 @@ dp = Dumpulator(DUMP_PATH)
 
         public void TryAutoDetectDumpFile()
         {
-            if (!string.IsNullOrWhiteSpace(DmpPathTextBox.Text) && File.Exists(DmpPathTextBox.Text))
+            if (HasImportedDump)
             {
                 return;
             }
@@ -85,7 +89,7 @@ dp = Dumpulator(DUMP_PATH)
                         string sameBase = Path.ChangeExtension(TraceHandler.Trace.Filename, ".dmp");
                         if (File.Exists(sameBase))
                         {
-                            DmpPathTextBox.Text = sameBase;
+                            ImportDump(sameBase);
                             return;
                         }
 
@@ -93,7 +97,7 @@ dp = Dumpulator(DUMP_PATH)
                         var dmps = Directory.GetFiles(traceDir, "*.dmp");
                         if (dmps.Length > 0)
                         {
-                            DmpPathTextBox.Text = dmps[0];
+                            ImportDump(dmps[0]);
                             return;
                         }
                     }
@@ -261,7 +265,15 @@ dp = Dumpulator(DUMP_PATH)
                 return;
             }
 
-            string dumpPath = DmpPathTextBox.Text.Trim();
+            string dumpPath = !string.IsNullOrWhiteSpace(CurrentDumpFilePath) && File.Exists(CurrentDumpFilePath)
+                ? CurrentDumpFilePath
+                : DmpPathTextBox.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(CurrentDumpFilePath) && File.Exists(dumpPath))
+            {
+                ImportDump(dumpPath);
+            }
+
             if (string.IsNullOrWhiteSpace(dumpPath) || !File.Exists(dumpPath))
             {
                 AppendLog($"[Warning] Dump path '{dumpPath}' not found. Emulation relying on DUMP_PATH may fail.", Brushes.Goldenrod);
@@ -302,9 +314,7 @@ dp = Dumpulator(DUMP_PATH)
             StopButtonBorder.Opacity = 1.0;
             StopButtonBorder.IsEnabled = true;
             ProcessStatusText.Text = "RUNNING";
-            ProcessStatusText.Foreground = new SolidColorBrush(Color.FromRgb(255, 200, 80));
-
-            AppendLog($"\n>>> Execution Started at {DateTime.Now:HH:mm:ss} <<<", new SolidColorBrush(Color.FromRgb(78, 201, 176)));
+            ProcessStatusText.Foreground = Brushes.LightGray;
 
             await _runner.RunScriptAsync(script, context);
         }
@@ -317,17 +327,21 @@ dp = Dumpulator(DUMP_PATH)
             StopButtonBorder.IsEnabled = false;
 
             ProcessStatusText.Text = exitCode == 0 ? "FINISHED" : $"FAILED ({exitCode})";
-            ProcessStatusText.Foreground = exitCode == 0
-                ? new SolidColorBrush(Color.FromRgb(78, 201, 176))
-                : new SolidColorBrush(Color.FromRgb(240, 110, 110));
+            ProcessStatusText.Foreground = exitCode == 0 ? Brushes.LightGray : Brushes.IndianRed;
 
-            AppendLog($">>> Process Finished with Exit Code {exitCode} <<<\n",
-                exitCode == 0 ? new SolidColorBrush(Color.FromRgb(78, 201, 176)) : new SolidColorBrush(Color.FromRgb(240, 110, 110)));
+            if (exitCode != 0)
+            {
+                AppendLog($"[Process exited with code {exitCode}]", Brushes.IndianRed);
+            }
         }
 
         private void UpdateProcessStatus(string status)
         {
-            AppendLog($"[*] {status}", new SolidColorBrush(Color.FromRgb(150, 150, 150)));
+            if (status.StartsWith("[Error]", StringComparison.OrdinalIgnoreCase) ||
+                status.StartsWith("[Stop Error]", StringComparison.OrdinalIgnoreCase))
+            {
+                AppendLog(status, Brushes.IndianRed);
+            }
         }
 
         private void AppendLog(string message, Brush brush)
@@ -362,17 +376,82 @@ dp = Dumpulator(DUMP_PATH)
             if (e.LeftButton == MouseButtonState.Pressed)
             {
                 OutputTextBox.Document.Blocks.Clear();
-                AppendLog("[Log Cleared]", Brushes.Gray);
             }
         }
 
-        private void BrowseDmp_MouseDown(object sender, MouseButtonEventArgs e)
+        private static string FormatBytes(long bytes)
+        {
+            if (bytes < 1024) return $"{bytes} B";
+            if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+            return $"{bytes / (1024.0 * 1024.0):F1} MB";
+        }
+
+        public void LoadProjectState(string? script, string? dumpPath, string? originalDumpName)
+        {
+            if (!string.IsNullOrWhiteSpace(script))
+            {
+                PythonEditor.Text = script;
+            }
+
+            if (!string.IsNullOrWhiteSpace(dumpPath) && File.Exists(dumpPath))
+            {
+                CurrentDumpFilePath = dumpPath;
+                DumpOriginalFileName = !string.IsNullOrWhiteSpace(originalDumpName) ? originalDumpName : Path.GetFileName(dumpPath);
+                DmpPathTextBox.Text = dumpPath;
+                long size = new FileInfo(dumpPath).Length;
+                DumpStatusBadge.Text = $"[{DumpOriginalFileName} ({FormatBytes(size)})]";
+                ClearDumpButtonBorder.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                CurrentDumpFilePath = null;
+                DumpOriginalFileName = null;
+                DmpPathTextBox.Text = "";
+                DumpStatusBadge.Text = "";
+                ClearDumpButtonBorder.Visibility = Visibility.Collapsed;
+                TryAutoDetectDumpFile();
+            }
+        }
+
+        public void ResetState()
+        {
+            PythonEditor.Text = DefaultPythonScript;
+            CurrentDumpFilePath = null;
+            DumpOriginalFileName = null;
+            DmpPathTextBox.Text = "";
+            DumpStatusBadge.Text = "";
+            ClearDumpButtonBorder.Visibility = Visibility.Collapsed;
+            OutputTextBox.Document.Blocks.Clear();
+        }
+
+        public void ImportDump(string filePath)
+        {
+            if (!File.Exists(filePath)) return;
+
+            CurrentDumpFilePath = filePath;
+            DumpOriginalFileName = Path.GetFileName(filePath);
+            DmpPathTextBox.Text = filePath;
+            long size = new FileInfo(filePath).Length;
+            DumpStatusBadge.Text = $"[{DumpOriginalFileName} ({FormatBytes(size)})]";
+            ClearDumpButtonBorder.Visibility = Visibility.Visible;
+        }
+
+        public void ClearDump()
+        {
+            CurrentDumpFilePath = null;
+            DumpOriginalFileName = null;
+            DmpPathTextBox.Text = "";
+            DumpStatusBadge.Text = "";
+            ClearDumpButtonBorder.Visibility = Visibility.Collapsed;
+        }
+
+        private void ImportDmp_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton != MouseButtonState.Pressed) return;
 
             var dlg = new OpenFileDialog
             {
-                Title = "Select Target Minidump File (.dmp)",
+                Title = "Select Minidump File (.dmp) to Import into Project",
                 Filter = "Minidump (*.dmp)|*.dmp|All Files (*.*)|*.*",
                 CheckFileExists = true
             };
@@ -389,7 +468,15 @@ dp = Dumpulator(DUMP_PATH)
 
             if (dlg.ShowDialog() == true)
             {
-                DmpPathTextBox.Text = dlg.FileName;
+                ImportDump(dlg.FileName);
+            }
+        }
+
+        private void ClearDump_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                ClearDump();
             }
         }
 

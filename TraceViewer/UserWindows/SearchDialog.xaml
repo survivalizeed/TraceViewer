@@ -151,16 +151,12 @@
 
         <!-- Status Bar -->
         <Grid Grid.Row="4" Margin="0,4,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="150"/>
-            </Grid.ColumnDefinitions>
-            <Label Style="{StaticResource ViewTitles}" x:Name="StatusLabel" Content="" FontSize="12" Padding="2,2,2,2" Grid.Column="0">
+            <Label Style="{StaticResource ViewTitles}" x:Name="StatusLabel" Content="" FontSize="12" Padding="2" HorizontalAlignment="Center" VerticalAlignment="Center" HorizontalContentAlignment="Center">
                 <Label.Effect>
                     <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
                 </Label.Effect>
             </Label>
-            <ProgressBar x:Name="SearchProgressBar" Height="6" Visibility="Collapsed" Background="#202020" Foreground="White" BorderThickness="0" Grid.Column="1" VerticalAlignment="Center"/>
+            <ProgressBar x:Name="SearchProgressBar" Height="6" Width="140" HorizontalAlignment="Right" Visibility="Collapsed" Background="#202020" Foreground="White" BorderThickness="0" VerticalAlignment="Center"/>
         </Grid>
 
     </Grid>
