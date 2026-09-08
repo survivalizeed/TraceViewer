@@ -60,6 +60,7 @@
                                 <MenuItem x:Name="HeapAlignment" Header="Heap Alignment" Click="HeapAlignment_Click"/>
                             </MenuItem>
                             <MenuItem Header="EDITOR">
+                                <MenuItem x:Name="SearchFind" Header="Find" Click="SearchFind_Click"/>
                                 <MenuItem x:Name="EditorSettings" Header="Settings" Click="EditorSettings_Click"/>
                             </MenuItem>
                         </Menu>

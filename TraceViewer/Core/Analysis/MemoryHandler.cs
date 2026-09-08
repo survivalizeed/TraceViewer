@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace TraceViewer.Core.Analysis
 {
-    internal class MemoryHandler
+    public class MemoryHandler
     {
         public static readonly ulong region_size = 0x1000;
 

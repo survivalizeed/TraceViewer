@@ -33,6 +33,13 @@ namespace TraceViewer
                 }
             }
 
+            // Handle Ctrl+F shortcut for "Find"
+            if ((Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && e.Key == Key.F && TraceHandler.Trace != null)
+            {
+                OpenSearchDialog();
+                e.Handled = true;
+            }
+
             // Handle F2 shortcut for "Rename Block" on current row
             if (e.Key == Key.F2 && CurrentHoveredRow != null)
             {

@@ -1,0 +1,167 @@
+<Window x:Class="TraceViewer.UserWindows.SearchDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TraceViewer.UserWindows"
+        mc:Ignorable="d"
+        Title="Search"
+        WindowStyle="None"
+        BorderBrush="White"
+        BorderThickness="0.5"
+        Background="#0D0D0D"
+        Width="980"
+        Height="560"
+        MinWidth="700"
+        MinHeight="380"
+        ResizeMode="CanResizeWithGrip"
+        WindowStartupLocation="CenterOwner"
+        Loaded="Window_Loaded">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top Title Bar -->
+        <Grid Grid.Row="0" Background="Transparent" MouseDown="TitleBar_MouseDown" Margin="0,0,0,5">
+            <DockPanel LastChildFill="True">
+                <Label Style="{StaticResource InstructionsViewTitles}" Content="SEARCH" FontSize="18" Padding="5,2,10,5" DockPanel.Dock="Left" BorderThickness="0">
+                    <Label.Effect>
+                        <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
+                    </Label.Effect>
+                </Label>
+                <Label Style="{StaticResource LabelButton}" x:Name="CloseBtn" Content=" X " Padding="10,4,10,4" DockPanel.Dock="Right" HorizontalAlignment="Right" MouseDown="CloseBtn_MouseDown">
+                    <Label.Effect>
+                        <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
+                    </Label.Effect>
+                </Label>
+            </DockPanel>
+        </Grid>
+
+        <Line Grid.Row="1" Stroke="White" StrokeThickness="2" X1="0" Y1="0" X2="10000" Y2="0" Margin="0,0,0,10"/>
+
+        <!-- Search Input and Action Buttons Row -->
+        <DockPanel Grid.Row="2" LastChildFill="True" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Margin="10,0,0,0">
+                <Label Style="{StaticResource LabelButton}" x:Name="SearchBtn" Content="SEARCH" Padding="15,6,15,6" MouseDown="SearchBtn_MouseDown">
+                    <Label.Effect>
+                        <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
+                    </Label.Effect>
+                </Label>
+            </StackPanel>
+            <TextBox Style="{StaticResource CommentsTextBox}" x:Name="SearchQueryTextBox" FontSize="14" Foreground="White" BorderBrush="White" CaretBrush="White" Padding="8,6,8,6" PreviewKeyDown="SearchQueryTextBox_PreviewKeyDown">
+                <TextBox.Effect>
+                    <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="8" Opacity="0.5"/>
+                </TextBox.Effect>
+            </TextBox>
+        </DockPanel>
+
+        <!-- Results Table Header & List -->
+        <Grid Grid.Row="3" Margin="0,0,0,5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Table Header -->
+            <Grid Grid.Row="0" Background="#151515" Height="26">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="65"/>
+                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition Width="1.3*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" Style="{StaticResource InstructionsViewTitles}" Content="#" FontSize="12" Padding="4,2,4,2"/>
+                <Label Grid.Column="1" Style="{StaticResource InstructionsViewTitles}" Content="ADDRESS" FontSize="12" Padding="4,2,4,2"/>
+                <Label Grid.Column="2" Style="{StaticResource InstructionsViewTitles}" Content="MATCH DETAIL" FontSize="12" Padding="4,2,4,2"/>
+                <Label Grid.Column="3" Style="{StaticResource InstructionsViewTitles}" Content="DISASSEMBLY" FontSize="12" Padding="4,2,4,2"/>
+            </Grid>
+
+            <!-- Results ListBox -->
+            <ListBox Grid.Row="1" x:Name="ResultsListBox"
+                     Background="Transparent"
+                     BorderBrush="{StaticResource ViewBorderBrighterBrush}"
+                     BorderThickness="0.5"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     VirtualizingStackPanel.IsVirtualizing="True"
+                     VirtualizingStackPanel.VirtualizationMode="Recycling"
+                     SelectionMode="Single"
+                     SelectionChanged="ResultsListBox_SelectionChanged"
+                     MouseDoubleClick="ResultsListBox_MouseDoubleClick"
+                     PreviewKeyDown="ResultsListBox_PreviewKeyDown">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,0.5"/>
+                        <Setter Property="BorderBrush" Value="{StaticResource ViewBorderBrush}"/>
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="ItemBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                                        <ContentPresenter/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource ViewBackgroundHoverBrush}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="ItemBorder" Property="Background" Value="#303030"/>
+                                            <Setter TargetName="ItemBorder" Property="BorderBrush" Value="White"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Height="24">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="65"/>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="1.3*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource DisasmTextBlockBorder}">
+                                <TextBlock Style="{StaticResource DisasmTextBlock}" Text="{Binding RowId}" Foreground="White" FontSize="11"/>
+                            </Border>
+                            <Border Grid.Column="1" Style="{StaticResource DisasmTextBlockBorder}">
+                                <TextBlock Style="{StaticResource DisasmTextBlock}" Text="{Binding IpAddressHex}" Foreground="DarkGoldenrod" FontSize="11"/>
+                            </Border>
+                            <Border Grid.Column="2" Style="{StaticResource DisasmTextBlockBorder}">
+                                <TextBlock Style="{StaticResource DisasmTextBlock}" Text="{Binding Details}" Foreground="White" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip="{Binding Details}"/>
+                            </Border>
+                            <Border Grid.Column="3" Style="{StaticResource DisasmTextBlockBorder}">
+                                <TextBlock Style="{StaticResource DisasmTextBlock}" local:DisasmHighlighter.DisasmText="{Binding Disasm}" FontSize="11" TextTrimming="CharacterEllipsis" ToolTip="{Binding Disasm}"/>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+
+        <!-- Status Bar -->
+        <Grid Grid.Row="4" Margin="0,4,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="150"/>
+            </Grid.ColumnDefinitions>
+            <Label Style="{StaticResource ViewTitles}" x:Name="StatusLabel" Content="" FontSize="12" Padding="2,2,2,2" Grid.Column="0">
+                <Label.Effect>
+                    <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
+                </Label.Effect>
+            </Label>
+            <ProgressBar x:Name="SearchProgressBar" Height="6" Visibility="Collapsed" Background="#202020" Foreground="White" BorderThickness="0" Grid.Column="1" VerticalAlignment="Center"/>
+        </Grid>
+
+    </Grid>
+</Window>

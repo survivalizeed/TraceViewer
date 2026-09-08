@@ -29,9 +29,14 @@
                            TextAlignment="Left" 
                            HorizontalAlignment="Stretch"
                            TextWrapping="Wrap" 
-                           FontSize="13" 
+                           FontFamily="Consolas"
+                           FontSize="14" 
                            LineHeight="20" 
-                           Foreground="White"/>
+                           Foreground="White">
+                    <TextBlock.Effect>
+                        <DropShadowEffect Color="White" ShadowDepth="0" BlurRadius="15" Opacity="0.8"/>
+                    </TextBlock.Effect>
+                </TextBlock>
             </ScrollViewer>
 
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
