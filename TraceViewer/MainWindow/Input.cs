@@ -39,6 +39,14 @@ namespace TraceViewer
                 CurrentHoveredRow.PromptRenameBlock();
                 e.Handled = true;
             }
+
+            // Handle Escape shortcut to clear active backward slice filter
+            if (e.Key == Key.Escape && BackwardSlicer.IsActive)
+            {
+                BackwardSlicer.ClearSlice();
+                RefreshView();
+                e.Handled = true;
+            }
         }
     }
 }

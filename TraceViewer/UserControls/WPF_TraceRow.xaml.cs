@@ -102,10 +102,12 @@ namespace TraceViewer
                     if (traceRow.Id == BackwardSlicer.TargetRowId)
                     {
                         disasm_border.BorderBrush = Brushes.Cyan;
+                        disasm_border.BorderThickness = new Thickness(1.5);
                     }
                     else
                     {
                         disasm_border.ClearValue(Border.BorderBrushProperty);
+                        disasm_border.ClearValue(Border.BorderThicknessProperty);
                     }
                 }
                 else
@@ -113,11 +115,13 @@ namespace TraceViewer
                     parent_panel.Opacity = hiddenOpacity;
                     hidden = true;
                     disasm_border.ClearValue(Border.BorderBrushProperty);
+                    disasm_border.ClearValue(Border.BorderThicknessProperty);
                 }
             }
             else
             {
                 disasm_border.ClearValue(Border.BorderBrushProperty);
+                disasm_border.ClearValue(Border.BorderThicknessProperty);
                 if (hiddenRows.Contains(traceRow.Id) || DeObfus.deObHiddenRows.Contains(traceRow.Id) || ConstantFolder.FoldedHiddenRows.Contains(traceRow.Id))
                 {
                     parent_panel.Opacity = hiddenOpacity;
@@ -319,6 +323,7 @@ namespace TraceViewer
             ulong? blockStartAddress = null;
             int rsp_index = 0;
             bool rspRendered = false;
+            Run? firstChangedRun = null;
 
             Action<ulong, string> WriteLine = (address, data) =>
             {
@@ -339,7 +344,13 @@ namespace TraceViewer
                 var addrBrush = isAccessLine ? Brushes.Red : Brushes.DarkGoldenrod;
                 var dataBrush = isAccessLine ? Brushes.Red : Brushes.White;
 
-                paragraph.Inlines.Add(new Run($"{HexPrefix}{address:X} : ") { Foreground = addrBrush });
+                var addrRun = new Run($"{HexPrefix}{address:X} : ") { Foreground = addrBrush };
+                if (isAccessLine && firstChangedRun == null)
+                {
+                    firstChangedRun = addrRun;
+                }
+
+                paragraph.Inlines.Add(addrRun);
                 paragraph.Inlines.Add(new Run($"{HexPrefix}{data}") { Foreground = dataBrush });
 
                 if (address == stack_alignment_base)
@@ -453,7 +464,7 @@ namespace TraceViewer
                 rspRendered = true;
             }
 
-            window.StackView.Document = flowDoc;
+            UpdateRichTextBoxDocument(window.StackView, flowDoc, firstChangedRun);
         }
 
         void UpdateHeap()
@@ -479,6 +490,7 @@ namespace TraceViewer
             int alignment_counter = 0;
             var composedBuilder = new StringBuilder(16);
             ulong? blockStartAddress = null;
+            Run? firstChangedRun = null;
 
             Action<ulong, string> WriteLine = (address, data) =>
             {
@@ -499,7 +511,13 @@ namespace TraceViewer
                 var addrBrush = isAccessLine ? Brushes.Red : Brushes.DarkGoldenrod;
                 var dataBrush = isAccessLine ? Brushes.Red : Brushes.White;
 
-                paragraph.Inlines.Add(new Run($"{HexPrefix}{address:X} : ") { Foreground = addrBrush });
+                var addrRun = new Run($"{HexPrefix}{address:X} : ") { Foreground = addrBrush };
+                if (isAccessLine && firstChangedRun == null)
+                {
+                    firstChangedRun = addrRun;
+                }
+
+                paragraph.Inlines.Add(addrRun);
                 paragraph.Inlines.Add(new Run($"{HexPrefix}{data}") { Foreground = dataBrush });
 
                 if (address == heap_alignment_base)
@@ -566,7 +584,41 @@ namespace TraceViewer
                 WriteLine(blockStartAddress.HasValue ? blockStartAddress.Value : prev.Key, composedBuilder.ToString());
             }
 
-            window.HeapView.Document = flowDoc;
+            UpdateRichTextBoxDocument(window.HeapView, flowDoc, firstChangedRun);
+        }
+
+        private static void UpdateRichTextBoxDocument(RichTextBox rtb, FlowDocument flowDoc, Run? firstChangedRun)
+        {
+            double prevOffset = rtb.VerticalOffset;
+            rtb.Document = flowDoc;
+
+            if (!rtb.IsVisible) return;
+
+            rtb.UpdateLayout();
+
+            if (firstChangedRun != null)
+            {
+                rtb.ScrollToVerticalOffset(prevOffset);
+                rtb.UpdateLayout();
+
+                var rect = firstChangedRun.ContentStart.GetCharacterRect(LogicalDirection.Forward);
+                double viewportHeight = rtb.ViewportHeight;
+                if (viewportHeight > 0 && double.IsFinite(rect.Top) && double.IsFinite(rect.Bottom))
+                {
+                    bool isVisible = rect.Top >= 0 && rect.Bottom <= viewportHeight;
+                    if (!isVisible)
+                    {
+                        double targetOffset = rtb.VerticalOffset + rect.Top - (viewportHeight / 2);
+                        rtb.ScrollToVerticalOffset(Math.Max(0, targetOffset));
+                        rtb.UpdateLayout();
+                    }
+                }
+            }
+            else
+            {
+                rtb.ScrollToVerticalOffset(prevOffset);
+                rtb.UpdateLayout();
+            }
         }
 
         private void ToggleHide()
@@ -929,6 +981,10 @@ namespace TraceViewer
                 if (clearSliceItem != null)
                 {
                     clearSliceItem.Visibility = BackwardSlicer.IsActive ? Visibility.Visible : Visibility.Collapsed;
+                    if (BackwardSlicer.IsActive)
+                    {
+                        clearSliceItem.Header = $"Clear Slice Filter ({BackwardSlicer.IncludedRows.Count} rows active)";
+                    }
                 }
             }
         }
@@ -941,13 +997,6 @@ namespace TraceViewer
             if (result.Success)
             {
                 window.RefreshView();
-                var msg = new MessageDialog($"Backward Slice Active!\n\nTarget: {result.TargetDesc}\n\nIsolated {result.SlicedCount} contributing instructions.\nAll unrelated instructions are dimmed.\n\nUse right-click -> 'Clear Slice Filter' or ANALYZER -> 'Clear Backward Slice' to restore full view.");
-                msg.ShowDialog();
-            }
-            else
-            {
-                var msg = new MessageDialog($"Could not compute slice: {result.TargetDesc}");
-                msg.ShowDialog();
             }
         }
 
