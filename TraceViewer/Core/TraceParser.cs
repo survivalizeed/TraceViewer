@@ -218,6 +218,7 @@ namespace TraceViewer.Core
         public ulong Address { get; set; }
         public ulong Value { get; set; }
         public int size { get; set; } // Set by the MemoryHandler
+        public bool IsWrite { get; set; }
     }
 
     public static class TraceLoader
@@ -465,7 +466,7 @@ namespace TraceViewer.Core
                             bool isWrite = (flag & 1) == 0;
                             ulong value = isWrite && memoryAccessNewData != null ? memoryAccessNewData[newDataCounter++] : memoryAccessOldData[i];
                             value = MaskValueBySize(value, disasm);
-                            mems.Add(new MemoryAccess { Address = memoryAccessAddresses[i], Value = value });
+                            mems.Add(new MemoryAccess { Address = memoryAccessAddresses[i], Value = value, IsWrite = isWrite });
                         }
                     }
 

@@ -984,7 +984,8 @@ namespace TraceViewer
                     clearSliceItem.Visibility = BackwardSlicer.IsActive ? Visibility.Visible : Visibility.Collapsed;
                     if (BackwardSlicer.IsActive)
                     {
-                        clearSliceItem.Header = $"Clear Slice Filter ({BackwardSlicer.IncludedRows.Count} rows active)";
+                        string descSnippet = !string.IsNullOrEmpty(BackwardSlicer.TargetDescription) ? $" - {BackwardSlicer.TargetDescription}" : "";
+                        clearSliceItem.Header = $"Clear Slice Filter ({BackwardSlicer.IncludedRows.Count} rows active{descSnippet})";
                     }
                 }
             }
