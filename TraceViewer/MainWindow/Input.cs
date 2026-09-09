@@ -15,6 +15,7 @@ namespace TraceViewer
             // Handle Ctrl+G shortcut for "Go To Row" functionality
             if ((Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && e.Key == Key.G && TraceHandler.Trace != null)
             {
+                e.Handled = true;
                 InputDialog input = new InputDialog("Put in a row to go to:");
                 input.ShowDialog();
                 var res = input.GetResult();

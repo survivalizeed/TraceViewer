@@ -35,6 +35,7 @@ namespace TraceViewer
         private List<byte[]>? registers_x64;
         private List<MemoryAccess>? memoryAccesses;
         private TraceRow? traceRow;
+        public TraceRow? CurrentTraceRow => traceRow;
         private string mnemonic = "";
         private MainWindow window;
 
@@ -693,6 +694,15 @@ namespace TraceViewer
 
         private void PreviewOnKeyPressComments(object sender, KeyEventArgs e)
         {
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            {
+                if (e.Key is Key.G or Key.S or Key.F)
+                {
+                    e.Handled = true;
+                    return;
+                }
+            }
+
             if (e.Key == Key.H && (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
             {
                 ToggleHide();
@@ -778,6 +788,11 @@ namespace TraceViewer
         private void Comments_GotFocus(object sender, RoutedEventArgs e)
         {
             isFocused = true;
+            if (traceRow != null)
+            {
+                window.CurrentHoveredRow = this;
+                window.CurrentHoveredTraceRowId = traceRow.Id;
+            }
         }
 
         private void disasm_MouseDown(object sender, MouseButtonEventArgs e)
@@ -978,14 +993,14 @@ namespace TraceViewer
                 if (sliceItem != null)
                 {
                     sliceItem.Header = $"Backward Slice from #{traceRow.Id}";
+                    sliceItem.InputGestureText = "Ctrl+S";
                 }
                 if (clearSliceItem != null)
                 {
                     clearSliceItem.Visibility = BackwardSlicer.IsActive ? Visibility.Visible : Visibility.Collapsed;
                     if (BackwardSlicer.IsActive)
                     {
-                        string descSnippet = !string.IsNullOrEmpty(BackwardSlicer.TargetDescription) ? $" - {BackwardSlicer.TargetDescription}" : "";
-                        clearSliceItem.Header = $"Clear Slice Filter ({BackwardSlicer.IncludedRows.Count} rows active{descSnippet})";
+                        clearSliceItem.Header = $"Clear Slice Filter ({BackwardSlicer.IncludedRows.Count} rows active)";
                     }
                 }
             }

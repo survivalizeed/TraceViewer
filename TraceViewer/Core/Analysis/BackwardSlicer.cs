@@ -101,17 +101,48 @@ namespace TraceViewer.Core.Analysis
             if (!string.IsNullOrWhiteSpace(specificReg))
             {
                 string specRegLower = specificReg.ToLowerInvariant();
-
-                // If target row produced specificReg by reading from memory (e.g. mov r12, [rsp+0x40] or pop r12):
-                var readMemForReg = targetMemAccesses.FirstOrDefault(a => a.IsRead);
                 var writtenRegsAtTarget = GetWrittenRegisters(targetRow, targetDesc, targetMnem, targetOp1);
+                bool targetWritesReg = writtenRegsAtTarget.Any(w => w.Equals(specRegLower, StringComparison.OrdinalIgnoreCase));
 
-                if (writtenRegsAtTarget.Any(w => w.Equals(specRegLower, StringComparison.OrdinalIgnoreCase)) &&
-                    readMemForReg.Range.Size > 0)
+                if (targetWritesReg)
                 {
-                    liveMemRanges.Add(readMemForReg.Range);
-                    string snippet = targetOp2.Contains('[') ? targetOp2 : $"[0x{readMemForReg.Range.Start:X}]";
-                    desc = $"{specificReg.ToUpperInvariant()} from {snippet} (0x{readMemForReg.Range.Start:X}) (Row #{targetRowId})";
+                    bool isFullOverwrite = (targetDesc.type == DisasmType.Setter || IsZeroingIdiom(targetMnem, targetOp1, targetOp2))
+                        && IsFullOverwrite(targetOp1);
+
+                    if (isFullOverwrite)
+                    {
+                        var readMemForReg = targetMemAccesses.FirstOrDefault(a => a.IsRead);
+                        if (readMemForReg.Range.Size > 0)
+                        {
+                            liveMemRanges.Add(readMemForReg.Range);
+                            string snippet = targetOp2.Contains('[') ? targetOp2 : $"[0x{readMemForReg.Range.Start:X}]";
+                            desc = $"{specificReg.ToUpperInvariant()} from {snippet} (0x{readMemForReg.Range.Start:X}) (Row #{targetRowId})";
+                        }
+                        else if (!string.IsNullOrEmpty(targetOp2) && DeObfus._regToFamily.TryGetValue(targetOp2.ToLowerInvariant(), out var srcFam))
+                        {
+                            if (!IsStackPointerFamily(srcFam))
+                            {
+                                liveRegFamilies.Add(srcFam);
+                            }
+                            desc = $"{specificReg.ToUpperInvariant()} from {targetOp2.ToUpperInvariant()} (Row #{targetRowId})";
+                        }
+                        else
+                        {
+                            // Pure constant setter: e.g. movabs rsi, 0x7FF...
+                            desc = $"{specificReg.ToUpperInvariant()} constant definition {targetRow.Disasm} (Row #{targetRowId})";
+                            // liveRegFamilies remains empty!
+                        }
+                    }
+                    else
+                    {
+                        // Manipulator (e.g. dec sil / add rsi, 1): reads previous value and any inputs
+                        AddReaderRegisters(targetDesc.read_from, liveRegFamilies, targetOp1, targetOp2);
+                        foreach (var readAcc in targetMemAccesses.Where(a => a.IsRead))
+                        {
+                            liveMemRanges.Add(readAcc.Range);
+                        }
+                        desc = $"{specificReg.ToUpperInvariant()} modified by {targetRow.Disasm} (Row #{targetRowId})";
+                    }
                 }
                 else
                 {
@@ -174,22 +205,14 @@ namespace TraceViewer.Core.Analysis
                         string memSnippet = targetOp2.Contains('[') ? targetOp2 : (targetOp1.Contains('[') ? targetOp1 : $"[0x{first.Range.Start:X}]");
                         desc = $"Value from {memSnippet} (0x{first.Range.Start:X}) for {targetRow.Disasm} (#{targetRowId})";
                     }
-                    else
+                    else if (liveRegFamilies.Count > 0)
                     {
                         desc = $"Inputs of {targetRow.Disasm} (#{targetRowId})";
                     }
-
-                    // Pure constant setter with no inputs (e.g. xor eax, eax / mov rax, 1)
-                    if (liveRegFamilies.Count == 0 && liveMemRanges.Count == 0)
+                    else
                     {
-                        if (!string.IsNullOrEmpty(targetDesc.write_to) && targetDesc.write_to != "memory")
-                        {
-                            if (DeObfus._regToFamily.TryGetValue(targetDesc.write_to.ToLowerInvariant(), out var fam))
-                            {
-                                liveRegFamilies.Add(fam);
-                                desc = $"{targetDesc.write_to.ToUpperInvariant()} (Row #{targetRowId})";
-                            }
-                        }
+                        // Pure constant setter with no inputs (e.g. movabs rsi, 0x123 / mov rax, 1 / xor eax, eax)
+                        desc = $"Constant definition {targetRow.Disasm} (#{targetRowId})";
                     }
                 }
             }
