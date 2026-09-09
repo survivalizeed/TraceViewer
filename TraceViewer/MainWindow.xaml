@@ -97,9 +97,9 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="45"  MinWidth="30" MaxWidth="100" Name="Cd0"/>
                                 <ColumnDefinition Width="110" MinWidth="60" MaxWidth="200" Name="Cd1"/>
-                                <ColumnDefinition Width="320" MinWidth="100" MaxWidth="600" Name="Cd2"/>
-                                <ColumnDefinition Width="320" MinWidth="100" MaxWidth="700" Name="Cd3"/>
-                                <ColumnDefinition Width="320" MinWidth="100" MaxWidth="700" Name="Cd4"/>
+                                <ColumnDefinition Width="300" MinWidth="100" MaxWidth="600" Name="Cd2"/>
+                                <ColumnDefinition Width="300" MinWidth="100" MaxWidth="700" Name="Cd3"/>
+                                <ColumnDefinition Width="300" MinWidth="100" MaxWidth="700" Name="Cd4"/>
                                 <ColumnDefinition Width="*" Name="Cd5"/>
                             </Grid.ColumnDefinitions>
 
