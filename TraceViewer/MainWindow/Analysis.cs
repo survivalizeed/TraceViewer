@@ -14,7 +14,7 @@ namespace TraceViewer
             if (TraceHandler.Trace == null)
                 return;
             ConfirmDialog confirmDialog = new ConfirmDialog("The Analysis can make mistakes!\r\n" +
-                "The useless assignment detection may flag overwritten function arguments as useless.\r\n\n\r" +
+                "The useless assignment detection may flag instructions as useless which would be needed in a untraced branch.\r\n\n\r" +
                 "Make sure to only use this on actually obfuscated code!", null, 230);
             confirmDialog.ShowDialog();
             if (confirmDialog.GetResult())

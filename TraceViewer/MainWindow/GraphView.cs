@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Shapes;
 using TraceViewer.Core.Analysis;
 
@@ -17,23 +17,26 @@ namespace TraceViewer
     {
         private double _x;
         private double _y;
-        private string _text;
-        private double _width = 100;
-        private double _height = 50;
+        private string _text = "";
+        private double _width = 150;
+        private double _height = 52;
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public BasicBlock? Block { get; set; }
+        public int BlockId => Block?.Id ?? 0;
+        public ulong StartIp => Block?.StartIp ?? 0;
+        public int InstructionCount => Block?.InstructionCount ?? 0;
+        public int ExecutionCount => Block?.ExecutionCount ?? 1;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            if (propertyName == nameof(CenterPoint))
-            {
-            }
         }
 
         public double X
         {
-            get { return _x; }
+            get => _x;
             set
             {
                 if (_x != value)
@@ -48,7 +51,7 @@ namespace TraceViewer
 
         public double Y
         {
-            get { return _y; }
+            get => _y;
             set
             {
                 if (_y != value)
@@ -63,7 +66,7 @@ namespace TraceViewer
 
         public string Text
         {
-            get { return _text; }
+            get => _text;
             set
             {
                 if (_text != value)
@@ -76,7 +79,7 @@ namespace TraceViewer
 
         public double Width
         {
-            get { return _width; }
+            get => _width;
             set
             {
                 if (_width != value)
@@ -87,9 +90,10 @@ namespace TraceViewer
                 }
             }
         }
+
         public double Height
         {
-            get { return _height; }
+            get => _height;
             set
             {
                 if (_height != value)
@@ -105,67 +109,87 @@ namespace TraceViewer
         public double Top => Y;
         public Point CenterPoint => new Point(X + Width / 2, Y + Height / 2);
 
-        public List<Node> Connections { get; set; } = new List<Node>();
+        public List<NodeConnection> Connections { get; } = [];
+        public List<NodeConnection> IncomingConnections { get; } = [];
     }
 
-    public class OffsetConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value is double baseValue && parameter is string offsetStr && double.TryParse(offsetStr, NumberStyles.Any, CultureInfo.InvariantCulture, out double offset))
-            {
-                return baseValue + offset;
-            }
-            return value;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class ConnectionInfo
+    public class NodeConnection
     {
         public Node StartNode { get; }
         public Node EndNode { get; }
+        public EdgeType Type { get; }
+        public int ExecutionCount { get; }
 
-        public ConnectionInfo(Node start, Node end)
+        public NodeConnection(Node start, Node end, EdgeType type = EdgeType.Normal, int count = 1)
         {
             StartNode = start;
             EndNode = end;
+            Type = type;
+            ExecutionCount = count;
         }
 
-        public override bool Equals(object obj) => obj is ConnectionInfo other && StartNode == other.StartNode && EndNode == other.EndNode;
-        public override int GetHashCode() => HashCode.Combine(StartNode, EndNode);
-    }
+        public override bool Equals(object? obj) =>
+            obj is NodeConnection other && StartNode == other.StartNode && EndNode == other.EndNode && Type == other.Type;
 
+        public override int GetHashCode() => HashCode.Combine(StartNode, EndNode, Type);
+    }
 
     public partial class MainWindow : Window
     {
- 
+        private Point _panStartPoint;
+        private bool _isPanning = false;
+        private bool _hasPanned = false;
 
-        public void AddNode(Node node, Node connectTo = null)
+        private Brush GetViewBorderBrush() => TryFindResource("ViewBorderBrush") as Brush ?? new SolidColorBrush(Color.FromRgb(0x17, 0x17, 0x17));
+        private Brush GetViewBorderHoverBrush() => TryFindResource("ViewBorderHoverBrush") as Brush ?? new SolidColorBrush(Color.FromRgb(0x60, 0x60, 0x60));
+        private Brush GetViewBorderBrighterBrush() => TryFindResource("ViewBorderBrighterBrush") as Brush ?? new SolidColorBrush(Color.FromRgb(0x80, 0x80, 0x80));
+        private Brush GetPrimaryForegroundBrush() => TryFindResource("PrimaryForegroundBrush") as Brush ?? Brushes.White;
+        private Brush GetHighlightBrush() => highlightBrush ?? Brushes.Coral;
+
+        private static DropShadowEffect CreateCoralGlow() => new()
         {
-            if (node == null) return;
+            Color = Color.FromRgb(0xFF, 0x7F, 0x50), // Coral
+            BlurRadius = 12,
+            ShadowDepth = 0,
+            Opacity = 0.75
+        };
 
-            if (nodes.Contains(node)) return;
+        public void RenderGraph(List<BasicBlock> blockList, List<BlockConnection> connectionList)
+        {
+            GraphViewClear();
 
-            if (GraphViewCanvas != null)
+            var newNodes = new List<Node>(blockList.Count);
+            for (int i = 0; i < blockList.Count; i++)
             {
-                double requiredHeight = node.Y + node.Height + 100;
-                double currentHeight = double.IsNaN(GraphViewCanvas.Height) ? 0 : GraphViewCanvas.Height;
-                if (requiredHeight > currentHeight)
+                var block = blockList[i];
+                var node = new Node
                 {
-                    GraphViewCanvas.Height = requiredHeight;
-                }
-                double requiredWidth = node.X + node.Width + 100;
-                double currentWidth = double.IsNaN(GraphViewCanvas.Width) ? 0 : GraphViewCanvas.Width;
-                if (requiredWidth > currentWidth)
+                    Block = block,
+                    Text = block.Title,
+                    Height = block.Height,
+                    Width = block.Width,
+                    X = block.X,
+                    Y = block.Y
+                };
+                newNodes.Add(node);
+                AddNode(node);
+            }
+
+            var blockIdToNode = newNodes.ToDictionary(n => n.BlockId);
+            foreach (var conn in connectionList)
+            {
+                if (blockIdToNode.TryGetValue(conn.From.Id, out var fromNode) &&
+                    blockIdToNode.TryGetValue(conn.To.Id, out var toNode))
                 {
-                    GraphViewCanvas.Width = requiredWidth;
+                    ConnectNodes(fromNode, toNode, conn.Type, conn.ExecutionCount);
                 }
             }
+        }
+
+        public void AddNode(Node node, Node? connectTo = null)
+        {
+            if (node == null) return;
+            if (nodes.Contains(node)) return;
 
             nodes.Add(node);
             AddNodeToCanvas(node);
@@ -176,18 +200,629 @@ namespace TraceViewer
             }
         }
 
-        private void Timeline_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        private void AddNodeToCanvas(Node node)
         {
-            UnhighlightAllConnections();
-            if (connections != null && connections.Count > (int)e.NewValue)
-                HighlightConnection(nodes[connections[(int)e.NewValue].Item1], nodes[connections[(int)e.NewValue].Item2]);
+            if (GraphViewCanvas == null) return;
+
+            var container = new Border
+            {
+                Width = node.Width,
+                Height = node.Height,
+                Background = GetViewBorderBrush(),
+                BorderBrush = GetViewBorderHoverBrush(),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(3),
+                DataContext = node,
+                Tag = node,
+                Cursor = Cursors.Hand,
+                ClipToBounds = true
+            };
+
+            var mainGrid = new Grid
+            {
+                Margin = new Thickness(8, 6, 8, 6)
+            };
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            // Top row: Block title (left) & Execution count badge (right)
+            var topDock = new DockPanel { LastChildFill = false };
+
+            string titleStr = node.Block != null ? $"Block {node.Block.Id}" : node.Text;
+            var titleBlock = new TextBlock
+            {
+                Text = titleStr,
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 11.5,
+                FontWeight = FontWeights.Bold,
+                Foreground = GetPrimaryForegroundBrush(),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            DockPanel.SetDock(titleBlock, Dock.Left);
+            topDock.Children.Add(titleBlock);
+
+            int execCount = node.ExecutionCount;
+            var execBlock = new TextBlock
+            {
+                Text = execCount > 1 ? $"{execCount:N0}x" : "1x",
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 10,
+                FontWeight = execCount > 1 ? FontWeights.Bold : FontWeights.Normal,
+                Foreground = execCount > 1 ? GetHighlightBrush() : GetViewBorderBrighterBrush(),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            DockPanel.SetDock(execBlock, Dock.Right);
+            topDock.Children.Add(execBlock);
+
+            Grid.SetRow(topDock, 0);
+            mainGrid.Children.Add(topDock);
+
+            // Bottom row: Start address & Instruction count
+            string ipHex = node.StartIp.ToString("X");
+            string shortIp = ipHex.Length > 8 ? ipHex[^8..] : ipHex;
+            int instrCount = node.InstructionCount;
+
+            var bottomBlock = new TextBlock
+            {
+                Text = $"0x{shortIp} • {instrCount} instrs",
+                FontFamily = new FontFamily("Consolas"),
+                FontSize = 9.5,
+                Foreground = GetViewBorderBrighterBrush(),
+                Margin = new Thickness(0, 4, 0, 0)
+            };
+            Grid.SetRow(bottomBlock, 1);
+            mainGrid.Children.Add(bottomBlock);
+
+            container.Child = mainGrid;
+
+            // Events
+            container.MouseDown += NodeElement_MouseDown;
+            container.MouseMove += NodeElement_MouseMove;
+            container.MouseUp += NodeElement_MouseUp;
+            container.MouseEnter += NodeElement_MouseEnter;
+            container.MouseLeave += NodeElement_MouseLeave;
+
+            container.SetBinding(Canvas.LeftProperty, new Binding("Left") { Mode = BindingMode.OneWay });
+            container.SetBinding(Canvas.TopProperty, new Binding("Top") { Mode = BindingMode.OneWay });
+
+            GraphViewCanvas.Children.Add(container);
+            Panel.SetZIndex(container, 1);
         }
 
-        public void InitializeTimeline(List<(int, int)> connections)
+        private void NodeElement_MouseEnter(object sender, MouseEventArgs e)
         {
-            this.connections = connections;
+            if (sender is Border border && border.Tag is Node n && n != selectedNode)
+            {
+                border.BorderBrush = Brushes.White;
+            }
+        }
 
-            Timeline.Maximum = connections.Count;
+        private void NodeElement_MouseLeave(object sender, MouseEventArgs e)
+        {
+            if (sender is Border border && border.Tag is Node n && n != selectedNode)
+            {
+                if (selectedNode != null)
+                {
+                    var successors = new HashSet<Node>(selectedNode.Connections.Select(c => c.EndNode));
+                    var predecessors = new HashSet<Node>(selectedNode.IncomingConnections.Select(c => c.StartNode));
+                    if (successors.Contains(n))
+                        border.BorderBrush = Brushes.White;
+                    else if (predecessors.Contains(n))
+                        border.BorderBrush = GetViewBorderHoverBrush();
+                    else
+                        border.BorderBrush = new SolidColorBrush(Color.FromRgb(0x30, 0x30, 0x30));
+                }
+                else
+                {
+                    border.BorderBrush = GetViewBorderHoverBrush();
+                }
+            }
+        }
+
+        public void ConnectNodes(Node node1, Node node2, EdgeType type = EdgeType.Normal, int executionCount = 1)
+        {
+            if (node1 == null || node2 == null) return;
+            if (!nodes.Contains(node1) || !nodes.Contains(node2)) return;
+
+            var existing = node1.Connections.FirstOrDefault(c => c.EndNode == node2 && c.Type == type);
+            if (existing == null)
+            {
+                var conn = new NodeConnection(node1, node2, type, executionCount);
+                node1.Connections.Add(conn);
+                node2.IncomingConnections.Add(conn);
+                DrawConnection(node1, node2, type, executionCount);
+            }
+        }
+
+        private void DrawConnection(Node node1, Node node2, EdgeType type, int executionCount)
+        {
+            if (GraphViewCanvas == null) return;
+
+            var conn = new NodeConnection(node1, node2, type, executionCount);
+
+            bool isSelfLoop = (node1 == node2);
+            bool isBackEdge = !isSelfLoop && (node2.Y < node1.Y - 10);
+            bool isHorizontal = !isSelfLoop && !isBackEdge && Math.Abs(node2.Y - node1.Y) <= 10;
+
+            Point startPoint;
+            Point endPoint;
+            PointCollection arrowPoints;
+
+            var pathGeometry = new PathGeometry();
+            var figure = new PathFigure { IsClosed = false };
+
+            if (isSelfLoop)
+            {
+                startPoint = new Point(node1.X + node1.Width, node1.Y + node1.Height * 0.75);
+                endPoint = new Point(node1.X + node1.Width, node1.Y + node1.Height * 0.25);
+                figure.StartPoint = startPoint;
+
+                Point cp1 = new Point(node1.X + node1.Width + 35, node1.Y + node1.Height * 0.90);
+                Point cp2 = new Point(node1.X + node1.Width + 35, node1.Y + node1.Height * 0.10);
+                figure.Segments.Add(new BezierSegment(cp1, cp2, endPoint, true));
+
+                arrowPoints = new PointCollection
+                {
+                    new Point(endPoint.X, endPoint.Y),
+                    new Point(endPoint.X + 7, endPoint.Y - 4),
+                    new Point(endPoint.X + 7, endPoint.Y + 4)
+                };
+            }
+            else if (isBackEdge)
+            {
+                // Loop back-edge: exit cleanly from top of node1 and enter bottom of node2
+                startPoint = new Point(node1.X + node1.Width * 0.70, node1.Y);
+                endPoint = new Point(node2.X + node2.Width * 0.30, node2.Y + node2.Height);
+                figure.StartPoint = startPoint;
+
+                double dy = Math.Min(90, (startPoint.Y - endPoint.Y) * 0.5);
+                Point cp1 = new Point(startPoint.X, startPoint.Y - dy);
+                Point cp2 = new Point(endPoint.X, endPoint.Y + dy);
+                figure.Segments.Add(new BezierSegment(cp1, cp2, endPoint, true));
+
+                arrowPoints = new PointCollection
+                {
+                    new Point(endPoint.X, endPoint.Y),
+                    new Point(endPoint.X - 4, endPoint.Y + 7),
+                    new Point(endPoint.X + 4, endPoint.Y + 7)
+                };
+            }
+            else if (isHorizontal)
+            {
+                bool leftToRight = node2.X > node1.X;
+                startPoint = new Point(node1.X + (leftToRight ? node1.Width : 0), node1.Y + node1.Height * 0.5);
+                endPoint = new Point(node2.X + (leftToRight ? 0 : node2.Width), node2.Y + node2.Height * 0.5);
+                figure.StartPoint = startPoint;
+
+                double dx = Math.Min(40, Math.Abs(endPoint.X - startPoint.X) * 0.3);
+                Point cp1 = new Point(startPoint.X + (leftToRight ? dx : -dx), startPoint.Y - 20);
+                Point cp2 = new Point(endPoint.X + (leftToRight ? -dx : dx), endPoint.Y - 20);
+                figure.Segments.Add(new BezierSegment(cp1, cp2, endPoint, true));
+
+                arrowPoints = new PointCollection
+                {
+                    new Point(endPoint.X, endPoint.Y),
+                    new Point(endPoint.X + (leftToRight ? -7 : 7), endPoint.Y - 4),
+                    new Point(endPoint.X + (leftToRight ? -7 : 7), endPoint.Y + 4)
+                };
+            }
+            else
+            {
+                // Normal downward edge
+                startPoint = new Point(node1.X + node1.Width * 0.5, node1.Y + node1.Height);
+                endPoint = new Point(node2.X + node2.Width * 0.5, node2.Y);
+                figure.StartPoint = startPoint;
+
+                double dy = Math.Min(80, (endPoint.Y - startPoint.Y) * 0.5);
+                Point cp1 = new Point(startPoint.X, startPoint.Y + dy);
+                Point cp2 = new Point(endPoint.X, endPoint.Y - dy);
+                figure.Segments.Add(new BezierSegment(cp1, cp2, endPoint, true));
+
+                arrowPoints = new PointCollection
+                {
+                    new Point(endPoint.X, endPoint.Y),
+                    new Point(endPoint.X - 4, endPoint.Y - 7),
+                    new Point(endPoint.X + 4, endPoint.Y - 7)
+                };
+            }
+
+            pathGeometry.Figures.Add(figure);
+
+            var strokeBrush = new SolidColorBrush(Color.FromRgb(0x80, 0x80, 0x80));
+            var arrowBrush = GetHighlightBrush();
+
+            string tooltip = executionCount > 1
+                ? $"Transition • {executionCount:N0}x"
+                : "Transition";
+
+            var path = new Path
+            {
+                Data = pathGeometry,
+                Stroke = strokeBrush,
+                StrokeThickness = 1.5,
+                Opacity = 0.55,
+                DataContext = conn,
+                ToolTip = tooltip,
+                Tag = "GraphEdge"
+            };
+
+            GraphViewCanvas.Children.Add(path);
+            Panel.SetZIndex(path, 0);
+
+            var arrow = new Polygon
+            {
+                Points = arrowPoints,
+                Fill = arrowBrush,
+                Stroke = arrowBrush,
+                StrokeThickness = 1,
+                Opacity = 0.65,
+                DataContext = conn,
+                ToolTip = tooltip,
+                Tag = "GraphArrow"
+            };
+
+            GraphViewCanvas.Children.Add(arrow);
+            Panel.SetZIndex(arrow, 0);
+        }
+
+        private void NodeElement_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is FrameworkElement element && element.DataContext is Node node)
+            {
+                if (e.ClickCount == 2)
+                {
+                    int targetRow = -1;
+                    if (node.Block != null && node.Block.FirstTraceRowId >= 0)
+                    {
+                        targetRow = node.Block.FirstTraceRowId;
+                    }
+                    else if (GraphHandler.blocks != null && node.BlockId < GraphHandler.blocks.Count && GraphHandler.uniqueIPAccesses != null)
+                    {
+                        var b = GraphHandler.blocks[node.BlockId];
+                        if (b.startIndex < GraphHandler.uniqueIPAccesses.Count)
+                        {
+                            var ids = GraphHandler.uniqueIPAccesses[b.startIndex].Value;
+                            if (ids.Count > 0) targetRow = ids[0];
+                        }
+                    }
+
+                    if (targetRow >= 0)
+                    {
+                        DisasmViewButton_MouseDown(null, null);
+                        ScrollTo(targetRow);
+                        e.Handled = true;
+                        return;
+                    }
+                }
+
+                if (e.LeftButton == MouseButtonState.Pressed)
+                {
+                    if (selectedNode != null && selectedNode != node)
+                    {
+                        ResetNodeAndConnectionStyles(selectedNode);
+                    }
+                    selectedNode = node;
+                    ChangeNodeAndConnectionStyles(selectedNode);
+
+                    currentlyDraggingNode = node;
+                    dragStartPoint = e.GetPosition(GraphViewCanvas);
+                    initialNodePosition = new Point(currentlyDraggingNode.X, currentlyDraggingNode.Y);
+                    element.CaptureMouse();
+                    Panel.SetZIndex(element, 10);
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private void NodeElement_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (currentlyDraggingNode != null && e.LeftButton == MouseButtonState.Pressed)
+            {
+                Point currentPosition = e.GetPosition(GraphViewCanvas);
+                double deltaX = currentPosition.X - dragStartPoint.X;
+                double deltaY = currentPosition.Y - dragStartPoint.Y;
+
+                currentlyDraggingNode.X = Math.Max(10, initialNodePosition.X + deltaX);
+                currentlyDraggingNode.Y = Math.Max(10, initialNodePosition.Y + deltaY);
+
+                RecalculateConnectionsForNode(currentlyDraggingNode);
+                e.Handled = true;
+            }
+        }
+
+        private void NodeElement_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (currentlyDraggingNode != null && sender is FrameworkElement element)
+            {
+                element.ReleaseMouseCapture();
+                Panel.SetZIndex(element, 1);
+                currentlyDraggingNode = null;
+                e.Handled = true;
+            }
+        }
+
+        private void ResetNodeAndConnectionStyles(Node? node = null)
+        {
+            if (GraphViewCanvas == null) return;
+
+            var defaultBorderBrush = GetViewBorderHoverBrush();
+
+            foreach (var child in GraphViewCanvas.Children.OfType<Border>().Where(b => b.Tag is Node))
+            {
+                child.BorderBrush = defaultBorderBrush;
+                child.BorderThickness = new Thickness(1);
+                child.Opacity = 1.0;
+                child.Effect = null;
+            }
+
+            var lineBrush = new SolidColorBrush(Color.FromRgb(0x80, 0x80, 0x80));
+            var arrowBrush = GetHighlightBrush();
+
+            foreach (var path in GraphViewCanvas.Children.OfType<Path>())
+            {
+                path.Stroke = lineBrush;
+                path.Opacity = 0.55;
+                path.StrokeThickness = 1.5;
+            }
+            foreach (var arrow in GraphViewCanvas.Children.OfType<Polygon>())
+            {
+                arrow.Fill = arrowBrush;
+                arrow.Stroke = arrowBrush;
+                arrow.Opacity = 0.65;
+            }
+        }
+
+        private void ChangeNodeAndConnectionStyles(Node node)
+        {
+            if (GraphViewCanvas == null || node == null) return;
+
+            var successors = new HashSet<Node>(node.Connections.Select(c => c.EndNode));
+            var predecessors = new HashSet<Node>(node.IncomingConnections.Select(c => c.StartNode));
+
+            var hlBrush = GetHighlightBrush();
+            var hoverBrush = GetViewBorderHoverBrush();
+            var dimmedBorder = new SolidColorBrush(Color.FromRgb(0x30, 0x30, 0x30));
+
+            foreach (var child in GraphViewCanvas.Children.OfType<Border>())
+            {
+                if (child.Tag is Node n)
+                {
+                    if (n == node)
+                    {
+                        child.BorderBrush = hlBrush; // Coral
+                        child.BorderThickness = new Thickness(2);
+                        child.Opacity = 1.0;
+                        child.Effect = CreateCoralGlow();
+                    }
+                    else if (successors.Contains(n))
+                    {
+                        // Successor: Bright white border
+                        child.BorderBrush = Brushes.White;
+                        child.BorderThickness = new Thickness(1.5);
+                        child.Opacity = 1.0;
+                        child.Effect = null;
+                    }
+                    else if (predecessors.Contains(n))
+                        // Predecessor: BorderHoverBrush
+                    {
+                        child.BorderBrush = hoverBrush;
+                        child.BorderThickness = new Thickness(1.5);
+                        child.Opacity = 0.9;
+                        child.Effect = null;
+                    }
+                    else
+                    {
+                        child.BorderBrush = dimmedBorder;
+                        child.BorderThickness = new Thickness(1);
+                        child.Opacity = 0.35;
+                        child.Effect = null;
+                    }
+                }
+            }
+
+            var activeConnections = new HashSet<NodeConnection>(node.Connections.Concat(node.IncomingConnections));
+
+            foreach (var path in GraphViewCanvas.Children.OfType<Path>())
+            {
+                if (path.DataContext is NodeConnection conn)
+                {
+                    if (activeConnections.Contains(conn))
+                    {
+                        path.Stroke = hlBrush; // Coral
+                        path.Opacity = 1.0;
+                        path.StrokeThickness = 2.5;
+                    }
+                    else
+                    {
+                        path.Stroke = new SolidColorBrush(Color.FromRgb(0x55, 0x55, 0x55));
+                        path.Opacity = 0.12;
+                        path.StrokeThickness = 1.0;
+                    }
+                }
+            }
+
+            foreach (var arrow in GraphViewCanvas.Children.OfType<Polygon>())
+            {
+                if (arrow.DataContext is NodeConnection conn)
+                {
+                    if (activeConnections.Contains(conn))
+                    {
+                        arrow.Fill = hlBrush; // Coral
+                        arrow.Stroke = hlBrush;
+                        arrow.Opacity = 1.0;
+                    }
+                    else
+                    {
+                        arrow.Opacity = 0.12;
+                    }
+                }
+            }
+        }
+
+        private void RecalculateConnectionsForNode(Node node)
+        {
+            if (GraphViewCanvas == null || node == null) return;
+
+            var relevantConnections = node.Connections.Concat(node.IncomingConnections).Distinct().ToList();
+
+            var pathsToRemove = GraphViewCanvas.Children.OfType<Path>()
+                .Where(p => p.DataContext is NodeConnection nc && relevantConnections.Contains(nc)).ToList();
+            var arrowsToRemove = GraphViewCanvas.Children.OfType<Polygon>()
+                .Where(a => a.DataContext is NodeConnection nc && relevantConnections.Contains(nc)).ToList();
+
+            foreach (var p in pathsToRemove) GraphViewCanvas.Children.Remove(p);
+            foreach (var a in arrowsToRemove) GraphViewCanvas.Children.Remove(a);
+
+            foreach (var conn in relevantConnections)
+            {
+                DrawConnection(conn.StartNode, conn.EndNode, conn.Type, conn.ExecutionCount);
+            }
+
+            if (selectedNode != null)
+            {
+                ChangeNodeAndConnectionStyles(selectedNode);
+            }
+        }
+
+        public void GraphViewClear()
+        {
+            nodes?.Clear();
+            connections?.Clear();
+            selectedNode = null;
+            currentlyDraggingNode = null;
+            if (GraphViewCanvas != null)
+            {
+                GraphViewCanvas.Children.Clear();
+            }
+        }
+
+        // --- Interactive Pan & Zoom Handlers ---
+
+        private void GraphViewContainer_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            // Check if the click target is within a node
+            bool isNodeClick = false;
+            DependencyObject? curr = e.OriginalSource as DependencyObject;
+            while (curr != null && curr != GraphViewContainer)
+            {
+                if (curr is FrameworkElement fe && fe.DataContext is Node)
+                {
+                    isNodeClick = true;
+                    break;
+                }
+                curr = VisualTreeHelper.GetParent(curr);
+            }
+
+            if (!isNodeClick && (e.ChangedButton == MouseButton.Middle || e.ChangedButton == MouseButton.Left))
+            {
+                _isPanning = true;
+                _hasPanned = false;
+                _panStartPoint = e.GetPosition(GraphViewContainer);
+                GraphViewContainer.CaptureMouse();
+                GraphViewContainer.Cursor = Cursors.SizeAll;
+                e.Handled = true;
+            }
+        }
+
+        private void GraphViewContainer_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (_isPanning)
+            {
+                Point current = e.GetPosition(GraphViewContainer);
+                double dx = current.X - _panStartPoint.X;
+                double dy = current.Y - _panStartPoint.Y;
+
+                if (Math.Abs(dx) > 3 || Math.Abs(dy) > 3)
+                {
+                    _hasPanned = true;
+                }
+
+                _panStartPoint = current;
+
+                GraphTranslateTransform.X += dx;
+                GraphTranslateTransform.Y += dy;
+                e.Handled = true;
+            }
+        }
+
+        private void GraphViewContainer_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (_isPanning && (e.ChangedButton == MouseButton.Middle || e.ChangedButton == MouseButton.Left))
+            {
+                _isPanning = false;
+                GraphViewContainer.ReleaseMouseCapture();
+                GraphViewContainer.Cursor = Cursors.Arrow;
+
+                // Only if user simply clicked empty canvas without dragging/panning at all
+                if (!_hasPanned && e.ChangedButton == MouseButton.Left)
+                {
+                    if (selectedNode != null)
+                    {
+                        ResetNodeAndConnectionStyles(selectedNode);
+                        selectedNode = null;
+                    }
+                }
+
+                e.Handled = true;
+            }
+        }
+
+        private void GraphViewContainer_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            Point mousePos = e.GetPosition(GraphViewContainer);
+            double zoomFactor = e.Delta > 0 ? 1.15 : 1.0 / 1.15;
+            ZoomAtPoint(mousePos, zoomFactor);
+            e.Handled = true;
+        }
+
+        private void ZoomAtPoint(Point center, double zoomFactor)
+        {
+            double currentScale = GraphScaleTransform.ScaleX;
+            double newScale = Math.Clamp(currentScale * zoomFactor, 0.15, 3.0);
+            double actualFactor = newScale / currentScale;
+
+            GraphTranslateTransform.X = center.X - (center.X - GraphTranslateTransform.X) * actualFactor;
+            GraphTranslateTransform.Y = center.Y - (center.Y - GraphTranslateTransform.Y) * actualFactor;
+
+            GraphScaleTransform.ScaleX = newScale;
+            GraphScaleTransform.ScaleY = newScale;
+        }
+
+        public void FitToView()
+        {
+            if (nodes == null || nodes.Count == 0) return;
+
+            double minX = nodes.Min(n => n.X);
+            double minY = nodes.Min(n => n.Y);
+            double maxX = nodes.Max(n => n.X + n.Width);
+            double maxY = nodes.Max(n => n.Y + n.Height);
+
+            double graphW = maxX - minX;
+            double graphH = maxY - minY;
+            if (graphW <= 0 || graphH <= 0) return;
+
+            double viewW = GraphViewContainer.ActualWidth > 0 ? GraphViewContainer.ActualWidth : 1200;
+            double viewH = GraphViewContainer.ActualHeight > 0 ? GraphViewContainer.ActualHeight : 800;
+
+            double margin = 50;
+            double scaleX = (viewW - margin * 2) / graphW;
+            double scaleY = (viewH - margin * 2) / graphH;
+            double scale = Math.Clamp(Math.Min(scaleX, scaleY), 0.2, 1.1);
+
+            GraphScaleTransform.ScaleX = scale;
+            GraphScaleTransform.ScaleY = scale;
+
+            GraphTranslateTransform.X = (viewW - graphW * scale) / 2 - minX * scale;
+            GraphTranslateTransform.Y = (viewH - graphH * scale) / 2 - minY * scale;
+        }
+
+        // --- Timeline Interaction ---
+
+        public void InitializeTimeline(List<(int, int)> timelineConnections)
+        {
+            this.connections = timelineConnections;
+
+            Timeline.Maximum = Math.Max(0, timelineConnections.Count - 1);
             Timeline.Minimum = 0;
             Timeline.IsSnapToTickEnabled = true;
             Timeline.TickFrequency = 1;
@@ -197,61 +832,94 @@ namespace TraceViewer
             Timeline.ValueChanged += Timeline_ValueChanged;
         }
 
-
-
-        public void GraphViewClear()
+        private void Timeline_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            nodes?.Clear();
-            connections?.Clear();
-            if (GraphViewCanvas != null)
+            int idx = (int)e.NewValue;
+            if (connections != null && idx < connections.Count && idx >= 0)
             {
-                GraphViewCanvas.Children.Clear();
+                var (fromId, toId) = connections[idx];
+                var blockMap = nodes.ToDictionary(n => n.BlockId);
+                if (blockMap.TryGetValue(fromId, out var fromNode) && blockMap.TryGetValue(toId, out var toNode))
+                {
+                    HighlightTimelineStep(fromNode, toNode);
+                }
             }
         }
 
-        private void AddNodeToCanvas(Node node)
+        private void HighlightTimelineStep(Node fromNode, Node toNode)
         {
             if (GraphViewCanvas == null) return;
 
-            var container = new Grid
+            if (selectedNode != null && selectedNode != toNode)
             {
-                Width = node.Width,
-                Height = node.Height,
-                DataContext = node,
-                Tag = node
-            };
+                ResetNodeAndConnectionStyles(selectedNode);
+            }
+            selectedNode = toNode;
 
-            var rectangle = new Rectangle
+            var hlBrush = GetHighlightBrush();
+            var dimmedBorder = new SolidColorBrush(Color.FromRgb(0x30, 0x30, 0x30));
+
+            foreach (var child in GraphViewCanvas.Children.OfType<Border>().Where(b => b.Tag is Node))
             {
-                Fill = (SolidColorBrush)FindResource("ViewBorderBrush"),
-                Stroke = (SolidColorBrush)FindResource("ViewBorderHoverBrush"),
-                StrokeThickness = 1,
-                Tag = "NodeBorder"
-            };
+                var n = (Node)child.Tag;
+                if (n == toNode)
+                {
+                    child.BorderBrush = hlBrush; // Coral
+                    child.BorderThickness = new Thickness(2);
+                    child.Opacity = 1.0;
+                    child.Effect = CreateCoralGlow();
+                }
+                else if (n == fromNode)
+                {
+                    child.BorderBrush = Brushes.White;
+                    child.BorderThickness = new Thickness(1.5);
+                    child.Opacity = 0.95;
+                    child.Effect = null;
+                }
+                else
+                {
+                    child.BorderBrush = dimmedBorder;
+                    child.BorderThickness = new Thickness(1);
+                    child.Opacity = 0.35;
+                    child.Effect = null;
+                }
+            }
 
-            container.MouseDown += NodeElement_MouseDown;
-            container.MouseMove += NodeElement_MouseMove;
-            container.MouseUp += NodeElement_MouseUp;
-            container.IsHitTestVisible = true;
-
-            var label = new Label
+            foreach (var path in GraphViewCanvas.Children.OfType<Path>())
             {
-                Style = (Style)FindResource("ViewTitles"),
-                FontSize = 12,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                IsHitTestVisible = false,
-            };
-            label.SetBinding(ContentControl.ContentProperty, new Binding("Text") { Mode = BindingMode.OneWay });
+                if (path.DataContext is NodeConnection conn)
+                {
+                    if (conn.StartNode == fromNode && conn.EndNode == toNode)
+                    {
+                        path.Stroke = hlBrush;
+                        path.Opacity = 1.0;
+                        path.StrokeThickness = 3.0;
+                    }
+                    else
+                    {
+                        path.Stroke = new SolidColorBrush(Color.FromRgb(0x55, 0x55, 0x55));
+                        path.Opacity = 0.10;
+                        path.StrokeThickness = 1.0;
+                    }
+                }
+            }
 
-            container.Children.Add(rectangle);
-            container.Children.Add(label);
-
-            container.SetBinding(Canvas.LeftProperty, new Binding("Left") { Mode = BindingMode.OneWay });
-            container.SetBinding(Canvas.TopProperty, new Binding("Top") { Mode = BindingMode.OneWay });
-
-            GraphViewCanvas.Children.Add(container);
-            Panel.SetZIndex(container, 1);
+            foreach (var arrow in GraphViewCanvas.Children.OfType<Polygon>())
+            {
+                if (arrow.DataContext is NodeConnection conn)
+                {
+                    if (conn.StartNode == fromNode && conn.EndNode == toNode)
+                    {
+                        arrow.Fill = hlBrush;
+                        arrow.Stroke = hlBrush;
+                        arrow.Opacity = 1.0;
+                    }
+                    else
+                    {
+                        arrow.Opacity = 0.10;
+                    }
+                }
+            }
         }
 
         private void StepLeftTimeline_MouseDown(object sender, MouseButtonEventArgs e)
@@ -269,452 +937,6 @@ namespace TraceViewer
             if (Timeline.Value < Timeline.Maximum)
             {
                 Timeline.Value += 1;
-            }
-        }
-        private void NodeElement_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement element && element.DataContext is Node node)
-            {
-                if (e.ClickCount == 2)
-                {
-                    int nodeIdx = nodes.IndexOf(node);
-                    if (nodeIdx >= 0 && GraphHandler.blocks != null && nodeIdx < GraphHandler.blocks.Count && GraphHandler.uniqueIPAccesses != null)
-                    {
-                        var block = GraphHandler.blocks[nodeIdx];
-                        if (block.startIndex < GraphHandler.uniqueIPAccesses.Count)
-                        {
-                            var ids = GraphHandler.uniqueIPAccesses[block.startIndex].Value;
-                            if (ids.Count > 0)
-                            {
-                                DisasmViewButton_MouseDown(null, null);
-                                ScrollTo(ids[0]);
-                                e.Handled = true;
-                                return;
-                            }
-                        }
-                    }
-                }
-
-                if (selectedNode != null)
-                {
-                    ResetNodeAndConnectionStyles(selectedNode);
-                }
-                selectedNode = node;
-                ChangeNodeAndConnectionStyles(selectedNode, element);
-
-                currentlyDraggingNode = node;
-                dragStartPoint = e.GetPosition(GraphViewCanvas);
-                initialNodePosition = new Point(currentlyDraggingNode.X, currentlyDraggingNode.Y);
-                element.CaptureMouse();
-                Panel.SetZIndex(element, 10);
-                e.Handled = true;
-            }
-        }
-
-        private void ResetNodeAndConnectionStyles(Node node)
-        {
-            if (GraphViewCanvas == null || node == null) return;
-
-            // Reset node border
-            foreach (var child in GraphViewCanvas.Children.OfType<Grid>().Where(g => g.Tag == node))
-            {
-                if (child is Grid nodeGrid)
-                {
-                    var border = nodeGrid.Children.OfType<Rectangle>().FirstOrDefault(r => (string?)r.Tag == "NodeBorder");
-                    if (border != null)
-                    {
-                        border.Stroke = (SolidColorBrush)FindResource("ViewBorderHoverBrush");
-                    }
-                }
-            }
-
-            // Reset outgoing connection lines
-            foreach (var line in GraphViewCanvas.Children.OfType<Line>())
-            {
-                if (line.DataContext is ConnectionInfo ci && ci.StartNode == node)
-                {
-                    line.Stroke = defaultLineBrush;
-                }
-            }
-            foreach (var arrow in GraphViewCanvas.Children.OfType<Polygon>())
-            {
-                if (arrow.DataContext is ConnectionInfo ci && ci.StartNode == node)
-                {
-                    arrow.Fill = defaultArrowFillBrush;
-                    arrow.Stroke = defaultArrowStrokeBrush;
-                }
-            }
-        }
-
-        private void ChangeNodeAndConnectionStyles(Node node, FrameworkElement nodeElement)
-        {
-            if (GraphViewCanvas == null || node == null) return;
-
-            if (nodeElement is Grid nodeGrid)
-            {
-                // Change node border to coral
-                var border = nodeGrid.Children.OfType<Rectangle>().FirstOrDefault(r => (string?)r.Tag == "NodeBorder");
-                if (border != null)
-                {
-                    border.Stroke = highlightBrush;
-                }
-            }
-
-            // Change outgoing connection lines to yellow
-            foreach (var line in GraphViewCanvas.Children.OfType<Line>())
-            {
-                if (line.DataContext is ConnectionInfo ci && ci.StartNode == node)
-                {
-                    line.Stroke = highlightBrush;
-                    Panel.SetZIndex(line, -1);
-                }
-            }
-            foreach (var arrow in GraphViewCanvas.Children.OfType<Polygon>())
-            {
-                if (arrow.DataContext is ConnectionInfo ci && ci.StartNode == node)
-                {
-                    arrow.Fill = Brushes.Red;
-                    arrow.Stroke = highlightBrush;
-                    Panel.SetZIndex(arrow, -1);
-                }
-            }
-        }
-
-        private void NodeElement_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (currentlyDraggingNode != null && e.LeftButton == MouseButtonState.Pressed && sender is FrameworkElement element)
-            {
-                Point currentPosition = e.GetPosition(GraphViewCanvas);
-                double deltaX = currentPosition.X - dragStartPoint.X;
-                double deltaY = currentPosition.Y - dragStartPoint.Y;
-
-                double newX = initialNodePosition.X + deltaX;
-                double newY = initialNodePosition.Y + deltaY;
-
-                newX = Math.Max(0, newX);
-                newY = Math.Max(0, newY);
-                double canvasW = (GraphViewCanvas != null && !double.IsNaN(GraphViewCanvas.Width) && GraphViewCanvas.Width > 0)
-                    ? GraphViewCanvas.Width
-                    : (GraphViewCanvas?.ActualWidth ?? 0);
-                double canvasH = (GraphViewCanvas != null && !double.IsNaN(GraphViewCanvas.Height) && GraphViewCanvas.Height > 0)
-                    ? GraphViewCanvas.Height
-                    : (GraphViewCanvas?.ActualHeight ?? 0);
-
-                if (canvasW > 0 && canvasH > 0)
-                {
-                    newX = Math.Min(canvasW - currentlyDraggingNode.Width, newX);
-                    newY = Math.Min(canvasH - currentlyDraggingNode.Height, newY);
-                }
-
-                currentlyDraggingNode.X = newX;
-                currentlyDraggingNode.Y = newY;
-
-                RecalculateConnectionsForNode(currentlyDraggingNode);
-
-                e.Handled = true;
-            }
-        }
-
-        private void NodeElement_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            if (currentlyDraggingNode != null && sender is FrameworkElement element)
-            {
-                element.ReleaseMouseCapture();
-                int currentZIndex = Panel.GetZIndex(element);
-                if (currentZIndex > 1)
-                {
-                    Panel.SetZIndex(element, 1);
-                }
-                currentlyDraggingNode = null;
-                RecalculateAllConnections();
-                e.Handled = true;
-            }
-        }
-
-        private void RecalculateAllConnections()
-        {
-            if (GraphViewCanvas == null) return;
-
-            var shapesToRemove = GraphViewCanvas.Children.OfType<Shape>()
-                .Where(shape => shape.DataContext is ConnectionInfo)
-                .ToList();
-
-            foreach (var shape in shapesToRemove)
-            {
-                GraphViewCanvas.Children.Remove(shape);
-            }
-
-            var drawnConnections = new HashSet<ConnectionInfo>();
-
-            foreach (var node1 in nodes)
-            {
-                foreach (var node2 in node1.Connections)
-                {
-                    if (nodes.Contains(node2))
-                    {
-                        var connectionInfo = new ConnectionInfo(node1, node2);
-                        if (drawnConnections.Add(connectionInfo))
-                        {
-                            DrawConnection(node1, node2);
-                        }
-                    }
-                }
-            }
-            if (selectedNode != null)
-            {
-                foreach (var child in GraphViewCanvas.Children.OfType<Grid>().Where(g => g.Tag == selectedNode))
-                {
-                    ChangeNodeAndConnectionStyles(selectedNode, child);
-                    break;
-                }
-            }
-        }
-
-        private void RecalculateConnectionsForNode(Node node)
-        {
-            if (GraphViewCanvas == null || node == null) return;
-
-            var connectionsToRedraw = new HashSet<ConnectionInfo>();
-
-            // Identify all ConnectionInfos involving the moved node
-            foreach (var shape in GraphViewCanvas.Children.OfType<Shape>().Where(s => s.DataContext is ConnectionInfo))
-            {
-                var ci = (ConnectionInfo)shape.DataContext;
-                if (ci.StartNode == node || ci.EndNode == node)
-                {
-                    connectionsToRedraw.Add(ci);
-                }
-            }
-
-            // Remove the shapes for these connections
-            foreach (var ciToRemove in connectionsToRedraw.ToList()) // Iterate over a copy to allow removal
-            {
-                foreach (var shape in GraphViewCanvas.Children.OfType<Shape>().Where(s => s.DataContext is ConnectionInfo && ((ConnectionInfo)s.DataContext).Equals(ciToRemove)).ToList())
-                {
-                    GraphViewCanvas.Children.Remove(shape);
-                }
-            }
-
-            // Redraw the connections based on the Connections list of the relevant nodes
-            foreach (var n in nodes)
-            {
-                if (n == node)
-                {
-                    foreach (var connectedNode in n.Connections)
-                    {
-                        if (nodes.Contains(connectedNode))
-                        {
-                            DrawConnection(n, connectedNode);
-                        }
-                    }
-                }
-                else if (n.Connections.Contains(node))
-                {
-                    DrawConnection(n, node);
-                }
-            }
-
-            if (selectedNode != null)
-            {
-                foreach (var child in GraphViewCanvas.Children.OfType<Grid>().Where(g => g.Tag == selectedNode))
-                {
-                    ChangeNodeAndConnectionStyles(selectedNode, child);
-                    break;
-                }
-            }
-        }
-
-
-        public void ConnectNodes(Node node1, Node node2)
-        {
-            if (node1 == null || node2 == null || node1 == node2) return;
-            if (!nodes.Contains(node1) || !nodes.Contains(node2)) return;
-
-            bool connectionAdded = false;
-            if (!node1.Connections.Contains(node2))
-            {
-                node1.Connections.Add(node2);
-                connectionAdded = true;
-            }
-
-            if (connectionAdded)
-            {
-                DrawConnection(node1, node2);
-            }
-        }
-
-
-        private void DrawConnection(Node node1, Node node2)
-        {
-            if (GraphViewCanvas == null) return;
-
-            Point startPoint = node1.CenterPoint;
-            Point endPoint = node2.CenterPoint;
-            ConnectionInfo connectionInfo = new ConnectionInfo(node1, node2);
-
-            Vector direction = endPoint - startPoint;
-            if (direction.Length < Epsilon) return;
-
-            Vector normal = new Vector(-direction.Y, direction.X);
-            normal.Normalize();
-
-            Point adjustedStartPoint = startPoint;
-            Point adjustedEndPoint = endPoint;
-
-            if (node1.GetHashCode() > node2.GetHashCode() && node1.Connections.Contains(node2))
-            {
-                adjustedStartPoint += normal * ConnectionOffset;
-                adjustedEndPoint += normal * ConnectionOffset;
-            }
-            else if (node2.GetHashCode() > node1.GetHashCode() && node2.Connections.Contains(node1))
-            {
-                adjustedStartPoint -= normal * ConnectionOffset;
-                adjustedEndPoint -= normal * ConnectionOffset;
-            }
-
-            Line line = new Line
-            {
-                Stroke = defaultLineBrush,
-                StrokeThickness = 2,
-                DataContext = connectionInfo,
-                X1 = adjustedStartPoint.X,
-                Y1 = adjustedStartPoint.Y,
-                X2 = adjustedEndPoint.X,
-                Y2 = adjustedEndPoint.Y
-            };
-            GraphViewCanvas.Children.Add(line);
-            Panel.SetZIndex(line, -1);
-
-            double lineLength = direction.Length;
-            if (lineLength > Epsilon)
-            {
-                direction.Normalize();
-                int arrowCount = (int)(lineLength / ArrowSpacing);
-                for (int i = 1; i <= arrowCount; i++)
-                {
-                    double distanceAlongLine = i * ArrowSpacing;
-                    if (distanceAlongLine < lineLength)
-                    {
-                        Point arrowTip = adjustedStartPoint + direction * distanceAlongLine;
-                        Point arrowSource = arrowTip - direction * 5; // Pfeilrichtung
-                        Polygon arrow = CreateArrowhead(arrowTip, arrowSource, connectionInfo);
-                        GraphViewCanvas.Children.Add(arrow);
-                        Panel.SetZIndex(arrow, 0);
-                    }
-                }
-                // Add one last arrow at the end if needed
-                if (arrowCount == 0 || lineLength % ArrowSpacing > ArrowSpacing / 2)
-                {
-                    Point arrowTip = adjustedEndPoint;
-                    Point arrowSource = adjustedEndPoint - direction * 5;
-                    Polygon arrow = CreateArrowhead(arrowTip, arrowSource, connectionInfo);
-                    GraphViewCanvas.Children.Add(arrow);
-                    Panel.SetZIndex(arrow, 0);
-                }
-            }
-        }
-
-        private Polygon CreateArrowhead(Point tipPoint, Point lineSourcePoint, ConnectionInfo connectionInfo)
-        {
-            double arrowLength = 10;
-            double arrowAngle = 25;
-
-            Vector vector = tipPoint - lineSourcePoint;
-            if (vector.Length < Epsilon)
-            {
-                vector = new Vector(1, 0);
-            }
-            vector.Normalize();
-
-            Point p1 = tipPoint;
-            Point basePoint = tipPoint - vector * arrowLength;
-            Vector perpendicular = new Vector(-vector.Y, vector.X);
-
-            double arrowWidth = arrowLength * Math.Tan(arrowAngle * Math.PI / 180.0);
-
-            Point p2 = basePoint + perpendicular * arrowWidth;
-            Point p3 = basePoint - perpendicular * arrowWidth;
-
-            var arrowPolygon = new Polygon
-            {
-                Points = new PointCollection { p1, p2, p3 },
-                Fill = defaultArrowFillBrush,
-                Stroke = defaultArrowStrokeBrush,
-                StrokeThickness = 1,
-                DataContext = connectionInfo
-            };
-
-            return arrowPolygon;
-        }
-
-        public void HighlightConnection(Node startNode, Node endNode)
-        {
-            if (GraphViewCanvas == null || startNode == null || endNode == null) return;
-
-            // Highlight the connection
-            foreach (var child in GraphViewCanvas.Children)
-            {
-                if (child is Line line && line.DataContext is ConnectionInfo connectionInfo)
-                {
-                    if ((connectionInfo.StartNode == startNode && connectionInfo.EndNode == endNode) ||
-                        (connectionInfo.StartNode == endNode && connectionInfo.EndNode == startNode))
-                    {
-                        line.Stroke = highlightBrush;
-                    }
-                }
-                else if (child is Polygon arrow && arrow.DataContext is ConnectionInfo arrowConnectionInfo)
-                {
-                    if ((arrowConnectionInfo.StartNode == startNode && arrowConnectionInfo.EndNode == endNode) ||
-                        (arrowConnectionInfo.StartNode == endNode && arrowConnectionInfo.EndNode == startNode))
-                    {
-                        arrow.Fill = Brushes.Red;
-                        arrow.Stroke = highlightBrush;
-                    }
-                }
-            }
-
-            foreach (var child in GraphViewCanvas.Children.OfType<Grid>().Where(g => g.Tag == startNode))
-            {
-                if (child is Grid nodeGrid)
-                {
-                    var border = nodeGrid.Children.OfType<Rectangle>().FirstOrDefault(r => (string?)r.Tag == "NodeBorder");
-                    if (border != null)
-                    {
-                        border.Stroke = highlightBrush;
-                    }
-                }
-                break;
-            }
-        }
-
-        public void UnhighlightAllConnections()
-        {
-            if (GraphViewCanvas == null) return;
-
-            foreach (var child in GraphViewCanvas.Children)
-            {
-                if (child is Line line && line.DataContext is ConnectionInfo connectionInfo)
-                {
-                    line.Stroke = defaultLineBrush;
-                }
-                else if (child is Polygon arrow && arrow.DataContext is ConnectionInfo arrowConnectionInfo)
-                {
-                    arrow.Fill = defaultArrowFillBrush;
-                    arrow.Stroke = defaultArrowStrokeBrush;
-                }
-            }
-
-            // Unhighlight all nodes (reset their border color)
-            foreach (var child in GraphViewCanvas.Children.OfType<Grid>())
-            {
-                if (child.Tag is Node node)
-                {
-                    var border = child.Children.OfType<Rectangle>().FirstOrDefault(r => (string?)r.Tag == "NodeBorder");
-                    if (border != null)
-                    {
-                        border.Stroke = (SolidColorBrush)FindResource("ViewBorderHoverBrush");
-                    }
-                }
             }
         }
     }

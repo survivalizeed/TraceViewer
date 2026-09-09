@@ -66,6 +66,10 @@ namespace TraceViewer
             DeactivateAllViewButtons();
             SetViewButtonActive(GraphViewButtonBorder);
             SetCurrentUIState(UIState.GraphView);
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                FitToView();
+            }), System.Windows.Threading.DispatcherPriority.Background);
         }
 
         private void DumpulatorViewButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)

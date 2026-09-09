@@ -64,10 +64,10 @@ namespace TraceViewer
 
         // Graph
         private List<Node> nodes = new List<Node>();
-        private Node currentlyDraggingNode = null;
+        private Node? currentlyDraggingNode = null;
         private Point dragStartPoint;
         private Point initialNodePosition;
-        private Node selectedNode = null;
+        private Node? selectedNode = null;
         private Brush defaultLineBrush = Brushes.White;
         private Brush defaultArrowFillBrush = Brushes.Coral;
         private Brush defaultArrowStrokeBrush = Brushes.Coral;

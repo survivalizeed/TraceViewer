@@ -955,15 +955,15 @@ namespace TraceViewer
         private void AddOrRemoveBookmark_Click(object sender, RoutedEventArgs e)
         {
             if (traceRow == null) return;
-            string idStr = traceRow.Id.ToString();
-            var existing = window.BookmarkViewItems.FirstOrDefault(x => x.id.Text == idStr);
+            int targetId = traceRow.Id;
+            var existing = window.BookmarkViewItems.FirstOrDefault(x => x.RowId == targetId);
             if (existing != null)
             {
                 window.BookmarkViewItems.Remove(existing);
             }
             else
             {
-                window.BookmarkViewItems.Add(new WPF_Bookmark(idStr, traceRow.Ip.ToString(), traceRow.Disasm, traceRow.comments));
+                window.BookmarkViewItems.Add(new WPF_Bookmark(targetId.ToString(), traceRow.Ip.ToString(), traceRow.Disasm ?? "", traceRow.comments ?? ""));
             }
         }
 
@@ -979,6 +979,7 @@ namespace TraceViewer
             {
                 var markItem = cm.Items.OfType<MenuItem>().FirstOrDefault(x => x.Name == "MarkUnmarkAsBlockStart");
                 var renameItem = cm.Items.OfType<MenuItem>().FirstOrDefault(x => x.Name == "RenameBlockMenuItem");
+                var bookmarkItem = cm.Items.OfType<MenuItem>().FirstOrDefault(x => x.Name == "AddOrRemoveBookmark");
                 var sliceItem = cm.Items.OfType<MenuItem>().FirstOrDefault(x => x.Name == "BackwardSlice");
                 var clearSliceItem = cm.Items.OfType<MenuItem>().FirstOrDefault(x => x.Name == "ClearSliceFilter");
 
@@ -989,6 +990,11 @@ namespace TraceViewer
                 if (renameItem != null)
                 {
                     renameItem.Visibility = traceRow.isBlockStart ? Visibility.Visible : Visibility.Collapsed;
+                }
+                if (bookmarkItem != null)
+                {
+                    bool isBookmarked = window.BookmarkViewItems.Any(x => x.RowId == traceRow.Id);
+                    bookmarkItem.Header = isBookmarked ? "Remove Bookmark" : "Add Bookmark";
                 }
                 if (sliceItem != null)
                 {

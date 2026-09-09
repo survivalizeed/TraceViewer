@@ -159,14 +159,14 @@ namespace TraceViewer
 
             // Restore Bookmarks
             BookmarkViewItems.Clear();
-            if (project.Bookmarks != null)
+            if (project.Bookmarks != null && TraceHandler.Trace?.Trace != null)
             {
                 foreach (int bmId in project.Bookmarks)
                 {
                     if (bmId >= 0 && bmId < TraceHandler.Trace.Trace.Count)
                     {
                         var row = TraceHandler.Trace.Trace[bmId];
-                        BookmarkViewItems.Add(new WPF_Bookmark(bmId.ToString(), row.Ip.ToString(), row.Disasm, row.comments));
+                        BookmarkViewItems.Add(new WPF_Bookmark(bmId.ToString(), row.Ip.ToString(), row.Disasm ?? "", row.comments ?? ""));
                     }
                 }
             }
@@ -247,11 +247,16 @@ namespace TraceViewer
                     project.Blocks.Add((Convert.ToInt32(item.Id), item.block));
             }
 
-            foreach (var bm in BookmarkViewItems)
+            var bookmarkIds = Dispatcher.Invoke(() =>
             {
-                if (int.TryParse(bm.id.Text, out int bmId))
-                    project.Bookmarks.Add(bmId);
-            }
+                var list = new List<int>(BookmarkViewItems.Count);
+                foreach (var bm in BookmarkViewItems)
+                {
+                    list.Add(bm.RowId);
+                }
+                return list;
+            });
+            project.Bookmarks = bookmarkIds;
 
             ProjectWriter.SaveProject(project, filename);
         }

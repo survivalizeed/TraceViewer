@@ -244,21 +244,15 @@
 
             <Grid Name="BookmarksView">
                 <Border Margin="0,104,0,20" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrighterBrush}">
-                    <ItemsControl x:Name="BookmarksViewItemControl" VirtualizingStackPanel.IsVirtualizing="True" ScrollViewer.CanContentScroll="True"
-                        ScrollViewer.VerticalScrollBarVisibility="Auto">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <VirtualizingStackPanel />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.Template>
-                            <ControlTemplate TargetType="ItemsControl">
-                                <ScrollViewer CanContentScroll="True">
-                                    <ItemsPresenter />
-                                </ScrollViewer>
-                            </ControlTemplate>
-                        </ItemsControl.Template>
-                    </ItemsControl>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" CanContentScroll="False">
+                        <ItemsControl x:Name="BookmarksViewItemControl">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </ScrollViewer>
                 </Border>
             </Grid>
 
@@ -275,9 +269,20 @@
                 </DockPanel>
 
                 <Border Grid.Row="1" BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrighterBrush}" Margin="0,3,0,0">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                        <Canvas x:Name="GraphViewCanvas" Width="2000" Height="2000" ClipToBounds="True"/>
-                    </ScrollViewer>
+                    <Grid x:Name="GraphViewContainer" ClipToBounds="True" Background="#0C0C0C"
+                          MouseDown="GraphViewContainer_MouseDown"
+                          MouseMove="GraphViewContainer_MouseMove"
+                          MouseUp="GraphViewContainer_MouseUp"
+                          MouseWheel="GraphViewContainer_MouseWheel">
+                        <Canvas x:Name="GraphViewCanvas" ClipToBounds="False">
+                            <Canvas.RenderTransform>
+                                <TransformGroup>
+                                    <ScaleTransform x:Name="GraphScaleTransform" ScaleX="1.0" ScaleY="1.0"/>
+                                    <TranslateTransform x:Name="GraphTranslateTransform" X="0" Y="0"/>
+                                </TransformGroup>
+                            </Canvas.RenderTransform>
+                        </Canvas>
+                    </Grid>
                 </Border>
             </Grid>
 
