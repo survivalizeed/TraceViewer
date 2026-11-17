@@ -73,6 +73,7 @@ namespace TraceViewer.Core.Analysis
         /// Tracks data-flow dynamically through registers and stack memory slots across stack manipulations
         /// (push, pop, sub rsp, add rsp, mov [rsp+...], etc.) without polluting the slice with stack adjustments.
         /// </summary>
+        /// <summary>Calculates slice for a given trace without required UI synchronization.</summary>
         public static (bool Success, int SlicedCount, string TargetDesc) RunSlice(TraceData trace, int targetRowId, string? specificReg = null)
         {
             if (trace == null || trace.Trace == null || trace.Trace.Count == 0)

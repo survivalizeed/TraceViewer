@@ -34,19 +34,31 @@ namespace TraceViewer
 
         private void Diff_Click(object sender, RoutedEventArgs e)
         {
-            if(TraceHandler.Trace == null)
+            if (TraceHandler.Trace == null)
+            {
+                MessageBox.Show("Please load a primary trace first before launching diff analysis.", "Trace Diff", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
+            }
+
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
                 Filter = "Trace Files (*.trace64)|*.trace64",
+                Title = "Select Secondary Trace File for Diffing",
                 FilterIndex = 1,
                 Multiselect = false
             };
             if (openFileDialog.ShowDialog() == true)
             {
-                var diffTrace = TraceLoader.OpenX64dbgTrace(openFileDialog.FileName);
-                Analyzer.DiffTraces(diffTrace);
-
+                try
+                {
+                    var diffTrace = TraceLoader.OpenX64dbgTrace(openFileDialog.FileName);
+                    DiffViewControl.LoadAndDiff(TraceHandler.Trace, diffTrace);
+                    DiffViewButton_MouseDown(null, null);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to load trace for diffing: {ex.Message}", "Diff Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 

@@ -85,6 +85,9 @@
                         <Border x:Name="DumpulatorViewButtonBorder" Style="{StaticResource ViewTitlesBorder}">
                             <Label x:Name="DumpulatorViewButton" Content="DUMPULATOR" Foreground="{StaticResource PrimaryForegroundBrush}" Style="{StaticResource ViewTitles}" MouseDown="DumpulatorViewButton_MouseDown"/>
                         </Border>
+                        <Border x:Name="DiffViewButtonBorder" Style="{StaticResource ViewTitlesBorder}">
+                            <Label x:Name="DiffViewButton" Content="DIFF" Foreground="{StaticResource PrimaryForegroundBrush}" Style="{StaticResource ViewTitles}" MouseDown="DiffViewButton_MouseDown"/>
+                        </Border>
                     </DockPanel>
                     <Line Margin="0,0,0,0" X1="0" Y1="0" X2="10000" Y2="0" Stroke="{StaticResource PrimaryForegroundBrush}" StrokeThickness="5"/>
                 </StackPanel>
@@ -289,6 +292,12 @@
             <Grid Name="DumpulatorView" Margin="0,104,0,20" Visibility="Collapsed">
                 <Border BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrighterBrush}">
                     <uc:DumpulatorControl x:Name="DumpulatorViewControl"/>
+                </Border>
+            </Grid>
+
+            <Grid Name="DiffView" Margin="0,104,0,20" Visibility="Collapsed">
+                <Border BorderThickness="0.5" BorderBrush="{StaticResource ViewBorderBrighterBrush}">
+                    <uc:DiffControl x:Name="DiffViewControl"/>
                 </Border>
             </Grid>
 

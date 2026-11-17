@@ -3,6 +3,7 @@ using System.Windows.Input;
 using System.Windows.Media.Effects;
 using System.Windows.Media;
 using System.Windows;
+using TraceViewer.Core;
 using TraceViewer.Core.Analysis;
 
 namespace TraceViewer
@@ -14,7 +15,8 @@ namespace TraceViewer
         BlocksView,
         BookmarksView,
         GraphView,
-        DumpulatorView
+        DumpulatorView,
+        DiffView
     }
     public partial class MainWindow : Window
     {
@@ -26,6 +28,7 @@ namespace TraceViewer
             SetViewButtonInactive(BookmarksViewButtonBorder);
             SetViewButtonInactive(GraphViewButtonBorder);
             SetViewButtonInactive(DumpulatorViewButtonBorder);
+            SetViewButtonInactive(DiffViewButtonBorder);
         }
 
         public void DisasmViewButton_MouseDown(object? sender = null, System.Windows.Input.MouseButtonEventArgs? e = null)
@@ -83,6 +86,19 @@ namespace TraceViewer
             SetCurrentUIState(UIState.DumpulatorView);
         }
 
+        public void DiffViewButton_MouseDown(object? sender = null, System.Windows.Input.MouseButtonEventArgs? e = null)
+        {
+            if (e != null && e.LeftButton != MouseButtonState.Pressed) return;
+            DeactivateAllViewButtons();
+            SetViewButtonActive(DiffViewButtonBorder);
+            SetCurrentUIState(UIState.DiffView);
+
+            if (TraceHandler.Trace != null && DiffViewControl != null)
+            {
+                DiffViewControl.EnsurePrimaryTrace(TraceHandler.Trace);
+            }
+        }
+
         private void SetViewButtonActive(Border buttonBorder)
         {
             buttonBorder.Background = new SolidColorBrush(Color.FromArgb(255, 40, 40, 40));
@@ -104,6 +120,7 @@ namespace TraceViewer
             BookmarksView.Visibility = uiState == UIState.BookmarksView ? Visibility.Visible : Visibility.Collapsed;
             GraphView.Visibility = uiState == UIState.GraphView ? Visibility.Visible : Visibility.Collapsed;
             DumpulatorView.Visibility = uiState == UIState.DumpulatorView ? Visibility.Visible : Visibility.Collapsed;
+            DiffView.Visibility = uiState == UIState.DiffView ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 }

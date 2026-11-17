@@ -55,6 +55,29 @@ namespace TraceViewer
                 RefreshView();
                 e.Handled = true;
             }
+
+            // Diff View navigation and slicing shortcuts
+            if (DiffView.Visibility == Visibility.Visible)
+            {
+                if (e.Key == Key.F7)
+                {
+                    DiffViewControl.JumpToFirstDivergence();
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.F8)
+                {
+                    if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+                        DiffViewControl.JumpToPrevDifference();
+                    else
+                        DiffViewControl.JumpToNextDifference();
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.F9)
+                {
+                    DiffViewControl.RunDifferentialSliceOnSelected();
+                    e.Handled = true;
+                }
+            }
         }
     }
 }

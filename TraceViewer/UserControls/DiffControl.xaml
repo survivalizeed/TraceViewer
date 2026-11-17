@@ -1,0 +1,278 @@
+<UserControl x:Class="TraceViewer.UserControls.DiffControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1200"
+             Background="{StaticResource PrimaryBackgroundBrush}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- 0: Toolbar -->
+            <RowDefinition Height="Auto"/>
+            <!-- 1: Divergent Branches Table -->
+            <RowDefinition Height="*"/>
+            <!-- 2: Splitter -->
+            <RowDefinition Height="Auto"/>
+            <!-- 3: Branch Detail & Context -->
+            <RowDefinition Height="220" MinHeight="130"/>
+        </Grid.RowDefinitions>
+
+        <!-- 0: COMPACT TOOLBAR -->
+        <Border Grid.Row="0" Background="#141414" BorderBrush="{StaticResource ViewBorderBrighterBrush}" BorderThickness="0,0,0,1" Padding="10,6">
+            <DockPanel LastChildFill="True">
+                <!-- Summary Stats (Right) -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="DIVERGENCES:" Foreground="#777777" FontFamily="Consolas" FontWeight="Bold" FontSize="11" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBlock x:Name="Txt_DivergentBranchCount" Text="0" Foreground="#61AFEF" FontFamily="Consolas" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                    <TextBlock Text="|" Foreground="#333333" FontFamily="Consolas" FontSize="12" VerticalAlignment="Center" Margin="10,0"/>
+                    <TextBlock Text="MATCH:" Foreground="#777777" FontFamily="Consolas" FontWeight="Bold" FontSize="11" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBlock x:Name="Txt_ScorePercent" Text="100%" Foreground="#98C379" FontFamily="Consolas" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Trace A / Trace B Info & Loader (Left) -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="TRACE A:" Foreground="#777777" FontFamily="Consolas" FontWeight="Bold" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock x:Name="Txt_TraceA_Name" Text="(None)" Foreground="#E0E0E0" FontFamily="Consolas" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="Txt_TraceA_Stats" Text="" Foreground="#666666" FontFamily="Consolas" FontSize="11" Margin="5,0,0,0" VerticalAlignment="Center"/>
+
+                    <TextBlock Text="|" Foreground="#333333" FontFamily="Consolas" FontSize="12" VerticalAlignment="Center" Margin="12,0"/>
+
+                    <TextBlock Text="TRACE B:" Foreground="#777777" FontFamily="Consolas" FontWeight="Bold" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock x:Name="Txt_TraceB_Name" Text="(None)" Foreground="#E0E0E0" FontFamily="Consolas" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="Txt_TraceB_Stats" Text="" Foreground="#666666" FontFamily="Consolas" FontSize="11" Margin="5,0,0,0" VerticalAlignment="Center"/>
+
+                    <Border x:Name="Btn_LoadTraceB" CornerRadius="2" BorderBrush="{StaticResource ViewBorderBrighterBrush}" BorderThickness="1" Background="#202020" Margin="12,0,0,0" Cursor="Hand" MouseDown="Btn_LoadTraceB_MouseDown" ToolTip="Load a secondary .trace64 file to compare">
+                        <TextBlock Text="LOAD TRACE B..." Foreground="White" FontFamily="Consolas" FontWeight="Bold" FontSize="11" Margin="8,3"/>
+                    </Border>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- 1: DIVERGENT BRANCHES TABLE -->
+        <Grid Grid.Row="1" Background="#0E0E0E">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Table Header -->
+            <Border Grid.Row="0" Background="#161616" BorderBrush="{StaticResource ViewBorderBrighterBrush}" BorderThickness="0,0,0,1" Padding="8,4">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="40"/>
+                        <ColumnDefinition Width="115"/>
+                        <ColumnDefinition Width="1.2*"/>
+                        <ColumnDefinition Width="0.9*"/>
+                        <ColumnDefinition Width="0.9*"/>
+                        <ColumnDefinition Width="1.4*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="#" Foreground="#777777" FontFamily="Consolas" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="ADDRESS" Foreground="#777777" FontFamily="Consolas" FontWeight="Bold" FontSize="11" Margin="4,0"/>
+                    <TextBlock Grid.Column="2" Text="INSTRUCTION" Foreground="#777777" FontFamily="Consolas" FontWeight="Bold" FontSize="11" Margin="4,0"/>
+                    <TextBlock Grid.Column="3" Text="TRACE A" Foreground="#61AFEF" FontFamily="Consolas" FontWeight="Bold" FontSize="11" Margin="4,0"/>
+                    <TextBlock Grid.Column="4" Text="TRACE B" Foreground="#E5C07B" FontFamily="Consolas" FontWeight="Bold" FontSize="11" Margin="4,0"/>
+                    <TextBlock Grid.Column="5" Text="CAUSE" Foreground="#98C379" FontFamily="Consolas" FontWeight="Bold" FontSize="11" Margin="4,0"/>
+                </Grid>
+            </Border>
+
+            <!-- Branches List -->
+            <ListBox x:Name="List_Branches" Grid.Row="1" Background="Transparent" BorderThickness="0"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     SelectionChanged="List_Branches_SelectionChanged"
+                     MouseDoubleClick="List_Branches_MouseDoubleClick">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Padding" Value="8,4"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        <Setter Property="BorderBrush" Value="#181818"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="ItemBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="ItemBorder" Property="Background" Value="#1A1A1A"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="ItemBorder" Property="Background" Value="#1F3346"/>
+                                            <Setter TargetName="ItemBorder" Property="BorderBrush" Value="#325D80"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="40"/>
+                                <ColumnDefinition Width="115"/>
+                                <ColumnDefinition Width="1.2*"/>
+                                <ColumnDefinition Width="0.9*"/>
+                                <ColumnDefinition Width="0.9*"/>
+                                <ColumnDefinition Width="1.4*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="{Binding Index}" Foreground="#666666" FontFamily="Consolas" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding AddressA, StringFormat='0x{0:X}'}" Foreground="#CCCCCC" FontFamily="Consolas" FontSize="11" VerticalAlignment="Center" Margin="4,0"/>
+                            <TextBlock Grid.Column="2" Text="{Binding Disasm}" Foreground="#FFFFFF" FontFamily="Consolas" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center" Margin="4,0" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Grid.Column="3" Text="{Binding DecisionA}" Foreground="#61AFEF" FontFamily="Consolas" FontSize="11" VerticalAlignment="Center" Margin="4,0" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Grid.Column="4" Text="{Binding DecisionB}" Foreground="#E5C07B" FontFamily="Consolas" FontSize="11" VerticalAlignment="Center" Margin="4,0" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Grid.Column="5" Text="{Binding SummaryCause}" Foreground="#98C379" FontFamily="Consolas" FontSize="11" VerticalAlignment="Center" Margin="4,0" TextTrimming="CharacterEllipsis"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- Empty State -->
+            <StackPanel x:Name="Placeholder_Empty" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="NO SECOND TRACE LOADED" Foreground="#888888" FontFamily="Consolas" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                <TextBlock Text="Load a second trace (.trace64) to compare branch decisions." Foreground="#555555" FontFamily="Consolas" FontSize="12" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                <Border CornerRadius="2" BorderBrush="{StaticResource ViewBorderBrighterBrush}" BorderThickness="1" Background="#202020" HorizontalAlignment="Center" Cursor="Hand" MouseDown="Btn_LoadTraceB_MouseDown" Padding="12,5">
+                    <TextBlock Text="SELECT TRACE B..." Foreground="White" FontFamily="Consolas" FontWeight="Bold" FontSize="11"/>
+                </Border>
+            </StackPanel>
+
+            <!-- Identical Traces State -->
+            <StackPanel x:Name="Placeholder_Identical" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">
+                <TextBlock Text="NO DIVERGENT BRANCHES FOUND" Foreground="#98C379" FontFamily="Consolas" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" Margin="0,0,0,6"/>
+                <TextBlock Text="Both traces followed the exact same path at all conditional branches." Foreground="#777777" FontFamily="Consolas" FontSize="12" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- 2: SPLITTER -->
+        <GridSplitter Grid.Row="2" Height="4" HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="#1C1C1C" Cursor="SizeNS"/>
+
+        <!-- 3: BRANCH DETAIL & CONTEXT -->
+        <Border Grid.Row="3" Background="#111111" BorderBrush="{StaticResource ViewBorderBrighterBrush}" BorderThickness="0,1,0,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Detail Header Bar -->
+                <Border Grid.Row="0" Background="#161616" BorderBrush="#242424" BorderThickness="0,0,0,1" Padding="10,5">
+                    <DockPanel LastChildFill="True">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Border x:Name="Btn_JumpDisasm" CornerRadius="2" BorderBrush="{StaticResource ViewBorderBrighterBrush}" BorderThickness="1" Background="#202020" Margin="0,0,6,0" Cursor="Hand" MouseDown="Btn_JumpDisasm_MouseDown" ToolTip="Jump to this instruction in the Disassembler view">
+                                <TextBlock Text="GO TO DISASM" Foreground="#61AFEF" FontFamily="Consolas" FontWeight="Bold" FontSize="11" Margin="8,3"/>
+                            </Border>
+
+                            <Border x:Name="Btn_DiffSlice" CornerRadius="2" BorderBrush="{StaticResource ViewBorderBrighterBrush}" BorderThickness="1" Background="#202020" Cursor="Hand" MouseDown="Btn_DiffSlice_MouseDown" ToolTip="Run Differential Backward Slice on the selected branch (F9)">
+                                <TextBlock Text="DIFF SLICE" Foreground="#E5C07B" FontFamily="Consolas" FontWeight="Bold" FontSize="11" Margin="8,3"/>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="BRANCH:" Foreground="#777777" FontFamily="Consolas" FontWeight="Bold" FontSize="11" Margin="0,0,8,0"/>
+                            <TextBlock x:Name="Txt_DetailBranchTitle" Text="Select a divergent branch from the list" Foreground="#E0E0E0" FontFamily="Consolas" FontSize="11"/>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- Context & Cause Split -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="1"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="1"/>
+                        <ColumnDefinition Width="320"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Context Trace A -->
+                    <Border Grid.Column="0" Padding="8,4">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="TRACE A CONTEXT" Foreground="#61AFEF" FontFamily="Consolas" FontWeight="Bold" FontSize="10" Margin="0,0,0,4"/>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl x:Name="Items_ContextA">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="2" Padding="4,1" Margin="0,1" Background="{Binding BackgroundBrush}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="45"/>
+                                                        <ColumnDefinition Width="95"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding RowId, StringFormat='#{0}'}" Foreground="#666666" FontFamily="Consolas" FontSize="10"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Ip, StringFormat='0x{0:X}'}" Foreground="#999999" FontFamily="Consolas" FontSize="10"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding Disasm}" Foreground="{Binding ForegroundBrush}" FontFamily="Consolas" FontWeight="{Binding FontWeight}" FontSize="11"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="1" Background="#242424"/>
+
+                    <!-- Context Trace B -->
+                    <Border Grid.Column="2" Padding="8,4">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="TRACE B CONTEXT" Foreground="#E5C07B" FontFamily="Consolas" FontWeight="Bold" FontSize="10" Margin="0,0,0,4"/>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl x:Name="Items_ContextB">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border CornerRadius="2" Padding="4,1" Margin="0,1" Background="{Binding BackgroundBrush}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="45"/>
+                                                        <ColumnDefinition Width="95"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding RowId, StringFormat='#{0}'}" Foreground="#666666" FontFamily="Consolas" FontSize="10"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Ip, StringFormat='0x{0:X}'}" Foreground="#999999" FontFamily="Consolas" FontSize="10"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding Disasm}" Foreground="{Binding ForegroundBrush}" FontFamily="Consolas" FontWeight="{Binding FontWeight}" FontSize="11"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="3" Background="#242424"/>
+
+                    <!-- Cause & Register Diff -->
+                    <Border Grid.Column="4" Padding="10,4">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="CAUSE &amp; REGISTERS" Foreground="#98C379" FontFamily="Consolas" FontWeight="Bold" FontSize="10" Margin="0,0,0,4"/>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <TextBlock x:Name="Txt_DifferingRegsDetail" Text="Select a branch to inspect register and flag differences." Foreground="#D4D4D4" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap"/>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
